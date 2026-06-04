@@ -1,10 +1,7 @@
 import { z } from 'zod';
 import { RecipeSchema } from './recipe.js';
 
-/**
- * Lightweight summary for gallery rows — drops the recipe body and stamps a
- * thumbnail URL (relative to the same origin).
- */
+/** Gallery-row summary: no recipe body, just a same-origin thumbnail URL. */
 export const SaveSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -62,11 +59,8 @@ export const CloneSaveBodySchema = z.object({
 export type CloneSaveBody = z.infer<typeof CloneSaveBodySchema>;
 
 /**
- * Asset library — uploaded image referenced by recipe image layers.
- *
- * The `url` field is a relative path to GET the raw bytes
- * (`/api/assets/{id}/file`) and never embeds origin/scheme so the SPA can use
- * it as-is regardless of deployment.
+ * Asset library entry: uploaded image referenced by recipe image layers.
+ * `url` is a relative path so the SPA uses it as-is across deployments.
  */
 export const AssetSchema = z.object({
   id: z.string(),
