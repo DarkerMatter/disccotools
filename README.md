@@ -48,4 +48,4 @@ There are a lot of tests, and they test the annoying stuff rather than the easy 
 
 ## License
 
-MIT. Do what you want, just don't blame us.
+MIT. Do what you want, just don't blame me.

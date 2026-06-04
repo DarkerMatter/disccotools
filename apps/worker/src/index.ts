@@ -56,6 +56,25 @@ app.patch('/api/assets/:id', renameAssetHandler);
 app.delete('/api/assets/:id', deleteAssetHandler);
 app.get('/api/assets/:id/file', getAssetFileHandler);
 
+// Public static assets stored in R2 under `static/`. No auth, cached.
+app.get('/static/*', async (c) => {
+  const path = c.req.path.replace(/^\/static\//, '');
+  if (!path) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'missing path' } }, 404);
+  }
+  const object = await c.env.R2.get(`static/${path}`);
+  if (!object) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'asset not found' } }, 404);
+  }
+  return new Response(object.body, {
+    headers: {
+      'Content-Type': object.httpMetadata?.contentType ?? 'application/octet-stream',
+      'Content-Length': String(object.size),
+      'Cache-Control': 'public, max-age=86400',
+    },
+  });
+});
+
 app.get('/api/health', (c) =>
   c.json({ status: 'ok', apiVersion: API_VERSION }, 200),
 );
