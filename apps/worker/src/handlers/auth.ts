@@ -56,9 +56,7 @@ async function mintDevSession(c: Context<AppEnv>): Promise<void> {
 }
 
 export async function loginHandler(c: Context<AppEnv>): Promise<Response> {
-  // The dev bypass requires BOTH flags to be true. Production sets neither,
-  // so accidentally flipping one alone (e.g. via wrangler.toml typo) cannot
-  // enable a Discord-less login on prod.
+  // Dev bypass needs BOTH flags. One wasn't enough humiliation, apparently.
   if (
     c.env.DEV_BYPASS_AUTH === 'true' &&
     c.env.ALLOW_DEV_BYPASS === 'true'
@@ -70,13 +68,13 @@ export async function loginHandler(c: Context<AppEnv>): Promise<Response> {
   setCookie(c, OAUTH_STATE_COOKIE, state, {
     httpOnly: true,
     secure: true,
-    // Strict is safe here: the OAuth callback is a top-level navigation back
-    // from discord.com, where Strict cookies are still sent. But Strict blocks
-    // the cookie on any cross-site fetch — which is exactly the protection
-    // we want for a one-shot CSRF state value. The session cookie itself stays
-    // Lax to keep cross-site links (e.g. /editor/:id from elsewhere) working.
+    // Strict is safe: the OAuth callback is a top-level nav from discord.com
+    // (Strict cookies travel) while Strict blocks cross-site fetch, which is
+    // exactly what we want for a one-shot CSRF state value. The session cookie
+    // stays Lax so cross-site links into /editor/:id still work.
     sameSite: 'Strict',
     path: '/',
+    // 10 minutes is plenty for one OAuth round-trip.
     maxAge: OAUTH_STATE_TTL_SECONDS,
   });
   return c.redirect(discordAuthorizeUrl(c.env, state), 302);
@@ -175,7 +173,7 @@ export async function logoutHandler(c: Context<AppEnv>): Promise<Response> {
       const claims = SessionClaimsSchema.parse(payload);
       await revokeSession(c.env.DB, claims.jti, claims.exp);
     } catch {
-      // Cookie missing or invalid — nothing to revoke.
+      // Cookie missing or invalid, nothing to revoke.
     }
   }
   clearSessionCookie(c);
