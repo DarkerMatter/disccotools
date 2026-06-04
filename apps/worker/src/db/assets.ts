@@ -1,12 +1,4 @@
-/**
- * D1 layer for the user asset library. Pure functions over `D1Database`.
- *
- * Layout:
- *   - One row per uploaded image; the actual bytes live in R2 under `r2_key`.
- *   - Recipes' `image` layers reference assets by id (in `recipe_json`); the
- *     LIKE-based scan in `findSavesReferencingAsset` is used to block deletes
- *     while references exist.
- */
+/** D1 layer for the user asset library. Bytes live in R2 under `r2_key`. */
 
 /** Raw D1 row shape (snake_case). */
 type AssetRow = {
@@ -56,9 +48,8 @@ export async function createAsset(
   db: D1Database,
   input: {
     /**
-     * Optional pre-generated id. The handler mints the id up-front so that the
-     * R2 key (which embeds the id) can be written before the D1 row. Tests can
-     * omit this and let the layer mint one.
+     * Optional pre-generated id. The handler mints id up-front so the R2 key
+     * (which embeds the id) can be written before the D1 row. Tests can omit.
      */
     id?: string;
     userId: string;
@@ -149,9 +140,9 @@ export async function deleteAsset(
 /**
  * Find saves owned by `userId` whose `recipe_json` mentions `assetId`.
  *
- * D1 has no native JSON ops, so we use a quoted LIKE pattern. The asset id is
- * a UUID, which makes false positives effectively impossible: it can only
- * appear quoted inside a serialized layer's `"assetId":"…"` field.
+ * D1 has no native JSON ops, so a quoted LIKE pattern stands in. The asset id
+ * is a UUID; a false positive would require it appearing verbatim quoted
+ * inside `recipe_json`, which only happens in a real `"assetId":"…"` field.
  */
 export async function findSavesReferencingAsset(
   db: D1Database,
