@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>transparent_bg</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fillRule="evenodd">
+        <g id="transparent_bg" fillRule="nonzero">
+            <rect id="Rectangle" fill="#FFFFFF" x="0" y="0" width="32" height="32"></rect>
+            <rect id="Rectangle" fill="#CACFD0" x="0" y="0" width="16" height="16"></rect>
+            <rect id="Rectangle" fill="#CACFD0" x="16" y="16" width="16" height="16"></rect>
+        </g>
+    </g>
+</svg>

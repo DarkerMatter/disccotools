@@ -1,0 +1,20 @@
+{
+  "name": "disccotools",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "pnpm -r --parallel test",
+    "build": "pnpm -r --parallel build",
+    "dev:spa": "pnpm --filter @disccotools/spa dev",
+    "dev:worker": "pnpm --filter @disccotools/worker dev",
+    "deploy": "bash scripts/deploy.sh"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

@@ -1,0 +1,194 @@
+/* Reset */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+html, body, #root { height: 100%; }
+button { font: inherit; cursor: pointer; }
+
+/* Theme tokens — light (default) */
+:root {
+  --color-bg: #ffffff;
+  --color-surface: #f8fafc;
+  --color-surface-elev: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-accent: #5865F2;
+  --color-accent-hover: #4752c4;
+  --color-success: #10b981;
+  --color-success-bg: #d1fae5;
+  --color-accent-bg: rgba(88, 101, 242, 0.12);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+/* Theme tokens — dark */
+:root[data-theme="dark"] {
+  --color-bg: #0b0f17;
+  --color-surface: #111827;
+  --color-surface-elev: #1f2937;
+  --color-border: #1f2937;
+  --color-text: #e5e7eb;
+  --color-text-muted: #94a3b8;
+  --color-accent: #818cf8;
+  --color-accent-hover: #6366f1;
+  --color-success: #34d399;
+  --color-success-bg: #064e3b;
+  --color-accent-bg: rgba(129, 140, 248, 0.2);
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Base */
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
+
+/* Inline header tabs — Chrome-style, integrated into the page header */
+.inline-tabs {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  align-self: stretch;
+}
+
+.inline-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  text-decoration: none;
+  margin-bottom: -1px; /* overlap the host header's bottom border */
+  transition: background 120ms ease, color 120ms ease;
+  cursor: pointer;
+}
+
+.inline-tab:hover {
+  background: var(--color-surface-elev);
+  color: var(--color-text);
+}
+
+.inline-tab--active {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-color: var(--color-border);
+  font-weight: 600;
+}
+
+.inline-tab--active:hover {
+  background: var(--color-bg);
+}
+
+/* NTTS badge — hover treatment */
+.ntts-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--color-accent-bg);
+  color: var(--color-accent);
+  background-size: 200% 100%;
+  background-position: 50% 0;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  cursor: default;
+}
+
+.ntts-badge:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 8px var(--color-accent);
+  background-image: linear-gradient(
+    90deg,
+    var(--color-accent-bg) 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    var(--color-accent-bg) 100%
+  );
+  animation: ntts-shimmer 1.6s linear infinite;
+}
+
+@keyframes ntts-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* DEV badge — hardcoded for the project dev, with confetti burst on hover */
+.dev-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  cursor: default;
+}
+
+:root[data-theme="dark"] .dev-badge {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+}
+
+.dev-badge:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 8px #ef4444;
+}
+
+.dev-confetti {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: var(--dev-c, #ef4444);
+  border-radius: 1px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.dev-badge:hover .dev-confetti {
+  animation: dev-confetti-burst 900ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes dev-confetti-burst {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+      calc(-50% + var(--dev-dx, 20px)),
+      calc(-50% + var(--dev-dy, -20px))
+    ) rotate(540deg);
+    opacity: 0;
+  }
+}
