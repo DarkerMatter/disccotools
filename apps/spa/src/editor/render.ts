@@ -10,17 +10,12 @@ import { iconUrl } from './iconify.js';
 /**
  * Build a standalone SVG document string for `recipe` at its export size.
  *
- * The SVG references Iconify icons and uploaded image assets by URL
- * (`<image href="...">`). The Iconify URL resolves to a CORS-enabled SVG and
- * the asset URL streams the user's uploaded bytes, so the canvas
- * rasterization step downstream won't taint when we `drawImage` it.
- *
- * When `assetUrlOverrides` is provided, each computed URL (Iconify or
- * `/api/assets/{id}/file`) is looked up in the map; if present, the
- * substitute (typically a `data:` URI) is written as the `<image href>`
- * instead. This is needed for the canvas rasterization path, since many
- * browsers do not synchronously composite externally-href'd `<image>`
- * children when rasterizing an SVG via `drawImage`.
+ * The SVG references Iconify icons and asset images via `<image href>`. Both
+ * sources are CORS-friendly so a downstream `drawImage` won't taint the
+ * canvas. When `assetUrlOverrides` is provided, each computed URL is replaced
+ * with its mapped substitute (typically a `data:` URI), because many browsers
+ * won't synchronously composite externally-href'd `<image>` children when
+ * rasterizing an SVG via `drawImage`.
  */
 export function recipeToSvgString(
   recipe: Recipe,
@@ -91,7 +86,7 @@ function layerToSvg(
         `</g>`,
       ].join('');
     }
-    // gradient — mask the white-fill icon SVG and fill a rect with the gradient.
+    // gradient: mask the white-fill icon SVG and fill a rect with the gradient.
     const url = iconUrl(layer.iconset, layer.name, '#ffffff');
     const finalHref = assetUrlOverrides?.get(url) ?? url;
     const maskId = `mask-${layer.id}`;
@@ -155,20 +150,15 @@ function gradientEndpoints(angleDeg: number) {
 }
 
 /**
- * Pre-fetch each unique asset referenced by `recipe` — Iconify icons and
- * user-uploaded images — returning a map from the computed URL to a `data:`
- * URI. The canvas rasterization path needs data URIs because many browsers
- * won't synchronously fetch+composite externally-href'd `<image>` children
- * inside an SVG passed to `drawImage`.
+ * Pre-fetch each unique asset referenced by `recipe` (Iconify icons and
+ * uploaded images) and return a map from URL to `data:` URI. Data URIs are
+ * required because many browsers won't synchronously fetch externally-href'd
+ * `<image>` children when rasterizing an SVG via `drawImage`.
  *
- * For icon layers the URL is the Iconify SVG URL and the data URI uses
- * `image/svg+xml`. For image layers the URL is `/api/assets/{id}/file`; the
- * mime type comes from the response's `Content-Type` header (falling back to
- * the blob's `type`, then `application/octet-stream`).
- *
- * On a per-asset fetch failure we log a warning and map the URL to itself, so
- * the render still proceeds (just with the same drop-out we already have for
- * that one asset, rather than crashing the entire export).
+ * For icon layers the mime defaults to `image/svg+xml`; for image layers we
+ * read `Content-Type` and fall back to the blob's `type`. On per-asset fetch
+ * failure we log and map the URL to itself so the rest of the export still
+ * renders.
  */
 async function prefetchAssetDataUris(recipe: Recipe): Promise<Map<string, string>> {
   const seen = new Map<string, string>();
@@ -211,10 +201,7 @@ function bytesToBase64(bytes: Uint8Array): string {
   return btoa(s);
 }
 
-/**
- * Render `recipe` to a PNG Blob using an offscreen canvas.
- * Browser-only — relies on Image, Canvas, URL.createObjectURL.
- */
+/** Render `recipe` to a PNG Blob via an offscreen canvas. Browser-only. */
 export async function renderToPng(recipe: Recipe): Promise<Blob> {
   const overrides = await prefetchAssetDataUris(recipe);
   const svg = recipeToSvgString(recipe, overrides);
@@ -248,11 +235,7 @@ export async function renderToPng(recipe: Recipe): Promise<Blob> {
   }
 }
 
-/**
- * Render at a specific size without mutating the input recipe.
- * Used by the save flow to produce a 128 px thumbnail without forcing the
- * user to change recipe.size.
- */
+/** Render at a specific size without mutating the input recipe. */
 export function renderRecipeAtSize(recipe: Recipe, size: Recipe['size']): Promise<Blob> {
   return renderToPng({ ...recipe, size });
 }
