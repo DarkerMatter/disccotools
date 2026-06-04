@@ -1,6 +1,14 @@
-import { applyD1Migrations, env, fetchMock } from 'cloudflare:test';
+import { applyD1Migrations, env } from 'cloudflare:test';
 import { Hono } from 'hono';
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import type { AppEnv } from '../env.js';
 import { sessionMiddleware, SESSION_COOKIE } from '../mw/session.js';
 import { callbackHandler, loginHandler, meHandler, logoutHandler } from './auth.js';
@@ -17,13 +25,77 @@ beforeAll(async () => {
   await applyD1Migrations(env.DB, env.TEST_MIGRATIONS);
 });
 
+/**
+ * Tiny Discord fetch mock layered over globalThis.fetch.
+ * We can't rely on cloudflare:test's fetchMock — it's been removed in
+ * vitest-pool-workers >= 0.16. Instead, route based on URL prefix.
+ */
+type Route = {
+  match: { method: string; path: string };
+  reply: { status: number; body: unknown };
+};
+
+let routes: Route[] = [];
+let realFetch: typeof globalThis.fetch | null = null;
+
+function setupFetchMock(): void {
+  routes = [];
+  if (realFetch === null) realFetch = globalThis.fetch;
+  globalThis.fetch = (async (
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> => {
+    const url =
+      typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+    const method = (
+      init?.method ??
+      (input instanceof Request ? input.method : 'GET')
+    ).toUpperCase();
+    // Sort routes by descending path length so more-specific paths match first.
+    // (e.g. `/users/@me/guilds/.../member` before `/users/@me`)
+    const sorted = [...routes].sort(
+      (a, b) => b.match.path.length - a.match.path.length,
+    );
+    for (const r of sorted) {
+      if (
+        r.match.method === method &&
+        (url === r.match.path || url.startsWith(r.match.path + '?'))
+      ) {
+        return new Response(JSON.stringify(r.reply.body), {
+          status: r.reply.status,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+    }
+    throw new Error(`unexpected outbound fetch in test: ${method} ${url}`);
+  }) as typeof globalThis.fetch;
+}
+
+function teardownFetchMock(): void {
+  if (realFetch !== null) {
+    globalThis.fetch = realFetch;
+  }
+  routes = [];
+}
+
+function mockDiscord(path: string, method: string, status: number, body: unknown): void {
+  routes.push({
+    match: { method: method.toUpperCase(), path: `https://discord.com${path}` },
+    reply: { status, body },
+  });
+}
+
 beforeEach(() => {
-  fetchMock.activate();
-  fetchMock.disableNetConnect();
+  setupFetchMock();
 });
 
 afterEach(() => {
-  fetchMock.assertNoPendingInterceptors();
+  teardownFetchMock();
+  vi.restoreAllMocks();
 });
 
 describe('GET /api/auth/login', () => {
@@ -99,26 +171,22 @@ describe('GET /api/auth/callback', () => {
   });
 
   it('completes happy path: exchanges code, fetches user + member, upserts, sets session cookie, redirects to /', async () => {
-    fetchMock
-      .get('https://discord.com')
-      .intercept({ path: '/api/v10/oauth2/token', method: 'POST' })
-      .reply(200, { access_token: 'test-access-token', token_type: 'Bearer' });
-    fetchMock
-      .get('https://discord.com')
-      .intercept({ path: '/api/v10/users/@me', method: 'GET' })
-      .reply(200, {
-        id: '714517219026927767',
-        username: 'mitri',
-        global_name: 'Dimitri',
-        avatar: 'a_abc123',
-      });
-    fetchMock
-      .get('https://discord.com')
-      .intercept({
-        path: `/api/v10/users/@me/guilds/${env.HOME_GUILD_ID}/member`,
-        method: 'GET',
-      })
-      .reply(200, { user: { id: '714517219026927767' } });
+    mockDiscord('/api/v10/oauth2/token', 'POST', 200, {
+      access_token: 'test-access-token',
+      token_type: 'Bearer',
+    });
+    mockDiscord('/api/v10/users/@me', 'GET', 200, {
+      id: '714517219026927767',
+      username: 'mitri',
+      global_name: 'Dimitri',
+      avatar: 'a_abc123',
+    });
+    mockDiscord(
+      `/api/v10/users/@me/guilds/${env.HOME_GUILD_ID}/member`,
+      'GET',
+      200,
+      { user: { id: '714517219026927767' } },
+    );
 
     const app = makeApp();
     const res = await app.fetch(
@@ -146,26 +214,22 @@ describe('GET /api/auth/callback', () => {
   });
 
   it('marks user as non-member when guild member check returns 404', async () => {
-    fetchMock
-      .get('https://discord.com')
-      .intercept({ path: '/api/v10/oauth2/token', method: 'POST' })
-      .reply(200, { access_token: 'test-access-token', token_type: 'Bearer' });
-    fetchMock
-      .get('https://discord.com')
-      .intercept({ path: '/api/v10/users/@me', method: 'GET' })
-      .reply(200, {
-        id: '999',
-        username: 'outsider',
-        global_name: null,
-        avatar: null,
-      });
-    fetchMock
-      .get('https://discord.com')
-      .intercept({
-        path: `/api/v10/users/@me/guilds/${env.HOME_GUILD_ID}/member`,
-        method: 'GET',
-      })
-      .reply(404, { message: 'Unknown member' });
+    mockDiscord('/api/v10/oauth2/token', 'POST', 200, {
+      access_token: 'test-access-token',
+      token_type: 'Bearer',
+    });
+    mockDiscord('/api/v10/users/@me', 'GET', 200, {
+      id: '999',
+      username: 'outsider',
+      global_name: null,
+      avatar: null,
+    });
+    mockDiscord(
+      `/api/v10/users/@me/guilds/${env.HOME_GUILD_ID}/member`,
+      'GET',
+      404,
+      { message: 'Unknown member' },
+    );
 
     const app = makeApp();
     const res = await app.fetch(
@@ -184,10 +248,9 @@ describe('GET /api/auth/callback', () => {
   });
 
   it('502s when token exchange fails', async () => {
-    fetchMock
-      .get('https://discord.com')
-      .intercept({ path: '/api/v10/oauth2/token', method: 'POST' })
-      .reply(400, { error: 'invalid_grant' });
+    mockDiscord('/api/v10/oauth2/token', 'POST', 400, {
+      error: 'invalid_grant',
+    });
 
     const app = makeApp();
     const res = await app.fetch(
