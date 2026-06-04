@@ -23,10 +23,8 @@ const ALLOWED_MIMES = new Set([
 ]);
 
 /**
- * Sniff the leading bytes of an uploaded file and return the detected MIME, or
- * null if the bytes don't match any allowed image format. Defense-in-depth: a
- * client could lie about `file.type`, but they can't easily lie about the bytes
- * themselves (and if they do, the format won't decode anyway).
+ * Sniff magic bytes to detect the real MIME type. Defense-in-depth against a
+ * client lying about `file.type`; the bytes themselves are harder to fake.
  */
 async function sniffImageMime(blob: Blob): Promise<string | null> {
   if (blob.size < 12) return null;
@@ -44,11 +42,11 @@ async function sniffImageMime(blob: Blob): Promise<string | null> {
   ) {
     return 'image/png';
   }
-  // JPEG: starts with FF D8 FF (SOI marker)
+  // JPEG: FF D8 FF (SOI marker)
   if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) {
     return 'image/jpeg';
   }
-  // WebP: "RIFF????WEBP" — bytes 0–3 = "RIFF", bytes 8–11 = "WEBP"
+  // WebP: "RIFF????WEBP" (bytes 0-3 "RIFF", bytes 8-11 "WEBP")
   if (
     head[0] === 0x52 && // R
     head[1] === 0x49 && // I
@@ -139,7 +137,7 @@ export async function createAssetHandler(c: Context<AppEnv>): Promise<Response> 
   if (!ALLOWED_MIMES.has(declaredMime)) {
     return validation(c, 'unsupported mime type');
   }
-  // Magic-byte sniff: defense-in-depth against a client lying about file.type.
+  // Magic-byte sniff: defense-in-depth against a lying file.type.
   const sniffed = await sniffImageMime(file);
   if (sniffed === null) {
     return validation(c, 'unsupported file format');
@@ -170,7 +168,7 @@ export async function createAssetHandler(c: Context<AppEnv>): Promise<Response> 
       sizeBytes: file.size,
     });
   } catch (err) {
-    // Roll back the R2 write so we don't leak orphan objects.
+    // Roll back R2 so we don't leak orphan objects.
     await c.env.R2.delete(key).catch(() => undefined);
     throw err;
   }
