@@ -38,10 +38,7 @@ export async function fetchMe(accessToken: string): Promise<DiscordUser> {
   return (await res.json()) as DiscordUser;
 }
 
-/**
- * Returns true if the user is a member of the given guild, false on 404.
- * Any other non-2xx status is logged and treated as false (non-member).
- */
+/** True if the user is in `guildId`, false on 404. Other non-2xx logs + false. */
 export async function fetchIsMember(
   accessToken: string,
   guildId: string,
