@@ -1,5 +1,5 @@
 /**
- * Thin client for the public Iconify CDN.
+ * Thin client for the public Iconify CDN. We trust it not to turn evil.
  * Docs: https://docs.iconify.design/api/queries.html
  */
 
@@ -38,12 +38,7 @@ export function iconUrl(prefix: string, name: string, color: string): string {
   return `https://api.iconify.design/${prefix}/${name}.svg?${params.toString()}`;
 }
 
-/**
- * Search the Iconify catalogue.
- * Falls back to an empty list on any failure (we don't surface errors as red UI in v1).
- * Default `limit` is 10000 so users can see every match in the selected sets;
- * pass `limit` to constrain.
- */
+/** Search the Iconify catalogue. Falls back to `[]` on any failure. */
 export async function searchIcons(
   query: string,
   opts: { limit?: number; prefixes?: readonly string[]; signal?: AbortSignal } = {},
@@ -72,15 +67,7 @@ export async function searchIcons(
   }
 }
 
-/**
- * Browse the full icon list for a single icon set (Iconify collection endpoint).
- * Used when the picker has no search query — returns every icon in the set so
- * the user can scroll through them.
- *
- * Pass `limit` to cap the returned count; default is 10000 (effectively unlimited
- * for any individual set). Network or parse failures resolve to an empty array,
- * matching the convention of `searchIcons`.
- */
+/** Browse every icon in a single Iconify set. Failures resolve to `[]`. */
 export async function browseIcons(
   prefix: string,
   opts: { limit?: number; signal?: AbortSignal } = {},
