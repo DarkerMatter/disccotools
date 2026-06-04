@@ -14,7 +14,7 @@ import {
 } from '../db/revokedSessions.js';
 
 export const SESSION_COOKIE = 'sid';
-export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
+export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // a Discord week
 
 /** Sign new session claims. iat, exp, and jti are set here. */
 export async function signSession(
@@ -49,10 +49,7 @@ export function clearSessionCookie(c: Context<AppEnv>): void {
   deleteCookie(c, SESSION_COOKIE, { path: '/' });
 }
 
-/**
- * Read the session cookie. If present and valid, attach the user to context.
- * If absent, malformed, expired, or revoked, attach null.
- */
+/** Attach a user to context if the session cookie verifies, else null. */
 export const sessionMiddleware = createMiddleware<AppEnv>(async (c, next) => {
   const token = getCookie(c, SESSION_COOKIE);
   if (!token) {
@@ -64,7 +61,7 @@ export const sessionMiddleware = createMiddleware<AppEnv>(async (c, next) => {
     const payload = await verify(token, c.env.SESSION_SIGNING_SECRET, 'HS256');
     const claims = SessionClaimsSchema.parse(payload);
 
-    // Check denylist — revoked tokens are treated as anonymous.
+    // Revoked tokens are treated as anonymous.
     const revoked = await isSessionRevoked(c.env.DB, claims.jti);
     if (revoked) {
       c.set('user', null);
@@ -74,12 +71,12 @@ export const sessionMiddleware = createMiddleware<AppEnv>(async (c, next) => {
 
     c.set('user', userFromClaims(claims));
 
-    // Opportunistic cleanup: ~1% of authenticated requests trigger a purge.
+    // Opportunistic cleanup: each request rolls a d100 and a 1 triggers a purge.
     if (Math.random() < 0.01) {
       try {
         c.executionCtx.waitUntil(purgeExpiredRevokedSessions(c.env.DB));
       } catch {
-        // executionCtx not available in some test harnesses — best effort only.
+        // executionCtx is missing in some test harnesses; best effort only.
       }
     }
   } catch {
