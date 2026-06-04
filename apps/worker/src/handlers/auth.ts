@@ -26,7 +26,7 @@ function discordAuthorizeUrl(env: AppEnv['Bindings'], state: string): string {
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: env.DISCORD_CLIENT_ID,
-    scope: 'identify guilds.members.read',
+    scope: 'identify guilds',
     state,
     redirect_uri: env.DISCORD_REDIRECT_URI,
   });

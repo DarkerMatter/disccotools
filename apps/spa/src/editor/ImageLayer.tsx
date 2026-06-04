@@ -45,6 +45,7 @@ export function ImageLayer({
           strokeWidth={2}
           strokeDasharray="4 3"
           pointerEvents="none"
+          className="layer-selection"
         />
       )}
     </g>

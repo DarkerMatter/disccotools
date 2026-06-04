@@ -38,16 +38,18 @@ export async function fetchMe(accessToken: string): Promise<DiscordUser> {
   return (await res.json()) as DiscordUser;
 }
 
-/** True if the user is in `guildId`, false on 404. Other non-2xx logs + false. */
+/** True if `guildId` is in the user's guild list. Non-2xx logs + false. */
 export async function fetchIsMember(
   accessToken: string,
   guildId: string,
 ): Promise<boolean> {
-  const res = await fetch(`${DISCORD_API}/users/@me/guilds/${guildId}/member`, {
+  const res = await fetch(`${DISCORD_API}/users/@me/guilds`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  if (res.status === 200) return true;
-  if (res.status === 404) return false;
-  console.warn(`discord member check returned ${res.status} for guild ${guildId}`);
-  return false;
+  if (!res.ok) {
+    console.warn(`discord /users/@me/guilds returned ${res.status}`);
+    return false;
+  }
+  const guilds = (await res.json()) as Array<{ id: string }>;
+  return Array.isArray(guilds) && guilds.some((g) => g.id === guildId);
 }

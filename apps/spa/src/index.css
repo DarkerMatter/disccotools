@@ -192,3 +192,21 @@ h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
     opacity: 0;
   }
 }
+
+/* Marching-ants animation for the selection rect drawn around the currently-
+   selected layer in the canvas. Dash pattern is "4 3" (7px total), so we
+   animate two cycles (-14px) over 1s for a seamless loop. */
+.layer-selection {
+  animation: layer-selection-march 1s linear infinite;
+}
+
+@keyframes layer-selection-march {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -14; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layer-selection {
+    animation: none;
+  }
+}

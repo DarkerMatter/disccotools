@@ -170,4 +170,30 @@ describe('useRecipeStore', () => {
     expect(s.history).toEqual([]);
     expect(s.selectedId).toBeNull();
   });
+
+  it('moveLayer shifts a layer in the layers array', () => {
+    useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'a' });
+    useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'b' });
+    useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'c' });
+    const ids = useRecipeStore.getState().recipe.layers.map((l) => l.id);
+    useRecipeStore.getState().moveLayer(ids[0]!, 2);
+    const after = useRecipeStore.getState().recipe.layers.map((l) => l.id);
+    expect(after).toEqual([ids[1], ids[2], ids[0]]);
+  });
+
+  it('moveLayer clamps to array bounds (no-op when at extremes)', () => {
+    useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'a' });
+    useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'b' });
+    const ids = useRecipeStore.getState().recipe.layers.map((l) => l.id);
+    // Try to move the first layer further left -> no-op
+    useRecipeStore.getState().moveLayer(ids[0]!, -5);
+    expect(useRecipeStore.getState().recipe.layers.map((l) => l.id)).toEqual(ids);
+  });
+
+  it('moveLayer is a no-op for an unknown id', () => {
+    useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'a' });
+    const before = useRecipeStore.getState().recipe.layers;
+    useRecipeStore.getState().moveLayer('does-not-exist', 1);
+    expect(useRecipeStore.getState().recipe.layers).toEqual(before);
+  });
 });

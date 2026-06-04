@@ -39,6 +39,8 @@ type EditorState = {
   updateLayer: <L extends Layer>(id: string, patch: Partial<L>) => void;
   /** Remove a layer by id. Clears selection if it was the selected one. */
   removeLayer: (id: string) => void;
+  /** Move the layer with `id` by `delta` positions in the layers array. Clamped. */
+  moveLayer: (id: string, delta: number) => void;
   undo: () => void;
   redo: () => void;
   canUndo: () => boolean;
@@ -192,6 +194,22 @@ export const useRecipeStore = create<EditorState>((set, get) => ({
       future: [],
       selectedId: s.selectedId === id ? null : s.selectedId,
     })),
+
+  moveLayer: (id, delta) =>
+    set((s) => {
+      const idx = s.recipe.layers.findIndex((l) => l.id === id);
+      if (idx === -1) return s;
+      const target = Math.max(0, Math.min(s.recipe.layers.length - 1, idx + delta));
+      if (target === idx) return s;
+      const next = [...s.recipe.layers];
+      const [moved] = next.splice(idx, 1);
+      next.splice(target, 0, moved!);
+      return {
+        recipe: { ...s.recipe, layers: next },
+        history: [...s.history, s.recipe].slice(-HISTORY_LIMIT),
+        future: [],
+      };
+    }),
 
   undo: () =>
     set((s) => {

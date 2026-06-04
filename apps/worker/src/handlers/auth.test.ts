@@ -106,7 +106,7 @@ describe('GET /api/auth/login', () => {
     const location = res.headers.get('location')!;
     expect(location.startsWith('https://discord.com/oauth2/authorize?')).toBe(true);
     expect(location).toContain(`client_id=${env.DISCORD_CLIENT_ID}`);
-    expect(location).toContain('scope=identify+guilds.members.read');
+    expect(location).toContain('scope=identify+guilds');
     expect(location).toMatch(/state=[a-f0-9]{64}/);
     const setCookie = res.headers.get('set-cookie') ?? '';
     expect(setCookie).toContain('oauth_state=');
@@ -182,10 +182,10 @@ describe('GET /api/auth/callback', () => {
       avatar: 'a_abc123',
     });
     mockDiscord(
-      `/api/v10/users/@me/guilds/${env.HOME_GUILD_ID}/member`,
+      `/api/v10/users/@me/guilds`,
       'GET',
       200,
-      { user: { id: '714517219026927767' } },
+      [{ id: env.HOME_GUILD_ID, name: 'NTTS' }],
     );
 
     const app = makeApp();
@@ -213,7 +213,7 @@ describe('GET /api/auth/callback', () => {
     expect(row!.is_home_member).toBe(1);
   });
 
-  it('marks user as non-member when guild member check returns 404', async () => {
+  it('marks user as non-member when home guild is not in their guild list', async () => {
     mockDiscord('/api/v10/oauth2/token', 'POST', 200, {
       access_token: 'test-access-token',
       token_type: 'Bearer',
@@ -225,10 +225,10 @@ describe('GET /api/auth/callback', () => {
       avatar: null,
     });
     mockDiscord(
-      `/api/v10/users/@me/guilds/${env.HOME_GUILD_ID}/member`,
+      `/api/v10/users/@me/guilds`,
       'GET',
-      404,
-      { message: 'Unknown member' },
+      200,
+      [{ id: 'some-other-guild', name: 'Elsewhere' }],
     );
 
     const app = makeApp();

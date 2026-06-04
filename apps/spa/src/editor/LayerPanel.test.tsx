@@ -115,4 +115,23 @@ describe('<LayerPanel />', () => {
     if (layers[0]?.kind === 'image') expect(layers[0].assetId).toBe('a1');
     expect(useRecipeStore.getState().selectedId).toBe(layers[0]!.id);
   });
+
+  it('moves a layer down with the down-arrow button', async () => {
+    renderPanel();
+    useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'one' });
+    useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'two' });
+    const idsBefore = useRecipeStore.getState().recipe.layers.map((l) => l.id);
+    const downOne = await screen.findByRole('button', { name: /move lucide:one down/i });
+    await userEvent.click(downOne);
+    const idsAfter = useRecipeStore.getState().recipe.layers.map((l) => l.id);
+    expect(idsAfter).toEqual([idsBefore[1], idsBefore[0]]);
+  });
+
+  it('disables the up button on the top row', async () => {
+    renderPanel();
+    useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'one' });
+    useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'two' });
+    const upOne = await screen.findByRole('button', { name: /move lucide:one up/i }) as HTMLButtonElement;
+    expect(upOne.disabled).toBe(true);
+  });
 });

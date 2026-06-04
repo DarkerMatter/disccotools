@@ -1,10 +1,19 @@
 import { useState } from 'react';
+import type React from 'react';
 import { useRecipeStore } from './useRecipeStore.js';
 import { IconPicker } from './IconPicker.js';
 import { AssetPicker } from './AssetPicker.js';
 import type { IconHit } from './iconify.js';
 import type { Asset } from '@disccotools/shared';
 import { MAX_LAYERS } from '@disccotools/shared';
+
+const arrowBtnStyle: React.CSSProperties = {
+  background: 'transparent',
+  border: 'none',
+  fontSize: 11,
+  color: 'var(--color-text-muted)',
+  padding: '2px 6px',
+};
 
 function layerLabel(layer: ReturnType<typeof useRecipeStore.getState>['recipe']['layers'][number]) {
   if (layer.kind === 'icon') return `${layer.iconset}:${layer.name}`;
@@ -20,6 +29,7 @@ export function LayerPanel() {
   const addTextLayer = useRecipeStore((s) => s.addTextLayer);
   const addImageLayer = useRecipeStore((s) => s.addImageLayer);
   const removeLayer = useRecipeStore((s) => s.removeLayer);
+  const moveLayer = useRecipeStore((s) => s.moveLayer);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [assetPickerOpen, setAssetPickerOpen] = useState(false);
@@ -105,8 +115,10 @@ export function LayerPanel() {
             No layers yet. Click “Add icon” to insert one.
           </p>
         )}
-        {layers.map((layer) => {
+        {layers.map((layer, idx) => {
           const active = layer.id === selectedId;
+          const isFirst = idx === 0;
+          const isLast = idx === layers.length - 1;
           return (
             <div
               key={layer.id}
@@ -114,7 +126,7 @@ export function LayerPanel() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6,
+                gap: 4,
                 padding: '6px 8px',
                 background: active ? 'var(--color-surface-elev)' : 'transparent',
                 borderRadius: 'var(--radius-sm)',
@@ -138,6 +150,32 @@ export function LayerPanel() {
                 }}
               >
                 {layerLabel(layer)}
+              </button>
+              <button
+                type="button"
+                onClick={() => moveLayer(layer.id, -1)}
+                disabled={isFirst}
+                aria-label={`Move ${layerLabel(layer)} up`}
+                style={{
+                  ...arrowBtnStyle,
+                  opacity: isFirst ? 0.3 : 1,
+                  cursor: isFirst ? 'default' : 'pointer',
+                }}
+              >
+                ▲
+              </button>
+              <button
+                type="button"
+                onClick={() => moveLayer(layer.id, 1)}
+                disabled={isLast}
+                aria-label={`Move ${layerLabel(layer)} down`}
+                style={{
+                  ...arrowBtnStyle,
+                  opacity: isLast ? 0.3 : 1,
+                  cursor: isLast ? 'default' : 'pointer',
+                }}
+              >
+                ▼
               </button>
               <button
                 type="button"

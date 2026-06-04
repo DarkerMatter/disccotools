@@ -30,6 +30,7 @@ export function IconLayer({
       strokeWidth={2}
       strokeDasharray="4 3"
       pointerEvents="none"
+      className="layer-selection"
     />
   ) : null;
 
