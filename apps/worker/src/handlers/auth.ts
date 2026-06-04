@@ -74,7 +74,7 @@ export async function loginHandler(c: Context<AppEnv>): Promise<Response> {
     // stays Lax so cross-site links into /editor/:id still work.
     sameSite: 'Strict',
     path: '/',
-    // 10 minutes is plenty for one OAuth round-trip.
+    // 10 minutes is generous for a single OAuth round-trip.
     maxAge: OAUTH_STATE_TTL_SECONDS,
   });
   return c.redirect(discordAuthorizeUrl(c.env, state), 302);
