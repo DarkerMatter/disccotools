@@ -35,7 +35,7 @@ app.get('/api/auth/callback', callbackHandler);
 app.get('/api/auth/me', meHandler);
 app.post('/api/auth/logout', logoutHandler);
 
-// Saves — all routes require authentication.
+// Saves: all routes require authentication.
 app.use('/api/saves/*', requireAuth);
 app.get('/api/saves', listSavesHandler);
 app.post('/api/saves', createSaveHandler);
@@ -47,7 +47,7 @@ app.post('/api/saves/:id/render', uploadRenderHandler);
 app.get('/api/saves/:id/download', downloadHandler);
 app.get('/api/saves/:id/thumbnail', thumbnailHandler);
 
-// Assets — all routes require authentication.
+// Assets: all routes require authentication.
 app.use('/api/assets/*', requireAuth);
 app.post('/api/assets', createAssetHandler);
 app.get('/api/assets', listAssetsHandler);
