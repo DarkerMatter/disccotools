@@ -1,7 +1,5 @@
--- 0002_saves.sql — persistent saves table + indexes.
--- Recipes are stored as JSON in `recipe_json`. Rendered output and thumbnails
--- live in R2 under `saves/{user_id}/{save_id}.png` and `_thumb.png`; their
--- R2 keys are remembered here so the worker can presign downloads.
+-- 0002_saves.sql: persistent saves table + indexes. Recipes are JSON; R2 keys
+-- for the render and thumbnail are remembered here so downloads can be served.
 
 CREATE TABLE saves (
   id                  TEXT PRIMARY KEY,        -- UUID v4/v7
