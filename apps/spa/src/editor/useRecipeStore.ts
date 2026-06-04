@@ -23,7 +23,7 @@ type EditorState = {
   resetTo: (r: Recipe) => void;
   /** Convenience: produce a new recipe from the current one. */
   updateRecipe: (mutator: (current: Recipe) => Recipe) => void;
-  /** Selection is UI state — not undoable. */
+  /** Selection is UI state, not undoable. */
   setSelection: (id: string | null) => void;
   /** Set the persisted save identity. Does not push history. */
   setCurrentSave: (value: { id: string; name: string } | null) => void;
