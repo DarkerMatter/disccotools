@@ -11,11 +11,7 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Fetch wrapper for authenticated routes. On 401 it redirects the page to
- * `/api/auth/login` (preserving where we came from via the browser's history)
- * and throws an ApiError so the caller's await chain unwinds cleanly.
- */
+/** Fetch wrapper for authed routes. On 401 redirects to login and throws. */
 export async function apiFetch(
   path: string,
   init: RequestInit = {},
@@ -44,9 +40,7 @@ async function readError(res: Response): Promise<ApiError> {
   return new ApiError(code, res.status, message);
 }
 
-/**
- * Probe whether the user is signed in. 401 is the "no" path here, not an error.
- */
+/** Probe sign-in state. 401 is the "no" path, not an error. */
 export async function fetchMe(): Promise<AuthMeResponse | null> {
   const res = await fetch('/api/auth/me');
   if (res.status === 401) return null;
