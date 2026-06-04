@@ -1,7 +1,5 @@
--- 0003_assets.sql — user asset library.
--- An asset is a single uploaded image (PNG/SVG/JPEG/WebP) stored in R2
--- under assets/{user_id}/{asset_id}.{ext}. Recipes' image layers reference
--- assets by id; deletion is blocked while references exist.
+-- 0003_assets.sql: user asset library. Bytes live in R2 under
+-- assets/{user_id}/{asset_id}.{ext}; recipe image layers reference assets by id.
 
 CREATE TABLE assets (
   id          TEXT PRIMARY KEY,
