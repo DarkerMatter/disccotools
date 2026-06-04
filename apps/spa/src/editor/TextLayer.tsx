@@ -16,8 +16,7 @@ export function TextLayer({
   const cx = layer.x * canvasSize;
   const cy = layer.y * canvasSize;
 
-  // Approximate text bounding box for the selection rect (we don't measure live —
-  // a rough estimate is enough for the dashed selection indicator).
+  // Approximate bbox for the dashed selection rect; we don't measure live.
   const approxWidth = Math.max(fontSize * 0.6 * layer.text.length, fontSize * 0.6);
   const approxHeight = fontSize * 1.2;
   const boxX = cx - approxWidth / 2;
