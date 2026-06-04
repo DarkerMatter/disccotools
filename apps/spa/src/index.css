@@ -210,3 +210,140 @@ h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
     animation: none;
   }
 }
+
+/* App shell — shared header + main page wrapper used across Editor/Icons/Images */
+.app-shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.app-header {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0 clamp(16px, 4vw, 32px);
+  min-height: 56px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  gap: 16px;
+}
+
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-size: 18px;
+  color: var(--color-text);
+}
+
+.app-header__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.auth-slot {
+  min-width: 200px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Editor 3-column layout */
+.editor-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 260px 1fr 280px;
+  min-height: 0;
+}
+
+.editor-aside-left {
+  border-right: 1px solid var(--color-border);
+  padding: 16px;
+  background: var(--color-surface);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.editor-canvas-section {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: var(--color-bg);
+}
+
+.editor-aside-right {
+  border-left: 1px solid var(--color-border);
+  padding: 16px;
+  background: var(--color-surface);
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Page content (Icons / Images list views) */
+.page-content {
+  padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 40px);
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Mobile / narrow viewports — collapse the header and stack the editor */
+@media (max-width: 899px) {
+  .app-header {
+    padding: 8px clamp(12px, 4vw, 32px);
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .app-header__brand {
+    font-size: 16px;
+  }
+
+  .app-header__actions {
+    gap: 8px;
+  }
+
+  .auth-slot {
+    min-width: 0;
+  }
+
+  /* Allow the tab strip to wrap below the brand+actions row on narrow viewports */
+  .app-header .inline-tabs {
+    flex-basis: 100%;
+    order: 5;
+    margin-bottom: -1px;
+    overflow-x: auto;
+  }
+
+  .editor-layout {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .editor-aside-left,
+  .editor-aside-right {
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    overflow-y: visible;
+  }
+
+  .editor-canvas-section {
+    min-height: 480px;
+    padding: 16px;
+  }
+}

@@ -56,54 +56,17 @@ export function Editor() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'var(--color-bg)',
-        color: 'var(--color-text)',
-      }}
-    >
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'stretch',
-          justifyContent: 'flex-start',
-          padding: '0 clamp(16px, 4vw, 32px)',
-          minHeight: 56,
-          borderBottom: '1px solid var(--color-border)',
-          background: 'var(--color-surface)',
-          gap: 16,
-        }}
-      >
-        <Link
-          to="/"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            fontWeight: 700,
-            letterSpacing: '-0.01em',
-            fontSize: 18,
-            color: 'var(--color-text)',
-          }}
-        >
+    <main className="app-shell">
+      <header className="app-header">
+        <Link to="/" className="app-header__brand">
           disccotools
         </Link>
         <TopTabs />
-        <nav
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 10,
-            flexWrap: 'wrap',
-            marginLeft: 'auto',
-          }}
-        >
+        <nav className="app-header__actions">
           <SaveButton />
           <DownloadButton />
           <ThemeToggle />
-          <div style={{ minWidth: 200, display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="auth-slot">
             {userState.status === 'anonymous' && <LoginButton />}
             {userState.status === 'authenticated' && (
               <UserPill user={userState.user} onLogout={handleLogout} />
@@ -112,26 +75,8 @@ export function Editor() {
         </nav>
       </header>
 
-      <div
-        style={{
-          flex: 1,
-          display: 'grid',
-          gridTemplateColumns: '260px 1fr 280px',
-          minHeight: 0,
-        }}
-      >
-        <aside
-          aria-label="Tools"
-          style={{
-            borderRight: '1px solid var(--color-border)',
-            padding: 16,
-            background: 'var(--color-surface)',
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            minHeight: 0,
-          }}
-        >
+      <div className="editor-layout">
+        <aside aria-label="Tools" className="editor-aside-left">
           <button
             type="button"
             onClick={() => setTutorialOpen(true)}
@@ -173,17 +118,7 @@ export function Editor() {
           </p>
         </aside>
 
-        <section
-          aria-label="Canvas"
-          style={{
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 32,
-            background: 'var(--color-bg)',
-          }}
-        >
+        <section aria-label="Canvas" className="editor-canvas-section">
           {loading && (
             <p
               style={{
@@ -214,18 +149,7 @@ export function Editor() {
           <Canvas />
         </section>
 
-        <aside
-          aria-label="Layers"
-          style={{
-            borderLeft: '1px solid var(--color-border)',
-            padding: 16,
-            background: 'var(--color-surface)',
-            overflowY: 'auto',
-            minHeight: 0,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
+        <aside aria-label="Layers" className="editor-aside-right">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <PropertiesPanel />
             <LayerPanel />

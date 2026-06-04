@@ -93,52 +93,15 @@ export function IconsPage() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'var(--color-bg)',
-        color: 'var(--color-text)',
-      }}
-    >
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'stretch',
-          justifyContent: 'flex-start',
-          padding: '0 clamp(16px, 4vw, 32px)',
-          minHeight: 56,
-          borderBottom: '1px solid var(--color-border)',
-          background: 'var(--color-surface)',
-          gap: 16,
-        }}
-      >
-        <Link
-          to="/"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            fontWeight: 700,
-            letterSpacing: '-0.01em',
-            fontSize: 18,
-            color: 'var(--color-text)',
-          }}
-        >
+    <main className="app-shell" style={{ minHeight: '100vh' }}>
+      <header className="app-header">
+        <Link to="/" className="app-header__brand">
           disccotools
         </Link>
         <TopTabs />
-        <nav
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 10,
-            flexWrap: 'wrap',
-            marginLeft: 'auto',
-          }}
-        >
+        <nav className="app-header__actions">
           <ThemeToggle />
-          <div style={{ minWidth: 200, display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="auth-slot">
             {userState.status === 'anonymous' && <LoginButton />}
             {userState.status === 'authenticated' && (
               <UserPill user={userState.user} onLogout={handleLogout} />
@@ -147,15 +110,7 @@ export function IconsPage() {
         </nav>
       </header>
 
-      <section
-        style={{
-          padding: 'clamp(24px, 4vw, 48px) clamp(16px, 4vw, 40px)',
-          width: '100%',
-          maxWidth: 1280,
-          margin: '0 auto',
-          boxSizing: 'border-box',
-        }}
-      >
+      <section className="page-content">
         <div
           style={{
             display: 'flex',
