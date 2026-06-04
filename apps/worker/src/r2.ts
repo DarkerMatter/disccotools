@@ -2,14 +2,14 @@
  * Pure helpers for R2 object keys.
  *
  * Conventions:
- *   saves/{user_id}/{save_id}.png        — full render
- *   saves/{user_id}/{save_id}_thumb.png  — thumbnail
- *   uploads/{user_id}/{asset_id}.{ext}   — raw uploads (Phase 5)
- *   assets/{user_id}/{asset_id}.{ext}    — library assets (Phase 5)
+ *   saves/{user_id}/{save_id}.png        full render
+ *   saves/{user_id}/{save_id}_thumb.png  thumbnail (a thumbnail, not a body part)
+ *   uploads/{user_id}/{asset_id}.{ext}   raw uploads (Phase 5)
+ *   assets/{user_id}/{asset_id}.{ext}    library assets (Phase 5)
  *
- * Ownership is enforced by checking that a key starts with the calling user's
- * `{user_id}/` prefix under a known top-level dir. The worker never trusts a
- * key supplied by the client.
+ * Ownership is enforced by checking that a key starts with the caller's
+ * `{user_id}/` prefix under a known top-level dir. Never trust a key from a
+ * client.
  */
 
 const TOP_LEVEL = ['saves', 'uploads', 'assets'] as const;
