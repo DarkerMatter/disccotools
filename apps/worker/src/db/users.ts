@@ -9,10 +9,7 @@ export type UpsertUserInput = {
   homeCheckedAt: number; // unix ms
 };
 
-/**
- * Upsert a user row. Returns the row as a `User` (post-write state).
- * Uses SQLite's ON CONFLICT to update mutable fields and bump updated_at.
- */
+/** Upsert a user row via ON CONFLICT and return the post-write state. */
 export async function upsertUser(
   db: D1Database,
   input: UpsertUserInput,
