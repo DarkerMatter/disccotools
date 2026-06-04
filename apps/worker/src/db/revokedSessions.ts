@@ -1,8 +1,4 @@
-/**
- * Denylist for revoked JWT session ids.
- * A row means: the JWT with this jti is invalid, even if it hasn't expired.
- * Expired rows are opportunistically cleaned during reads.
- */
+/** Denylist for revoked JWT session ids. A row invalidates that jti pre-exp. */
 
 export async function revokeSession(
   db: D1Database,
@@ -29,10 +25,7 @@ export async function isSessionRevoked(
   return row !== null;
 }
 
-/**
- * Opportunistic cleanup: delete rows whose expires_at is already past.
- * Called from sessionMiddleware periodically (probability gated).
- */
+/** Opportunistic cleanup; called from sessionMiddleware on a probability roll. */
 export async function purgeExpiredRevokedSessions(
   db: D1Database,
 ): Promise<void> {
