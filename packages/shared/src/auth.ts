@@ -1,9 +1,6 @@
 import { z } from 'zod';
 
-/**
- * The shape of a user as exposed by the worker to clients.
- * Mirrors the D1 `users` row with camelCase for the JS side.
- */
+/** User shape sent to clients; camelCase mirror of the D1 `users` row. */
 export const UserSchema = z.object({
   id: z.string(),                                // Discord snowflake
   username: z.string(),
@@ -14,11 +11,7 @@ export const UserSchema = z.object({
 });
 export type User = z.infer<typeof UserSchema>;
 
-/**
- * Claims encoded into the session JWT.
- * Standard JWT fields (sub, iat, exp) plus a denormalized user snapshot
- * so /api/auth/me responses don't need a DB read per request.
- */
+/** Session JWT claims. Includes a denormalized user snapshot to skip DB reads. */
 export const SessionClaimsSchema = z.object({
   sub: z.string(),                               // Discord user id
   username: z.string(),
@@ -38,11 +31,7 @@ export const AuthMeResponseSchema = z.object({
 });
 export type AuthMeResponse = z.infer<typeof AuthMeResponseSchema>;
 
-/**
- * Helper: convert SessionClaims to a User the API surface returns.
- * Used by both the SPA (to materialize cached state) and the worker
- * (to build /api/auth/me responses from session claims without a DB lookup).
- */
+/** Convert SessionClaims to the User shape the API surface returns. */
 export function userFromClaims(claims: SessionClaims): User {
   return {
     id: claims.sub,
