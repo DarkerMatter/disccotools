@@ -68,13 +68,11 @@ export async function loginHandler(c: Context<AppEnv>): Promise<Response> {
   setCookie(c, OAUTH_STATE_COOKIE, state, {
     httpOnly: true,
     secure: true,
-    // Strict is safe: the OAuth callback is a top-level nav from discord.com
-    // (Strict cookies travel) while Strict blocks cross-site fetch, which is
-    // exactly what we want for a one-shot CSRF state value. The session cookie
-    // stays Lax so cross-site links into /editor/:id still work.
-    sameSite: 'Strict',
+    // Lax (not Strict): the OAuth callback is a top-level nav from discord.com,
+    // and Strict drops the cookie on that cross-site return. CSRF is still
+    // covered because the callback compares this cookie to the query state.
+    sameSite: 'Lax',
     path: '/',
-    // 10 minutes is generous for a single OAuth round-trip.
     maxAge: OAUTH_STATE_TTL_SECONDS,
   });
   return c.redirect(discordAuthorizeUrl(c.env, state), 302);
