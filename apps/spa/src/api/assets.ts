@@ -6,11 +6,7 @@ import type {
 } from '@disccotools/shared';
 import { ApiError, apiFetch } from './client.js';
 
-/**
- * Thrown by `deleteAsset` when the API responds 409 — the asset is referenced
- * by at least one save. Carries the list of referencing saves so the UI can
- * point the user at them.
- */
+/** Thrown by `deleteAsset` on 409. Carries the referencing saves for the UI. */
 export class AssetInUseError extends Error {
   constructor(public readonly references: { id: string; name: string }[]) {
     super('asset is in use');
@@ -45,10 +41,8 @@ export async function renameAsset(id: string, name: string): Promise<Asset> {
 }
 
 /**
- * DELETE /api/assets/:id. Unlike most calls, we go direct to fetch here so we
- * can inspect the 409 body and surface its `references` list via
- * `AssetInUseError`. `apiFetch` swallows the body on non-2xx, which would
- * defeat the in-use-by-N-saves UI.
+ * DELETE /api/assets/:id. Bypasses `apiFetch` because we need the 409 body to
+ * surface `references` via `AssetInUseError`.
  */
 export async function deleteAsset(id: string): Promise<void> {
   const res = await fetch(`/api/assets/${id}`, { method: 'DELETE' });
