@@ -1,4 +1,4 @@
--- 0001_users.sql — initial users table
+-- 0001_users.sql: initial users table.
 
 CREATE TABLE users (
   id                  TEXT PRIMARY KEY,        -- Discord snowflake
