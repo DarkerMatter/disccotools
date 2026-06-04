@@ -1,6 +1,4 @@
--- 0004_revoked_sessions.sql — denylist for revoked session tokens.
--- A row here means the JWT with the matching jti is invalid even before its exp.
--- Cleanup of expired rows is opportunistic during checks.
+-- 0004_revoked_sessions.sql: denylist for revoked session tokens (jti -> exp).
 
 CREATE TABLE revoked_sessions (
   jti          TEXT PRIMARY KEY,
