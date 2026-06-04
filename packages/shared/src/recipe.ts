@@ -1,10 +1,9 @@
 import { z } from 'zod';
 
-/** A hex color string, e.g. "#5865F2". Validation is intentionally permissive — */
-/** we accept any CSS color string for now (UI can enforce stricter input). */
+/** A hex color string like "#5865F2". Validation is permissive (any CSS color). */
 export const ColorSchema = z.string().min(1);
 
-/** Export resolution. Discord role icons are usually small; we allow up to 1024. */
+/** Export resolution. Discord role icons are usually small; up to 1024 is fine. */
 export const SizeSchema = z.union([
   z.literal(32),
   z.literal(64),
@@ -15,7 +14,7 @@ export const SizeSchema = z.union([
 ]);
 export type Size = z.infer<typeof SizeSchema>;
 
-/** A 0–1 opacity. */
+/** A 0..1 opacity. */
 export const OpacitySchema = z.number().min(0).max(1);
 
 /** Background variants. */
@@ -30,7 +29,7 @@ export const BackgroundSchema = z.discriminatedUnion('kind', [
     kind: z.literal('gradient'),
     from: ColorSchema,
     to: ColorSchema,
-    angle: z.number(), // degrees, 0–360
+    angle: z.number(), // degrees, 0..360
     opacity: OpacitySchema,
   }),
 ]);
@@ -39,7 +38,7 @@ export type Background = z.infer<typeof BackgroundSchema>;
 /** Clip shape applied to the whole canvas. */
 export const ShapeSchema = z.enum([
   'circle',
-  'square',                       // legacy — kept for back-compat, hidden in UI
+  'square',                       // legacy: kept for back-compat, banished from the UI
   'rounded-square',
   'scalloped',                    // wavy-edged flower/badge
   'gear',                         // spiky-edged cog/seal
@@ -59,20 +58,16 @@ export type Shape = z.infer<typeof ShapeSchema>;
 /** Shared layer transform / identity fields. */
 export const LayerBaseSchema = z.object({
   id: z.string().min(1),     // UUID v4 generated client-side
-  x: z.number(),             // 0–1 normalized to canvas size
-  y: z.number(),             // 0–1 normalized
+  x: z.number(),             // 0..1 normalized to canvas size
+  y: z.number(),             // 0..1 normalized
   rotation: z.number(),      // degrees
   scale: z.number().positive(), // multiplier; 1 = "natural"
   opacity: OpacitySchema,
 });
 
 /**
- * Icon fill color. Accepts either a legacy bare string (treated as a solid),
- * or a structured object describing a solid OR a two-stop linear gradient.
- *
- * The Zod transform always normalizes the parsed result to the structured
- * `{ kind: 'solid' | 'gradient', ... }` form so consumers don't have to
- * handle the legacy string at runtime.
+ * Icon fill color. Legacy bare strings parse as solid; output is always the
+ * structured `{ kind: 'solid' | 'gradient', ... }` form.
  */
 export const IconColorSchema = z
   .union([
@@ -110,12 +105,11 @@ export const TextLayerSchema = LayerBaseSchema.extend({
   text: z.string().max(200),
   font: z.string().min(1).max(120), // CSS font-family
   color: ColorSchema,
-  size: z.number().positive(),      // font-size in "design units" (0–1 of canvas)
+  size: z.number().positive(),      // font-size in "design units" (0..1 of canvas)
 });
 export type TextLayer = z.infer<typeof TextLayerSchema>;
 
-/** Layer kind: image (custom upload, referenced by asset id). */
-/** Used in Phase 5; reserved here so the schema is complete. */
+/** Layer kind: image (custom upload referenced by asset id). */
 export const ImageLayerSchema = LayerBaseSchema.extend({
   kind: z.literal('image'),
   assetId: z.string().min(1),
@@ -129,7 +123,7 @@ export const LayerSchema = z.discriminatedUnion('kind', [
 ]);
 export type Layer = z.infer<typeof LayerSchema>;
 
-/** The full recipe — what the editor mutates and the worker stores. */
+/** The full recipe: what the editor mutates and the worker stores. */
 export const RecipeSchema = z.object({
   version: z.literal(1),
   size: SizeSchema,
