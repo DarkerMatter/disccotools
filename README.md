@@ -30,7 +30,7 @@ A [Hono](https://hono.dev) API running on Cloudflare Workers, with D1 (SQLite) f
 There's a dev auth bypass for local work that requires flipping **two** separate env flags, specifically so that one sleepy typo in `wrangler.toml` can't accidentally turn off authentication in production. You're welcome, future me.
 
 ### `apps/spa`
-React 18 + Vite + Zustand. A canvas editor that renders your recipe as live SVG (clip paths, gradient masks, the works), an undo/redo stack with a sensible history cap, an icon picker that lazily mounts a couple hundred icons at a time so your browser doesn't file a complaint, and a PNG exporter that pre-fetches every asset as a data URI to dodge canvas tainting. (If that sentence meant nothing to you: it's the difference between "download works" and "download mysteriously produces a blank image," and we picked the first one.)
+React 18 + Vite + Zustand. A canvas editor that renders your recipe as live SVG (clip paths, gradient masks, the works), an undo/redo stack with a sensible history cap, an icon picker that lazily mounts a couple hundred icons at a time so your browser doesn't file a complaint, and a PNG exporter that pre-fetches every asset as a data URI to dodge canvas tainting. (If that sentence meant nothing to you: it's the difference between "download works" and "download mysteriously produces a blank image," and I picked the first one.)
 
 State lives in a single Zustand store, theming is a light/dark context that respects your OS preference, and the routing is plain React Router with a couple of back-compat redirects for old bookmarks.
 
