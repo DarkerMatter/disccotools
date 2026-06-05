@@ -11,6 +11,8 @@ import {
   SaveDetailSchema,
   SaveFilterSchema,
   SaveSummarySchema,
+  TagsSchema,
+  UpdateAssetBodySchema,
   UpdateSaveBodySchema,
 } from './api.js';
 
@@ -23,8 +25,22 @@ describe('SaveSummarySchema', () => {
       createdAt: 1,
       updatedAt: 1,
       thumbnailUrl: null,
+      tags: [],
     };
     expect(SaveSummarySchema.parse(ok)).toEqual(ok);
+  });
+
+  it('accepts populated tags', () => {
+    const ok = {
+      id: 'sv_1',
+      name: 'design',
+      isTemplate: false,
+      createdAt: 1,
+      updatedAt: 1,
+      thumbnailUrl: null,
+      tags: ['icon', 'brand'],
+    };
+    expect(SaveSummarySchema.parse(ok).tags).toEqual(['icon', 'brand']);
   });
 });
 
@@ -40,6 +56,7 @@ describe('SaveDetailSchema', () => {
       updatedAt: 1,
       thumbnailUrl: null,
       downloadUrl: null,
+      tags: [],
     };
     expect(SaveDetailSchema.parse(ok)).toEqual(ok);
   });
@@ -82,6 +99,37 @@ describe('UpdateSaveBodySchema', () => {
   it('accepts a name-only patch', () => {
     expect(UpdateSaveBodySchema.parse({ name: 'new' })).toEqual({ name: 'new' });
   });
+
+  it('accepts a tags-only patch', () => {
+    expect(UpdateSaveBodySchema.parse({ tags: ['a', 'b'] })).toEqual({
+      tags: ['a', 'b'],
+    });
+  });
+});
+
+describe('TagsSchema', () => {
+  it('accepts an empty array', () => {
+    expect(TagsSchema.parse([])).toEqual([]);
+  });
+
+  it('accepts up to 8 short tags', () => {
+    const tags = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    expect(TagsSchema.parse(tags)).toEqual(tags);
+  });
+
+  it('rejects more than 8 tags', () => {
+    expect(() =>
+      TagsSchema.parse(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']),
+    ).toThrow();
+  });
+
+  it('rejects a tag longer than 24 chars', () => {
+    expect(() => TagsSchema.parse(['x'.repeat(25)])).toThrow();
+  });
+
+  it('rejects an empty tag string', () => {
+    expect(() => TagsSchema.parse([''])).toThrow();
+  });
 });
 
 describe('AssetSchema', () => {
@@ -94,8 +142,23 @@ describe('AssetSchema', () => {
       createdAt: 1,
       updatedAt: 1,
       url: '/api/assets/a_1/file',
+      tags: [],
     };
     expect(AssetSchema.parse(ok)).toEqual(ok);
+  });
+
+  it('accepts populated tags', () => {
+    const ok = {
+      id: 'a_1',
+      name: 'logo',
+      mimeType: 'image/png',
+      sizeBytes: 1024,
+      createdAt: 1,
+      updatedAt: 1,
+      url: '/api/assets/a_1/file',
+      tags: ['brand', 'logo'],
+    };
+    expect(AssetSchema.parse(ok).tags).toEqual(['brand', 'logo']);
   });
 });
 
@@ -115,12 +178,13 @@ describe('AssetResponseSchema', () => {
       createdAt: 1,
       updatedAt: 1,
       url: '/api/assets/a_1/file',
+      tags: [],
     };
     expect(AssetResponseSchema.parse({ asset })).toEqual({ asset });
   });
 });
 
-describe('RenameAssetBodySchema', () => {
+describe('RenameAssetBodySchema (alias for UpdateAssetBodySchema)', () => {
   it('accepts a non-empty name', () => {
     expect(RenameAssetBodySchema.parse({ name: 'new' })).toEqual({ name: 'new' });
   });
@@ -131,6 +195,33 @@ describe('RenameAssetBodySchema', () => {
 
   it('rejects names over 120 chars', () => {
     expect(() => RenameAssetBodySchema.parse({ name: 'x'.repeat(121) })).toThrow();
+  });
+
+  it('accepts an empty patch (no name, no tags)', () => {
+    expect(RenameAssetBodySchema.parse({})).toEqual({});
+  });
+});
+
+describe('UpdateAssetBodySchema', () => {
+  it('accepts a name-only patch', () => {
+    expect(UpdateAssetBodySchema.parse({ name: 'fresh' })).toEqual({ name: 'fresh' });
+  });
+
+  it('accepts a tags-only patch', () => {
+    expect(UpdateAssetBodySchema.parse({ tags: ['icon'] })).toEqual({ tags: ['icon'] });
+  });
+
+  it('accepts both name and tags', () => {
+    expect(UpdateAssetBodySchema.parse({ name: 'x', tags: ['a'] })).toEqual({
+      name: 'x',
+      tags: ['a'],
+    });
+  });
+
+  it('rejects tags exceeding the cap', () => {
+    expect(() =>
+      UpdateAssetBodySchema.parse({ tags: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'] }),
+    ).toThrow();
   });
 });
 

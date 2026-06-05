@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Asset } from '@disccotools/shared';
-import { logout } from '../api/client.js';
+import { ApiError, logout } from '../api/client.js';
 import {
   AssetInUseError,
   deleteAsset,
   listAssets,
   renameAsset,
-  uploadAsset,
+  updateAssetTags,
+  uploadAssetWithProgress,
+  validateAssetFile,
 } from '../api/assets.js';
 import { LoginButton } from '../auth/LoginButton.js';
 import { UserPill } from '../auth/UserPill.js';
@@ -67,12 +69,12 @@ function Dropzone({
         {disabled ? 'Uploading…' : 'Drop an image here, or click to pick.'}
       </p>
       <p style={{ margin: '6px 0 0 0', fontSize: 11 }}>
-        PNG, SVG, JPEG, WebP — up to 10 MB.
+        PNG, JPEG, WebP — up to 10 MB.
       </p>
       <input
         ref={ref}
         type="file"
-        accept="image/png,image/svg+xml,image/jpeg,image/webp"
+        accept="image/png,image/jpeg,image/webp"
         onChange={(e) => {
           const f = e.target.files?.[0];
           if (f) onFile(f);
@@ -84,14 +86,30 @@ function Dropzone({
   );
 }
 
+type UploadState =
+  | { status: 'idle' }
+  | { status: 'uploading'; fileName: string; fraction: number }
+  | { status: 'error'; message: string };
+
 export function ImagesPage() {
   const userState = useUser();
   const [assets, setAssets] = useState<Asset[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [upload, setUpload] = useState<UploadState>({ status: 'idle' });
+  const [query, setQuery] = useState('');
 
   const authenticated = userState.status === 'authenticated';
+
+  const filteredAssets = useMemo(() => {
+    if (assets === null) return null;
+    const q = query.trim().toLowerCase();
+    if (!q) return assets;
+    return assets.filter(
+      (a) =>
+        a.name.toLowerCase().includes(q) ||
+        (a.tags ?? []).some((t) => t.toLowerCase().includes(q)),
+    );
+  }, [assets, query]);
 
   const fetchAssets = useCallback(async () => {
     setError(null);
@@ -111,16 +129,29 @@ export function ImagesPage() {
   }, [authenticated, fetchAssets]);
 
   async function handleUpload(file: File) {
-    setUploadError(null);
-    setUploading(true);
+    const guard = validateAssetFile(file);
+    if (guard) {
+      setUpload({ status: 'error', message: guard });
+      return;
+    }
+    setUpload({ status: 'uploading', fileName: file.name, fraction: 0 });
     try {
-      const asset = await uploadAsset(file, defaultName(file));
+      const asset = await uploadAssetWithProgress(
+        file,
+        defaultName(file),
+        (p) =>
+          setUpload({
+            status: 'uploading',
+            fileName: file.name,
+            fraction: Number.isFinite(p.fraction) ? p.fraction : 0,
+          }),
+      );
       setAssets((prev) => (prev ? [asset, ...prev] : [asset]));
+      setUpload({ status: 'idle' });
     } catch (err) {
       console.error('uploadAsset failed', err);
-      setUploadError('Upload failed.');
-    } finally {
-      setUploading(false);
+      const message = err instanceof ApiError ? err.message : 'Upload failed.';
+      setUpload({ status: 'error', message });
     }
   }
 
@@ -138,6 +169,24 @@ export function ImagesPage() {
       console.error('renameAsset failed', err);
       setAssets((prev) =>
         prev ? prev.map((a) => (a.id === asset.id ? { ...a, name: previous } : a)) : prev,
+      );
+    }
+  }
+
+  async function handleTagsChange(asset: Asset, tags: string[]) {
+    const previous = asset.tags;
+    setAssets((prev) =>
+      prev ? prev.map((a) => (a.id === asset.id ? { ...a, tags } : a)) : prev,
+    );
+    try {
+      const updated = await updateAssetTags(asset.id, tags);
+      setAssets((prev) =>
+        prev ? prev.map((a) => (a.id === updated.id ? updated : a)) : prev,
+      );
+    } catch (err) {
+      console.error('updateAssetTags failed', err);
+      setAssets((prev) =>
+        prev ? prev.map((a) => (a.id === asset.id ? { ...a, tags: previous } : a)) : prev,
       );
     }
   }
@@ -207,12 +256,96 @@ export function ImagesPage() {
 
         {authenticated && (
           <>
-            <Dropzone onFile={(f) => void handleUpload(f)} disabled={uploading} />
-            {uploadError && (
-              <p role="alert" style={{ color: 'var(--color-text-muted)', marginBottom: 12 }}>
-                {uploadError}
-              </p>
+            <Dropzone
+              onFile={(f) => void handleUpload(f)}
+              disabled={upload.status === 'uploading'}
+            />
+            {upload.status === 'uploading' && (
+              <div role="status" aria-live="polite" style={{ marginBottom: 12 }}>
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: 'var(--color-text-muted)',
+                    margin: '0 0 4px 0',
+                  }}
+                >
+                  Uploading {upload.fileName}… {Math.round(upload.fraction * 100)}%
+                </p>
+                <div
+                  aria-hidden="true"
+                  style={{
+                    height: 6,
+                    background: 'var(--color-border)',
+                    borderRadius: 999,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${Math.max(0, Math.min(1, upload.fraction)) * 100}%`,
+                      height: '100%',
+                      background: 'var(--color-accent)',
+                      transition: 'width 80ms linear',
+                    }}
+                  />
+                </div>
+              </div>
             )}
+            {upload.status === 'error' && (
+              <div
+                role="alert"
+                style={{
+                  marginBottom: 12,
+                  padding: '8px 12px',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  color: '#ef4444',
+                  fontSize: 13,
+                  borderRadius: 'var(--radius-sm)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                }}
+              >
+                <span>{upload.message}</span>
+                <button
+                  type="button"
+                  onClick={() => setUpload({ status: 'idle' })}
+                  aria-label="Dismiss upload error"
+                  style={{
+                    background: 'transparent',
+                    color: 'inherit',
+                    border: '1px solid currentColor',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '2px 8px',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            <div style={{ marginBottom: 16 }}>
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by name or tag"
+                aria-label="Search assets"
+                style={{
+                  width: '100%',
+                  maxWidth: 360,
+                  padding: '6px 10px',
+                  fontSize: 13,
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--color-surface)',
+                  color: 'var(--color-text)',
+                }}
+              />
+            </div>
 
             {assets === null && !error && (
               <p style={{ color: 'var(--color-text-muted)' }}>Loading your assets…</p>
@@ -239,7 +372,24 @@ export function ImagesPage() {
               </div>
             )}
 
-            {assets !== null && assets.length > 0 && (
+            {assets !== null &&
+              assets.length > 0 &&
+              filteredAssets !== null &&
+              filteredAssets.length === 0 && (
+                <div
+                  style={{
+                    padding: 24,
+                    border: '1px dashed var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                    textAlign: 'center',
+                    color: 'var(--color-text-muted)',
+                  }}
+                >
+                  No assets match your search.
+                </div>
+              )}
+
+            {filteredAssets !== null && filteredAssets.length > 0 && (
               <div
                 style={{
                   display: 'grid',
@@ -247,12 +397,13 @@ export function ImagesPage() {
                   gap: 16,
                 }}
               >
-                {assets.map((a) => (
+                {filteredAssets.map((a) => (
                   <AssetCard
                     key={a.id}
                     asset={a}
                     onRename={(name) => handleRename(a, name)}
                     onDelete={() => handleDelete(a)}
+                    onTagsChange={(tags) => handleTagsChange(a, tags)}
                   />
                 ))}
               </div>

@@ -71,6 +71,7 @@ function toDto(asset: Asset): AssetDto {
     createdAt: asset.createdAt,
     updatedAt: asset.updatedAt,
     url: `/api/assets/${asset.id}/file`,
+    tags: asset.tags,
   };
 }
 
@@ -203,7 +204,10 @@ export async function renameAssetHandler(c: Context<AppEnv>): Promise<Response> 
   if (json === undefined) return validation(c, 'expected JSON body');
   const parsed = RenameAssetBodySchema.safeParse(json);
   if (!parsed.success) return validation(c, parsed.error.message);
-  const updated = await updateAsset(c.env.DB, id, { name: parsed.data.name });
+  const patch: Parameters<typeof updateAsset>[2] = {};
+  if (parsed.data.name !== undefined) patch.name = parsed.data.name;
+  if (parsed.data.tags !== undefined) patch.tags = parsed.data.tags;
+  const updated = await updateAsset(c.env.DB, id, patch);
   if (!updated) return notFound(c);
   return c.json({ asset: toDto(updated) }, 200);
 }

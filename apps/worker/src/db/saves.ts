@@ -1,4 +1,5 @@
 import { RecipeSchema, type Recipe } from '@disccotools/shared';
+import { normalizeTags } from './tags.js';
 
 /** Raw D1 row shape (snake_case). */
 type SaveRow = {
@@ -13,6 +14,7 @@ type SaveRow = {
   is_template: number;
   created_at: number;
   updated_at: number;
+  tags: string | null;
 };
 
 export type RenderedFormat = 'png' | 'svg';
@@ -30,9 +32,25 @@ export type Save = {
   isTemplate: boolean;
   createdAt: number;
   updatedAt: number;
+  tags: string[];
 };
 
 export type SaveFilter = 'all' | 'designs' | 'templates';
+
+function parseTagsColumn(raw: string | null | undefined): string[] {
+  if (raw === null || raw === undefined) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    const out: string[] = [];
+    for (const t of parsed) {
+      if (typeof t === 'string') out.push(t);
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
 
 function rowToSave(row: SaveRow): Save {
   let recipe: Recipe;
@@ -56,6 +74,7 @@ function rowToSave(row: SaveRow): Save {
     isTemplate: row.is_template === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    tags: parseTagsColumn(row.tags),
   };
 }
 
@@ -73,14 +92,16 @@ export async function createSave(
     name: string;
     recipe: Recipe;
     isTemplate?: boolean;
+    tags?: string[];
   },
 ): Promise<Save> {
   const now = Date.now();
   const id = newId();
+  const tags = normalizeTags(input.tags);
   await db
     .prepare(
-      `INSERT INTO saves (id, user_id, name, recipe_json, is_template, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO saves (id, user_id, name, recipe_json, is_template, created_at, updated_at, tags)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       id,
@@ -90,6 +111,7 @@ export async function createSave(
       input.isTemplate ? 1 : 0,
       now,
       now,
+      JSON.stringify(tags),
     )
     .run();
   const row = await db
@@ -139,6 +161,7 @@ export async function updateSave(
     name?: string;
     recipe?: Recipe;
     isTemplate?: boolean;
+    tags?: string[];
   },
 ): Promise<Save | null> {
   const sets: string[] = [];
@@ -154,6 +177,10 @@ export async function updateSave(
   if (patch.isTemplate !== undefined) {
     sets.push('is_template = ?');
     args.push(patch.isTemplate ? 1 : 0);
+  }
+  if (patch.tags !== undefined) {
+    sets.push('tags = ?');
+    args.push(JSON.stringify(normalizeTags(patch.tags)));
   }
   if (sets.length === 0) return getSave(db, id);
   const now = Date.now();
@@ -202,6 +229,7 @@ export async function cloneSave(
     name: opts.newName ?? `${source.name} (copy)`,
     recipe: source.recipe,
     isTemplate: false,
+    tags: source.tags,
   });
 }
 

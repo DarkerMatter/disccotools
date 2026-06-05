@@ -1,5 +1,7 @@
 /** D1 layer for the user asset library. Bytes live in R2 under `r2_key`. */
 
+import { normalizeTags } from './tags.js';
+
 /** Raw D1 row shape (snake_case). */
 type AssetRow = {
   id: string;
@@ -10,6 +12,7 @@ type AssetRow = {
   size_bytes: number;
   created_at: number;
   updated_at: number;
+  tags: string | null;
 };
 
 /** Domain shape used by handlers and clients (camelCase). */
@@ -22,7 +25,23 @@ export type Asset = {
   sizeBytes: number;
   createdAt: number;
   updatedAt: number;
+  tags: string[];
 };
+
+function parseTagsColumn(raw: string | null | undefined): string[] {
+  if (raw === null || raw === undefined) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    const out: string[] = [];
+    for (const t of parsed) {
+      if (typeof t === 'string') out.push(t);
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
 
 function rowToAsset(row: AssetRow): Asset {
   return {
@@ -34,6 +53,7 @@ function rowToAsset(row: AssetRow): Asset {
     sizeBytes: row.size_bytes,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    tags: parseTagsColumn(row.tags),
   };
 }
 
@@ -57,14 +77,16 @@ export async function createAsset(
     r2Key: string;
     mimeType: string;
     sizeBytes: number;
+    tags?: string[];
   },
 ): Promise<Asset> {
   const now = Date.now();
   const id = input.id ?? newId();
+  const tags = normalizeTags(input.tags);
   await db
     .prepare(
-      `INSERT INTO assets (id, user_id, name, r2_key, mime_type, size_bytes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO assets (id, user_id, name, r2_key, mime_type, size_bytes, created_at, updated_at, tags)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       id,
@@ -75,6 +97,7 @@ export async function createAsset(
       input.sizeBytes,
       now,
       now,
+      JSON.stringify(tags),
     )
     .run();
   const row = await db
@@ -117,15 +140,28 @@ export async function listAssetsByUser(
 export async function updateAsset(
   db: D1Database,
   id: string,
-  patch: { name?: string },
+  patch: { name?: string; tags?: string[] },
 ): Promise<Asset | null> {
-  if (patch.name === undefined) return getAsset(db, id);
+  const sets: string[] = [];
+  const args: unknown[] = [];
+  if (patch.name !== undefined) {
+    sets.push('name = ?');
+    args.push(patch.name);
+  }
+  if (patch.tags !== undefined) {
+    sets.push('tags = ?');
+    args.push(JSON.stringify(normalizeTags(patch.tags)));
+  }
+  if (sets.length === 0) return getAsset(db, id);
   const existing = await getAsset(db, id);
   if (!existing) return null;
   const now = Date.now();
+  sets.push('updated_at = ?');
+  args.push(now);
+  args.push(id);
   await db
-    .prepare(`UPDATE assets SET name = ?, updated_at = ? WHERE id = ?`)
-    .bind(patch.name, now, id)
+    .prepare(`UPDATE assets SET ${sets.join(', ')} WHERE id = ?`)
+    .bind(...args)
     .run();
   return getAsset(db, id);
 }

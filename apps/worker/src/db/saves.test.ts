@@ -122,6 +122,60 @@ describe('updateSave', () => {
   });
 });
 
+describe('save tags', () => {
+  it('defaults to an empty array on insert', async () => {
+    const created = await createSave(env.DB, {
+      userId: USER_ID,
+      name: 't1',
+      recipe: createEmptyRecipe(),
+    });
+    expect(created.tags).toEqual([]);
+    const fetched = await getSave(env.DB, created.id);
+    expect(fetched!.tags).toEqual([]);
+  });
+
+  it('round-trips a list of tags on create', async () => {
+    const created = await createSave(env.DB, {
+      userId: USER_ID,
+      name: 't2',
+      recipe: createEmptyRecipe(),
+      tags: ['icon', 'brand'],
+    });
+    expect(created.tags).toEqual(['icon', 'brand']);
+    const fetched = await getSave(env.DB, created.id);
+    expect(fetched!.tags).toEqual(['icon', 'brand']);
+  });
+
+  it('normalizes tags: lowercase, dedupe, cap to 8, ignore long', async () => {
+    const created = await createSave(env.DB, {
+      userId: USER_ID,
+      name: 't3',
+      recipe: createEmptyRecipe(),
+      tags: [
+        'Brand',
+        ' icon ',
+        'brand', // dup after lowercasing
+        'x'.repeat(25), // too long, dropped
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', // overflow past 8
+      ],
+    });
+    expect(created.tags).toEqual(['brand', 'icon', 'a', 'b', 'c', 'd', 'e', 'f']);
+  });
+
+  it('updates tags via updateSave', async () => {
+    const created = await createSave(env.DB, {
+      userId: USER_ID,
+      name: 't4',
+      recipe: createEmptyRecipe(),
+      tags: ['old'],
+    });
+    const updated = await updateSave(env.DB, created.id, {
+      tags: ['Fresh', 'fresh'],
+    });
+    expect(updated!.tags).toEqual(['fresh']);
+  });
+});
+
 describe('setSaveRender', () => {
   it('writes rendered_key, thumb_key, rendered_format, rendered_at', async () => {
     const created = await createSave(env.DB, {

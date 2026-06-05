@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { SaveFilter, SaveSummary } from '@disccotools/shared';
 import { logout } from '../api/client.js';
@@ -26,8 +26,20 @@ export function IconsPage() {
   const [filter, setFilter] = useState<SaveFilter>('designs');
   const [saves, setSaves] = useState<SaveSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
   const authenticated = userState.status === 'authenticated';
+
+  const filteredSaves = useMemo(() => {
+    if (saves === null) return null;
+    const q = query.trim().toLowerCase();
+    if (!q) return saves;
+    return saves.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        (s.tags ?? []).some((t) => t.toLowerCase().includes(q)),
+    );
+  }, [saves, query]);
 
   const fetchSaves = useCallback(async (f: SaveFilter) => {
     setError(null);
@@ -57,6 +69,7 @@ export function IconsPage() {
             createdAt: cloned.createdAt,
             updatedAt: cloned.updatedAt,
             thumbnailUrl: cloned.thumbnailUrl,
+            tags: cloned.tags,
           }, ...prev]
         : prev,
     );
@@ -87,6 +100,45 @@ export function IconsPage() {
     }
   }
 
+  async function handleRename(save: SaveSummary, name: string) {
+    const previous = save.name;
+    setSaves((prev) =>
+      prev ? prev.map((s) => (s.id === save.id ? { ...s, name } : s)) : prev,
+    );
+    try {
+      await updateSave(save.id, { name });
+    } catch (err) {
+      console.error('updateSave (rename) failed', err);
+      setSaves((prev) =>
+        prev ? prev.map((s) => (s.id === save.id ? { ...s, name: previous } : s)) : prev,
+      );
+    }
+  }
+
+  async function handleTagsChange(save: SaveSummary, tags: string[]) {
+    const previous = save.tags;
+    setSaves((prev) =>
+      prev ? prev.map((s) => (s.id === save.id ? { ...s, tags } : s)) : prev,
+    );
+    try {
+      const updated = await updateSave(save.id, { tags });
+      setSaves((prev) =>
+        prev
+          ? prev.map((s) =>
+              s.id === save.id ? { ...s, tags: updated.tags } : s,
+            )
+          : prev,
+      );
+    } catch (err) {
+      console.error('updateSave (tags) failed', err);
+      setSaves((prev) =>
+        prev
+          ? prev.map((s) => (s.id === save.id ? { ...s, tags: previous } : s))
+          : prev,
+      );
+    }
+  }
+
   async function handleLogout() {
     await logout();
     window.location.reload();
@@ -114,13 +166,31 @@ export function IconsPage() {
         <div
           style={{
             display: 'flex',
-            alignItems: 'baseline',
-            justifyContent: 'flex-end',
+            alignItems: 'center',
+            justifyContent: 'space-between',
             gap: 16,
             marginBottom: 24,
             flexWrap: 'wrap',
           }}
         >
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name or tag"
+            aria-label="Search saves"
+            style={{
+              flex: '1 1 200px',
+              minWidth: 160,
+              maxWidth: 360,
+              padding: '6px 10px',
+              fontSize: 13,
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--color-surface)',
+              color: 'var(--color-text)',
+            }}
+          />
           <div
             role="radiogroup"
             aria-label="Save filter"
@@ -214,7 +284,25 @@ export function IconsPage() {
           </div>
         )}
 
-        {authenticated && saves !== null && saves.length > 0 && (
+        {authenticated &&
+          saves !== null &&
+          saves.length > 0 &&
+          filteredSaves !== null &&
+          filteredSaves.length === 0 && (
+            <div
+              style={{
+                padding: 24,
+                border: '1px dashed var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                textAlign: 'center',
+                color: 'var(--color-text-muted)',
+              }}
+            >
+              No saves match your search.
+            </div>
+          )}
+
+        {authenticated && filteredSaves !== null && filteredSaves.length > 0 && (
           <div
             style={{
               display: 'grid',
@@ -222,13 +310,15 @@ export function IconsPage() {
               gap: 16,
             }}
           >
-            {saves.map((s) => (
+            {filteredSaves.map((s) => (
               <SaveCard
                 key={s.id}
                 save={s}
                 onClone={() => void handleClone(s)}
                 onDelete={() => void handleDelete(s)}
                 onToggleTemplate={() => void handleToggleTemplate(s)}
+                onRename={(name) => handleRename(s, name)}
+                onTagsChange={(tags) => handleTagsChange(s, tags)}
               />
             ))}
           </div>

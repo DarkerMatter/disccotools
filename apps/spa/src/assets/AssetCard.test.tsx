@@ -13,6 +13,7 @@ const baseAsset: Asset = {
   createdAt: Date.now() - 60000,
   updatedAt: Date.now() - 60000,
   url: '/api/assets/a1/file',
+  tags: [],
 };
 
 function renderCard(
@@ -20,6 +21,7 @@ function renderCard(
   handlers: Partial<{
     onRename: (name: string) => Promise<void> | void;
     onDelete: () => Promise<void> | void;
+    onTagsChange: (tags: string[]) => Promise<void> | void;
   }> = {},
 ) {
   return render(
@@ -28,6 +30,7 @@ function renderCard(
         asset={{ ...baseAsset, ...over }}
         onRename={handlers.onRename ?? (() => {})}
         onDelete={handlers.onDelete ?? (() => {})}
+        onTagsChange={handlers.onTagsChange ?? (() => {})}
       />
     </MemoryRouter>,
   );
@@ -68,6 +71,28 @@ describe('<AssetCard />', () => {
     await userEvent.click(screen.getByRole('button', { name: /^cancel$/i }));
     expect(onRename).not.toHaveBeenCalled();
     expect(screen.getByText('My image')).toBeInTheDocument();
+  });
+
+  it('renders existing tag chips', () => {
+    renderCard({ tags: ['brand', 'logo'] });
+    expect(screen.getByText('brand')).toBeInTheDocument();
+    expect(screen.getByText('logo')).toBeInTheDocument();
+  });
+
+  it('adding a tag fires onTagsChange', async () => {
+    const onTagsChange = vi.fn();
+    renderCard({ tags: ['brand'] }, { onTagsChange });
+    await userEvent.click(screen.getByRole('button', { name: /^\+ tag$/i }));
+    const input = screen.getByRole('textbox', { name: /new tag/i });
+    await userEvent.type(input, 'logo{Enter}');
+    expect(onTagsChange).toHaveBeenCalledWith(['brand', 'logo']);
+  });
+
+  it('removing a tag fires onTagsChange', async () => {
+    const onTagsChange = vi.fn();
+    renderCard({ tags: ['brand', 'logo'] }, { onTagsChange });
+    await userEvent.click(screen.getByRole('button', { name: /remove tag brand/i }));
+    expect(onTagsChange).toHaveBeenCalledWith(['logo']);
   });
 
   it('shows in-use message when onDelete throws AssetInUseError', async () => {

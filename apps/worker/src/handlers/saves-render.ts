@@ -38,6 +38,7 @@ function detailFor(save: Save): SaveDetail {
     updatedAt: save.updatedAt,
     thumbnailUrl: save.thumbKey ? `/api/saves/${save.id}/thumbnail` : null,
     downloadUrl: save.renderedKey ? `/api/saves/${save.id}/download` : null,
+    tags: save.tags,
   };
 }
 

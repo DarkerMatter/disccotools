@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react';
 import type { Asset } from '@disccotools/shared';
-import { listAssets, uploadAsset } from '../api/assets.js';
+import { ApiError } from '../api/client.js';
+import {
+  listAssets,
+  uploadAssetWithProgress,
+  validateAssetFile,
+} from '../api/assets.js';
 
 type Tab = 'myLibrary' | 'upload';
+
+type UploadState =
+  | { status: 'idle' }
+  | { status: 'uploading'; fraction: number }
+  | { status: 'error'; message: string };
 
 function defaultName(file: File): string {
   const base = file.name.replace(/\.[^.]+$/, '');
@@ -25,17 +35,15 @@ export function AssetPicker({
   // upload tab state
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [upload, setUpload] = useState<UploadState>({ status: 'idle' });
 
   useEffect(() => {
     if (!open) return;
     setTab('myLibrary');
     setError(null);
-    setUploadError(null);
+    setUpload({ status: 'idle' });
     setFile(null);
     setName('');
-    setUploading(false);
 
     let cancelled = false;
     listAssets()
@@ -58,27 +66,46 @@ export function AssetPicker({
 
   function handleFile(f: File | null) {
     setFile(f);
-    if (f) setName(defaultName(f));
+    if (f) {
+      setName(defaultName(f));
+      const guard = validateAssetFile(f);
+      if (guard) {
+        setUpload({ status: 'error', message: guard });
+      } else {
+        setUpload({ status: 'idle' });
+      }
+    } else {
+      setUpload({ status: 'idle' });
+    }
   }
 
   async function handleUpload() {
     if (!file) return;
     const trimmed = name.trim();
     if (!trimmed) {
-      setUploadError('Name is required.');
+      setUpload({ status: 'error', message: 'Name is required.' });
       return;
     }
-    setUploadError(null);
-    setUploading(true);
+    const guard = validateAssetFile(file);
+    if (guard) {
+      setUpload({ status: 'error', message: guard });
+      return;
+    }
+    setUpload({ status: 'uploading', fraction: 0 });
     try {
-      const asset = await uploadAsset(file, trimmed);
+      const asset = await uploadAssetWithProgress(file, trimmed, (p) =>
+        setUpload({
+          status: 'uploading',
+          fraction: Number.isFinite(p.fraction) ? p.fraction : 0,
+        }),
+      );
       setAssets((prev) => (prev ? [asset, ...prev] : [asset]));
+      setUpload({ status: 'idle' });
       onSelect(asset);
     } catch (err) {
       console.error('uploadAsset failed', err);
-      setUploadError('Upload failed.');
-    } finally {
-      setUploading(false);
+      const message = err instanceof ApiError ? err.message : 'Upload failed.';
+      setUpload({ status: 'error', message });
     }
   }
 
@@ -257,7 +284,7 @@ export function AssetPicker({
                 Pick an image
                 <input
                   type="file"
-                  accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                  accept="image/png,image/jpeg,image/webp"
                   onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
                   aria-label="Pick image file"
                 />
@@ -288,17 +315,48 @@ export function AssetPicker({
                 />
               </label>
               <p style={{ margin: 0, fontSize: 11, color: 'var(--color-text-muted)' }}>
-                PNG, SVG, JPEG, WebP — up to 10 MB.
+                PNG, JPEG, WebP — up to 10 MB.
               </p>
-              {uploadError && (
+              {upload.status === 'uploading' && (
+                <div role="status" aria-live="polite">
+                  <p
+                    style={{
+                      margin: '0 0 4px 0',
+                      fontSize: 12,
+                      color: 'var(--color-text-muted)',
+                    }}
+                  >
+                    Uploading… {Math.round(upload.fraction * 100)}%
+                  </p>
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      height: 6,
+                      background: 'var(--color-border)',
+                      borderRadius: 999,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${Math.max(0, Math.min(1, upload.fraction)) * 100}%`,
+                        height: '100%',
+                        background: 'var(--color-accent)',
+                        transition: 'width 80ms linear',
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              {upload.status === 'error' && (
                 <p role="alert" style={{ fontSize: 12, color: '#ef4444', margin: 0 }}>
-                  {uploadError}
+                  {upload.message}
                 </p>
               )}
               <button
                 type="button"
                 onClick={() => void handleUpload()}
-                disabled={!file || uploading}
+                disabled={!file || upload.status === 'uploading'}
                 style={{
                   alignSelf: 'flex-start',
                   background: 'var(--color-accent)',
@@ -308,11 +366,12 @@ export function AssetPicker({
                   fontSize: 13,
                   fontWeight: 600,
                   border: 'none',
-                  opacity: !file || uploading ? 0.5 : 1,
-                  cursor: !file || uploading ? 'not-allowed' : 'pointer',
+                  opacity: !file || upload.status === 'uploading' ? 0.5 : 1,
+                  cursor:
+                    !file || upload.status === 'uploading' ? 'not-allowed' : 'pointer',
                 }}
               >
-                {uploading ? 'Uploading…' : 'Upload'}
+                {upload.status === 'uploading' ? 'Uploading…' : 'Upload'}
               </button>
             </div>
           )}

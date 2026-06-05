@@ -129,6 +129,60 @@ describe('updateAsset', () => {
   });
 });
 
+describe('asset tags', () => {
+  it('defaults to an empty array on insert', async () => {
+    const created = await createAsset(env.DB, {
+      userId: USER_ID,
+      name: 't1',
+      r2Key: `assets/${USER_ID}/t1.png`,
+      mimeType: 'image/png',
+      sizeBytes: 1,
+    });
+    expect(created.tags).toEqual([]);
+    const fetched = await getAsset(env.DB, created.id);
+    expect(fetched!.tags).toEqual([]);
+  });
+
+  it('round-trips a list of tags on create', async () => {
+    const created = await createAsset(env.DB, {
+      userId: USER_ID,
+      name: 't2',
+      r2Key: `assets/${USER_ID}/t2.png`,
+      mimeType: 'image/png',
+      sizeBytes: 1,
+      tags: ['logo', 'brand'],
+    });
+    expect(created.tags).toEqual(['logo', 'brand']);
+    const fetched = await getAsset(env.DB, created.id);
+    expect(fetched!.tags).toEqual(['logo', 'brand']);
+  });
+
+  it('normalizes tags: lowercase, dedupe, cap', async () => {
+    const created = await createAsset(env.DB, {
+      userId: USER_ID,
+      name: 't3',
+      r2Key: `assets/${USER_ID}/t3.png`,
+      mimeType: 'image/png',
+      sizeBytes: 1,
+      tags: ['Logo', ' logo ', 'BRAND'],
+    });
+    expect(created.tags).toEqual(['logo', 'brand']);
+  });
+
+  it('updates tags via updateAsset', async () => {
+    const created = await createAsset(env.DB, {
+      userId: USER_ID,
+      name: 't4',
+      r2Key: `assets/${USER_ID}/t4.png`,
+      mimeType: 'image/png',
+      sizeBytes: 1,
+      tags: ['old'],
+    });
+    const updated = await updateAsset(env.DB, created.id, { tags: ['fresh'] });
+    expect(updated!.tags).toEqual(['fresh']);
+  });
+});
+
 describe('deleteAsset', () => {
   it('removes the row', async () => {
     const created = await createAsset(env.DB, {

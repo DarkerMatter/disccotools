@@ -329,6 +329,31 @@ describe('PATCH /api/assets/:id', () => {
     });
     expect(res.status).toBe(400);
   });
+
+  it('updates tags and normalizes (lowercase + dedupe)', async () => {
+    const app = makeApp();
+    const { id } = await uploadAsset(app, USER_ID, 'tag-me');
+    const res = await authedFetch(app, `http://t/api/assets/${id}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ tags: ['Logo', 'logo', 'BRAND'] }),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { asset: { tags: string[] } };
+    expect(body.asset.tags).toEqual(['logo', 'brand']);
+  });
+
+  it('rejects tags exceeding the cap', async () => {
+    const app = makeApp();
+    const { id } = await uploadAsset(app, USER_ID, 'cap');
+    const tooMany = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
+    const res = await authedFetch(app, `http://t/api/assets/${id}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ tags: tooMany }),
+    });
+    expect(res.status).toBe(400);
+  });
 });
 
 describe('DELETE /api/assets/:id', () => {

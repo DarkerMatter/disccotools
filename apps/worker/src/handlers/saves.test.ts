@@ -212,6 +212,43 @@ describe('PATCH /api/saves/:id', () => {
     expect(body.save.name).toBe('new');
     expect(body.save.isTemplate).toBe(true);
   });
+
+  it('updates tags and normalizes (lowercase + dedupe)', async () => {
+    const app = makeApp();
+    const created = await (await authedFetch(app, 'http://t/api/saves', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 's', recipe: createEmptyRecipe() }),
+    })).json() as { save: { id: string; tags: string[] } };
+    expect(created.save.tags).toEqual([]);
+
+    const res = await authedFetch(app, `http://t/api/saves/${created.save.id}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ tags: ['Icon', 'brand', 'icon'] }),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { save: { tags: string[] } };
+    expect(body.save.tags).toEqual(['icon', 'brand']);
+  });
+});
+
+describe('POST /api/saves with tags', () => {
+  it('accepts tags on create and returns them in the detail', async () => {
+    const app = makeApp();
+    const res = await authedFetch(app, 'http://t/api/saves', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'tagged',
+        recipe: createEmptyRecipe(),
+        tags: ['ICON', 'icon', 'Brand'],
+      }),
+    });
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { save: { tags: string[] } };
+    expect(body.save.tags).toEqual(['icon', 'brand']);
+  });
 });
 
 describe('DELETE /api/saves/:id', () => {

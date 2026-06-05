@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Asset } from '@disccotools/shared';
 import { AssetInUseError } from '../api/assets.js';
+import { TagChips } from '../tags/TagChips.js';
 
 function timeAgo(ms: number): string {
   const seconds = Math.max(0, Math.floor((Date.now() - ms) / 1000));
@@ -15,10 +16,12 @@ export function AssetCard({
   asset,
   onRename,
   onDelete,
+  onTagsChange,
 }: {
   asset: Asset;
   onRename: (name: string) => Promise<void> | void;
   onDelete: () => Promise<void> | void;
+  onTagsChange: (tags: string[]) => Promise<void> | void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(asset.name);
@@ -152,6 +155,8 @@ export function AssetCard({
         <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: 0 }}>
           Uploaded {timeAgo(asset.createdAt)}
         </p>
+
+        <TagChips tags={asset.tags ?? []} onChange={onTagsChange} />
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {!confirming && !inUseRefs && (

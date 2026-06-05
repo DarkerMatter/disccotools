@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Asset } from '@disccotools/shared';
@@ -8,6 +8,8 @@ import { AssetPicker } from './AssetPicker.js';
 vi.mock('../api/assets.js', () => ({
   listAssets: vi.fn(),
   uploadAsset: vi.fn(),
+  uploadAssetWithProgress: vi.fn(),
+  validateAssetFile: vi.fn(() => null),
   renameAsset: vi.fn(),
   deleteAsset: vi.fn(),
   AssetInUseError: class AssetInUseError extends Error {
@@ -18,10 +20,15 @@ vi.mock('../api/assets.js', () => ({
   },
 }));
 
-import { listAssets, uploadAsset } from '../api/assets.js';
+import {
+  listAssets,
+  uploadAssetWithProgress,
+  validateAssetFile,
+} from '../api/assets.js';
 
 const mockedList = vi.mocked(listAssets);
-const mockedUpload = vi.mocked(uploadAsset);
+const mockedUpload = vi.mocked(uploadAssetWithProgress);
+const mockedValidate = vi.mocked(validateAssetFile);
 
 const realMatchMedia = window.matchMedia;
 
@@ -37,6 +44,7 @@ const sample: Asset = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockedValidate.mockReturnValue(null);
   window.localStorage.clear();
   document.documentElement.removeAttribute('data-theme');
   window.matchMedia = vi.fn().mockImplementation((q: string) => ({
@@ -112,5 +120,28 @@ describe('<AssetPicker />', () => {
     expect(mockedUpload.mock.calls[0]![1]).toBe('kitten');
     await waitFor(() => expect(onSelect).toHaveBeenCalled());
     expect(onSelect.mock.calls[0]![0]).toMatchObject({ name: 'kitten' });
+  });
+
+  it('upload tab: shows an inline error for unsupported MIME and skips upload', async () => {
+    mockedList.mockResolvedValue([]);
+    mockedValidate.mockImplementation((f) =>
+      f.type === 'image/svg+xml'
+        ? 'Unsupported file type. PNG, JPEG, or WebP only.'
+        : null,
+    );
+    renderPicker();
+    await waitFor(() => expect(mockedList).toHaveBeenCalled());
+
+    await userEvent.click(screen.getByRole('tab', { name: /upload new/i }));
+    const fileInput = screen.getByLabelText(/pick image file/i) as HTMLInputElement;
+    const bad = new File(['<svg/>'], 'bad.svg', { type: 'image/svg+xml' });
+    // Bypass userEvent.upload — its accept-attribute check would block this
+    // file before onChange fires. We want to verify the in-app guard.
+    fireEvent.change(fileInput, { target: { files: [bad] } });
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /unsupported file type/i,
+    );
+    await userEvent.click(screen.getByRole('button', { name: /^upload$/i }));
+    expect(mockedUpload).not.toHaveBeenCalled();
   });
 });

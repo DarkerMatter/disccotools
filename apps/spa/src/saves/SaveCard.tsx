@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import type { SaveSummary } from '@disccotools/shared';
+import { TagChips } from '../tags/TagChips.js';
 
 function timeAgo(ms: number): string {
   const seconds = Math.max(0, Math.floor((Date.now() - ms) / 1000));
@@ -15,13 +16,30 @@ export function SaveCard({
   onClone,
   onDelete,
   onToggleTemplate,
+  onRename,
+  onTagsChange,
 }: {
   save: SaveSummary;
   onClone: () => void;
   onDelete: () => void;
   onToggleTemplate: () => void;
+  onRename: (name: string) => Promise<void> | void;
+  onTagsChange: (tags: string[]) => Promise<void> | void;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [draftName, setDraftName] = useState(save.name);
+
+  async function handleSaveName() {
+    const next = draftName.trim();
+    if (!next || next === save.name) {
+      setEditingName(false);
+      setDraftName(save.name);
+      return;
+    }
+    await onRename(next);
+    setEditingName(false);
+  }
 
   return (
     <article
@@ -71,20 +89,76 @@ export function SaveCard({
 
       <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-          <h3
-            style={{
-              fontSize: 14,
-              fontWeight: 600,
-              margin: 0,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-            title={save.name}
-          >
-            {save.name}
-          </h3>
-          {save.isTemplate && (
+          {!editingName && (
+            <button
+              type="button"
+              onClick={() => {
+                setDraftName(save.name);
+                setEditingName(true);
+              }}
+              aria-label={`Rename ${save.name}`}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                fontSize: 14,
+                fontWeight: 600,
+                color: 'var(--color-text)',
+                textAlign: 'left',
+                cursor: 'text',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                flex: 1,
+                minWidth: 0,
+              }}
+              title={save.name}
+            >
+              {save.name}
+            </button>
+          )}
+          {editingName && (
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+              <input
+                type="text"
+                value={draftName}
+                onChange={(e) => setDraftName(e.target.value)}
+                aria-label="Save name"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void handleSaveName();
+                  else if (e.key === 'Escape') {
+                    setEditingName(false);
+                    setDraftName(save.name);
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  minWidth: 80,
+                  padding: '4px 6px',
+                  fontSize: 12,
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--color-bg)',
+                  color: 'var(--color-text)',
+                }}
+              />
+              <button type="button" onClick={() => void handleSaveName()} style={ghostBtnStyle}>
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingName(false);
+                  setDraftName(save.name);
+                }}
+                style={ghostBtnStyle}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+          {save.isTemplate && !editingName && (
             <span
               style={{
                 background: 'var(--color-accent-bg)',
@@ -103,6 +177,9 @@ export function SaveCard({
         <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: 0 }}>
           Updated {timeAgo(save.updatedAt)}
         </p>
+
+        <TagChips tags={save.tags ?? []} onChange={onTagsChange} />
+
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           <Link
             to={`/editor/${save.id}`}

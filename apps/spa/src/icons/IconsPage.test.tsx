@@ -74,11 +74,80 @@ describe('<IconsPage />', () => {
   it('renders the saves list for authenticated users', async () => {
     authenticated();
     mockedListSaves.mockResolvedValue([
-      { id: 'sv1', name: 'first', isTemplate: false, createdAt: 1, updatedAt: 1, thumbnailUrl: null },
+      {
+        id: 'sv1',
+        name: 'first',
+        isTemplate: false,
+        createdAt: 1,
+        updatedAt: 1,
+        thumbnailUrl: null,
+        tags: [],
+      },
     ]);
     renderPage();
     await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument());
     expect(mockedListSaves).toHaveBeenCalledWith('designs');
+  });
+
+  it('filters saves by name when the search input is used', async () => {
+    authenticated();
+    mockedListSaves.mockResolvedValue([
+      {
+        id: 'sv1',
+        name: 'apple',
+        isTemplate: false,
+        createdAt: 1,
+        updatedAt: 1,
+        thumbnailUrl: null,
+        tags: [],
+      },
+      {
+        id: 'sv2',
+        name: 'banana',
+        isTemplate: false,
+        createdAt: 1,
+        updatedAt: 1,
+        thumbnailUrl: null,
+        tags: [],
+      },
+    ]);
+    renderPage();
+    await waitFor(() => expect(screen.getByText('apple')).toBeInTheDocument());
+    expect(screen.getByText('banana')).toBeInTheDocument();
+    await userEvent.type(screen.getByRole('searchbox', { name: /search saves/i }), 'app');
+    expect(screen.getByText('apple')).toBeInTheDocument();
+    expect(screen.queryByText('banana')).not.toBeInTheDocument();
+  });
+
+  it('search also matches tags', async () => {
+    authenticated();
+    mockedListSaves.mockResolvedValue([
+      {
+        id: 'sv1',
+        name: 'untitled',
+        isTemplate: false,
+        createdAt: 1,
+        updatedAt: 1,
+        thumbnailUrl: null,
+        tags: ['brand'],
+      },
+      {
+        id: 'sv2',
+        name: 'untitled-2',
+        isTemplate: false,
+        createdAt: 1,
+        updatedAt: 1,
+        thumbnailUrl: null,
+        tags: ['icon'],
+      },
+    ]);
+    renderPage();
+    await waitFor(() =>
+      expect(screen.getByText('untitled')).toBeInTheDocument(),
+    );
+    await userEvent.type(screen.getByRole('searchbox', { name: /search saves/i }), 'brand');
+    expect(screen.getByText('untitled')).toBeInTheDocument();
+    expect(screen.queryByText('untitled-2')).not.toBeInTheDocument();
   });
 
   it('refetches when the filter chip changes', async () => {

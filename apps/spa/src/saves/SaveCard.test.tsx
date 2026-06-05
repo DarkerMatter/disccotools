@@ -12,9 +12,19 @@ const baseSave: SaveSummary = {
   createdAt: Date.now() - 60000,
   updatedAt: Date.now() - 60000,
   thumbnailUrl: '/api/saves/sv1/thumbnail',
+  tags: [],
 };
 
-function renderCard(over: Partial<SaveSummary> = {}, handlers: Partial<{ onClone: () => void; onDelete: () => void; onToggleTemplate: () => void }> = {}) {
+function renderCard(
+  over: Partial<SaveSummary> = {},
+  handlers: Partial<{
+    onClone: () => void;
+    onDelete: () => void;
+    onToggleTemplate: () => void;
+    onRename: (name: string) => Promise<void> | void;
+    onTagsChange: (tags: string[]) => Promise<void> | void;
+  }> = {},
+) {
   return render(
     <MemoryRouter>
       <SaveCard
@@ -22,6 +32,8 @@ function renderCard(over: Partial<SaveSummary> = {}, handlers: Partial<{ onClone
         onClone={handlers.onClone ?? (() => {})}
         onDelete={handlers.onDelete ?? (() => {})}
         onToggleTemplate={handlers.onToggleTemplate ?? (() => {})}
+        onRename={handlers.onRename ?? (() => {})}
+        onTagsChange={handlers.onTagsChange ?? (() => {})}
       />
     </MemoryRouter>,
   );
@@ -62,5 +74,38 @@ describe('<SaveCard />', () => {
     expect(onClone).toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: /make template/i }));
     expect(onToggleTemplate).toHaveBeenCalled();
+  });
+
+  it('rename flow: click name → input → save calls onRename', async () => {
+    const onRename = vi.fn();
+    renderCard({}, { onRename });
+    await userEvent.click(screen.getByRole('button', { name: /rename my icon/i }));
+    const input = screen.getByRole('textbox', { name: /save name/i });
+    await userEvent.clear(input);
+    await userEvent.type(input, 'Renamed');
+    await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
+    expect(onRename).toHaveBeenCalledWith('Renamed');
+  });
+
+  it('renders existing tag chips', () => {
+    renderCard({ tags: ['brand', 'icon'] });
+    expect(screen.getByText('brand')).toBeInTheDocument();
+    expect(screen.getByText('icon')).toBeInTheDocument();
+  });
+
+  it('adding a tag fires onTagsChange with the new array', async () => {
+    const onTagsChange = vi.fn();
+    renderCard({ tags: ['brand'] }, { onTagsChange });
+    await userEvent.click(screen.getByRole('button', { name: /^\+ tag$/i }));
+    const input = screen.getByRole('textbox', { name: /new tag/i });
+    await userEvent.type(input, 'logo{Enter}');
+    expect(onTagsChange).toHaveBeenCalledWith(['brand', 'logo']);
+  });
+
+  it('removing a tag fires onTagsChange without it', async () => {
+    const onTagsChange = vi.fn();
+    renderCard({ tags: ['brand', 'icon'] }, { onTagsChange });
+    await userEvent.click(screen.getByRole('button', { name: /remove tag brand/i }));
+    expect(onTagsChange).toHaveBeenCalledWith(['icon']);
   });
 });

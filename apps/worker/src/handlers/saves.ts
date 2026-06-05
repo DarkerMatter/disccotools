@@ -34,6 +34,7 @@ function toSummary(save: Save): SaveSummary {
     createdAt: save.createdAt,
     updatedAt: save.updatedAt,
     thumbnailUrl: thumbnailUrlOf(save),
+    tags: save.tags,
   };
 }
 
@@ -48,6 +49,7 @@ function toDetail(save: Save): SaveDetail {
     updatedAt: save.updatedAt,
     thumbnailUrl: thumbnailUrlOf(save),
     downloadUrl: downloadUrlOf(save),
+    tags: save.tags,
   };
 }
 
@@ -93,12 +95,14 @@ export async function createSaveHandler(c: Context<AppEnv>): Promise<Response> {
   if (json === undefined) return validation(c, 'expected JSON body');
   const parsed = CreateSaveBodySchema.safeParse(json);
   if (!parsed.success) return validation(c, parsed.error.message);
-  const created = await createSave(c.env.DB, {
+  const createInput: Parameters<typeof createSave>[1] = {
     userId: user.id,
     name: parsed.data.name,
     recipe: parsed.data.recipe,
     isTemplate: parsed.data.isTemplate ?? false,
-  });
+  };
+  if (parsed.data.tags !== undefined) createInput.tags = parsed.data.tags;
+  const created = await createSave(c.env.DB, createInput);
   return c.json({ save: toDetail(created) }, 201);
 }
 
@@ -123,6 +127,7 @@ export async function updateSaveHandler(c: Context<AppEnv>): Promise<Response> {
   if (parsed.data.name !== undefined) patch.name = parsed.data.name;
   if (parsed.data.recipe !== undefined) patch.recipe = parsed.data.recipe;
   if (parsed.data.isTemplate !== undefined) patch.isTemplate = parsed.data.isTemplate;
+  if (parsed.data.tags !== undefined) patch.tags = parsed.data.tags;
   const updated = await updateSave(c.env.DB, id, patch);
   if (!updated) return notFound(c);
   return c.json({ save: toDetail(updated) }, 200);
