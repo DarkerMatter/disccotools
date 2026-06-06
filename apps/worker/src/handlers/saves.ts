@@ -18,14 +18,6 @@ import {
   type Save,
 } from '../db/saves.js';
 
-function thumbnailUrlOf(save: Save): string | null {
-  return save.thumbKey ? `/api/saves/${save.id}/thumbnail` : null;
-}
-
-function downloadUrlOf(save: Save): string | null {
-  return save.renderedKey ? `/api/saves/${save.id}/download` : null;
-}
-
 function toSummary(save: Save): SaveSummary {
   return {
     id: save.id,
@@ -33,7 +25,7 @@ function toSummary(save: Save): SaveSummary {
     isTemplate: save.isTemplate,
     createdAt: save.createdAt,
     updatedAt: save.updatedAt,
-    thumbnailUrl: thumbnailUrlOf(save),
+    recipe: save.recipe,
     tags: save.tags,
   };
 }
@@ -44,11 +36,8 @@ function toDetail(save: Save): SaveDetail {
     name: save.name,
     recipe: save.recipe,
     isTemplate: save.isTemplate,
-    renderedAt: save.renderedAt,
     createdAt: save.createdAt,
     updatedAt: save.updatedAt,
-    thumbnailUrl: thumbnailUrlOf(save),
-    downloadUrl: downloadUrlOf(save),
     tags: save.tags,
   };
 }
@@ -138,11 +127,15 @@ export async function deleteSaveHandler(c: Context<AppEnv>): Promise<Response> {
   if (!id) return validation(c, 'missing id');
   const result = await loadOwnedSave(c, id);
   if ('error' in result) return result.error;
+  // legacy R2 renders from pre-v2 are now orphaned; they're harmless and
+  // a manual cleanup pass can sweep them when bandwidth is convenient
   const { renderedKey, thumbKey } = result.save;
-  await Promise.allSettled([
-    renderedKey ? c.env.R2.delete(renderedKey) : Promise.resolve(),
-    thumbKey ? c.env.R2.delete(thumbKey) : Promise.resolve(),
-  ]);
+  if (renderedKey || thumbKey) {
+    await Promise.allSettled([
+      renderedKey ? c.env.R2.delete(renderedKey) : Promise.resolve(),
+      thumbKey ? c.env.R2.delete(thumbKey) : Promise.resolve(),
+    ]);
+  }
   await deleteSave(c.env.DB, id);
   return c.body(null, 204);
 }

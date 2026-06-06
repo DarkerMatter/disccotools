@@ -13,11 +13,6 @@ import {
   updateSaveHandler,
 } from './handlers/saves.js';
 import {
-  downloadHandler,
-  thumbnailHandler,
-  uploadRenderHandler,
-} from './handlers/saves-render.js';
-import {
   createAssetHandler,
   deleteAssetHandler,
   getAssetFileHandler,
@@ -47,9 +42,6 @@ app.get('/api/saves/:id', getSaveHandler);
 app.patch('/api/saves/:id', updateSaveHandler);
 app.delete('/api/saves/:id', deleteSaveHandler);
 app.post('/api/saves/:id/clone', cloneSaveHandler);
-app.post('/api/saves/:id/render', uploadRenderHandler);
-app.get('/api/saves/:id/download', downloadHandler);
-app.get('/api/saves/:id/thumbnail', thumbnailHandler);
 
 app.use('/api/assets/*', requireAuth);
 app.post('/api/assets', createAssetHandler);

@@ -3,7 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import type { SaveSummary } from '@disccotools/shared';
+import { createEmptyRecipe } from '@disccotools/shared';
 import { SaveCard } from './SaveCard.js';
+
+vi.mock('../editor/render.js', () => ({
+  renderToPng: vi.fn(),
+  downloadBlob: vi.fn(),
+}));
 
 const baseSave: SaveSummary = {
   id: 'sv1',
@@ -11,7 +17,7 @@ const baseSave: SaveSummary = {
   isTemplate: false,
   createdAt: Date.now() - 60000,
   updatedAt: Date.now() - 60000,
-  thumbnailUrl: '/api/saves/sv1/thumbnail',
+  recipe: createEmptyRecipe(),
   tags: [],
 };
 
@@ -52,9 +58,19 @@ describe('<SaveCard />', () => {
     expect(screen.getByText('TEMPLATE')).toBeInTheDocument();
   });
 
-  it('renders a fallback when there is no thumbnail', () => {
-    renderCard({ thumbnailUrl: null });
-    expect(screen.getByText(/no preview/i)).toBeInTheDocument();
+  it('renders a Canvas preview inside the edit link', () => {
+    renderCard();
+    const editLink = screen.getByRole('link', { name: /edit my icon/i });
+    expect(editLink.querySelector('svg[aria-label="Icon canvas"]')).not.toBeNull();
+  });
+
+  it('renders a Download button that re-renders from the recipe', async () => {
+    const { renderToPng, downloadBlob } = await import('../editor/render.js');
+    vi.mocked(renderToPng).mockResolvedValue(new Blob(['x'], { type: 'image/png' }));
+    renderCard();
+    await userEvent.click(screen.getByRole('button', { name: /download/i }));
+    expect(renderToPng).toHaveBeenCalled();
+    expect(downloadBlob).toHaveBeenCalled();
   });
 
   it('two-step confirm before delete fires onDelete', async () => {

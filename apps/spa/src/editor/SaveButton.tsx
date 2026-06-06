@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../auth/useUser.js';
-import { createSave, updateSave, uploadRender } from '../api/saves.js';
+import { createSave, updateSave } from '../api/saves.js';
 import { ApiError } from '../api/client.js';
 import { useRecipeStore } from './useRecipeStore.js';
 import { NameDialog } from './NameDialog.js';
-import { renderRecipeAtSize, renderToPng } from './render.js';
 
 export function SaveButton() {
   const userState = useUser();
@@ -28,11 +27,8 @@ export function SaveButton() {
       const save = existingId
         ? await updateSave(existingId, { name, recipe })
         : await createSave({ name, recipe });
-
-      const full = await renderToPng(recipe);
-      const thumb = await renderRecipeAtSize(recipe, 128);
-      await uploadRender(save.id, full, thumb);
-
+      // v2: we only store the recipe and reconstruct the PNG on demand,
+      // so no R2 render upload step anymore
       setCurrentSave({ id: save.id, name: save.name });
       if (!existingId) navigate(`/editor/${save.id}`);
     } catch (err) {

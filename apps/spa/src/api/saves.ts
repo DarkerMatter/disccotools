@@ -56,19 +56,3 @@ export async function cloneSave(id: string, opts: CloneSaveBody = {}): Promise<S
   const body = (await res.json()) as SaveResponse;
   return body.save;
 }
-
-export async function uploadRender(
-  id: string,
-  full: Blob,
-  thumb: Blob,
-): Promise<SaveDetail> {
-  const fd = new FormData();
-  fd.append('full', full, 'full.png');
-  fd.append('thumb', thumb, 'thumb.png');
-  const res = await apiFetch(`/api/saves/${id}/render`, {
-    method: 'POST',
-    body: fd,
-  });
-  const body = (await res.json()) as SaveResponse;
-  return body.save;
-}

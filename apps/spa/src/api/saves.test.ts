@@ -7,7 +7,6 @@ import {
   getSave,
   listSaves,
   updateSave,
-  uploadRender,
 } from './saves.js';
 
 const realFetch = global.fetch;
@@ -66,11 +65,8 @@ describe('createSave / updateSave / getSave / deleteSave / cloneSave', () => {
           name: 'a',
           recipe,
           isTemplate: false,
-          renderedAt: null,
           createdAt: 1,
           updatedAt: 1,
-          thumbnailUrl: null,
-          downloadUrl: null,
         },
       }),
     );
@@ -83,8 +79,7 @@ describe('createSave / updateSave / getSave / deleteSave / cloneSave', () => {
       jsonResponse(200, {
         save: {
           id: 'sv1', name: 'b', recipe: createEmptyRecipe(),
-          isTemplate: false, renderedAt: null, createdAt: 1, updatedAt: 2,
-          thumbnailUrl: null, downloadUrl: null,
+          isTemplate: false, createdAt: 1, updatedAt: 2,
         },
       }),
     );
@@ -103,8 +98,7 @@ describe('createSave / updateSave / getSave / deleteSave / cloneSave', () => {
       jsonResponse(201, {
         save: {
           id: 'sv2', name: 'a (copy)', recipe: createEmptyRecipe(),
-          isTemplate: false, renderedAt: null, createdAt: 1, updatedAt: 1,
-          thumbnailUrl: null, downloadUrl: null,
+          isTemplate: false, createdAt: 1, updatedAt: 1,
         },
       }),
     );
@@ -119,36 +113,11 @@ describe('createSave / updateSave / getSave / deleteSave / cloneSave', () => {
       jsonResponse(200, {
         save: {
           id: 'sv1', name: 'a', recipe: createEmptyRecipe(),
-          isTemplate: false, renderedAt: null, createdAt: 1, updatedAt: 1,
-          thumbnailUrl: null, downloadUrl: null,
+          isTemplate: false, createdAt: 1, updatedAt: 1,
         },
       }),
     );
     const s = await getSave('sv1');
     expect(s.name).toBe('a');
-  });
-});
-
-describe('uploadRender', () => {
-  it('POSTs multipart with both blobs', async () => {
-    const mock = mockFetch(async () =>
-      jsonResponse(200, {
-        save: {
-          id: 'sv1', name: 'a', recipe: createEmptyRecipe(),
-          isTemplate: false, renderedAt: 1, createdAt: 1, updatedAt: 1,
-          thumbnailUrl: '/api/saves/sv1/thumbnail',
-          downloadUrl: '/api/saves/sv1/download',
-        },
-      }),
-    );
-    const full = new Blob(['x'], { type: 'image/png' });
-    const thumb = new Blob(['y'], { type: 'image/png' });
-    await uploadRender('sv1', full, thumb);
-    const init = mock.mock.calls[0]![1]!;
-    expect(init.method).toBe('POST');
-    expect(init.body).toBeInstanceOf(FormData);
-    const fd = init.body as FormData;
-    expect(fd.get('full')).toBeInstanceOf(Blob);
-    expect(fd.get('thumb')).toBeInstanceOf(Blob);
   });
 });

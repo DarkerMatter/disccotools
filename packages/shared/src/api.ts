@@ -4,13 +4,14 @@ import { RecipeSchema } from './recipe.js';
 export const TagsSchema = z.array(z.string().min(1).max(24)).max(8);
 export type Tags = z.infer<typeof TagsSchema>;
 
+// recipes are reconstructed client-side from this shape, no R2 PNGs are stored
 export const SaveSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
   isTemplate: z.boolean(),
   createdAt: z.number(),
   updatedAt: z.number(),
-  thumbnailUrl: z.string().nullable(),
+  recipe: RecipeSchema,
   tags: TagsSchema,
 });
 export type SaveSummary = z.infer<typeof SaveSummarySchema>;
@@ -20,11 +21,8 @@ export const SaveDetailSchema = z.object({
   name: z.string(),
   recipe: RecipeSchema,
   isTemplate: z.boolean(),
-  renderedAt: z.number().nullable(),
   createdAt: z.number(),
   updatedAt: z.number(),
-  thumbnailUrl: z.string().nullable(),
-  downloadUrl: z.string().nullable(),
   tags: TagsSchema,
 });
 export type SaveDetail = z.infer<typeof SaveDetailSchema>;

@@ -68,7 +68,7 @@ export function IconsPage() {
             isTemplate: cloned.isTemplate,
             createdAt: cloned.createdAt,
             updatedAt: cloned.updatedAt,
-            thumbnailUrl: cloned.thumbnailUrl,
+            recipe: cloned.recipe,
             tags: cloned.tags,
           }, ...prev]
         : prev,

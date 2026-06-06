@@ -12,25 +12,14 @@ vi.mock('../auth/useUser.js', () => ({
 vi.mock('../api/saves.js', () => ({
   createSave: vi.fn(),
   updateSave: vi.fn(),
-  uploadRender: vi.fn(),
-}));
-vi.mock('./render.js', () => ({
-  renderToPng: vi.fn(),
-  renderRecipeAtSize: vi.fn(),
-  downloadBlob: vi.fn(),
-  recipeToSvgString: vi.fn(),
 }));
 
 import { useUser } from '../auth/useUser.js';
-import { createSave, updateSave, uploadRender } from '../api/saves.js';
-import { renderRecipeAtSize, renderToPng } from './render.js';
+import { createSave, updateSave } from '../api/saves.js';
 
 const mockedUseUser = vi.mocked(useUser);
 const mockedCreate = vi.mocked(createSave);
 const mockedUpdate = vi.mocked(updateSave);
-const mockedUpload = vi.mocked(uploadRender);
-const mockedRender = vi.mocked(renderToPng);
-const mockedRenderAt = vi.mocked(renderRecipeAtSize);
 
 function detail(over: Partial<{ id: string; name: string }> = {}) {
   return {
@@ -38,11 +27,9 @@ function detail(over: Partial<{ id: string; name: string }> = {}) {
     name: 'a',
     recipe: createEmptyRecipe(),
     isTemplate: false,
-    renderedAt: null,
     createdAt: 1,
     updatedAt: 1,
-    thumbnailUrl: null,
-    downloadUrl: null,
+    tags: [],
     ...over,
   };
 }
@@ -64,9 +51,6 @@ beforeEach(() => {
     currentSave: null,
   });
   vi.clearAllMocks();
-  mockedRender.mockResolvedValue(new Blob(['x'], { type: 'image/png' }));
-  mockedRenderAt.mockResolvedValue(new Blob(['y'], { type: 'image/png' }));
-  mockedUpload.mockResolvedValue(detail());
 });
 
 afterEach(() => {
@@ -83,7 +67,7 @@ describe('<SaveButton />', () => {
     expect(btn.title).toMatch(/sign in/i);
   });
 
-  it('opens the name dialog on first save and creates+uploads on submit', async () => {
+  it('opens the name dialog on first save and creates on submit (no render upload)', async () => {
     mockedUseUser.mockReturnValue({
       status: 'authenticated',
       user: {
@@ -99,9 +83,6 @@ describe('<SaveButton />', () => {
     await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
     await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
     expect(mockedCreate.mock.calls[0]![0]!.name).toBe('fresh');
-    await waitFor(() => expect(mockedUpload).toHaveBeenCalled());
-    expect(mockedRender).toHaveBeenCalled();
-    expect(mockedRenderAt).toHaveBeenCalledWith(expect.anything(), 128);
     expect(useRecipeStore.getState().currentSave?.id).toBe('sv1');
   });
 

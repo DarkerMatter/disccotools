@@ -86,7 +86,8 @@ function gradientEndpoints(angleDeg: number) {
 export function Canvas({
   recipe: recipeProp,
   displaySize = DISPLAY_SIZE,
-}: { recipe?: Recipe; displaySize?: number } = {}) {
+  interactive = true,
+}: { recipe?: Recipe; displaySize?: number; interactive?: boolean } = {}) {
   const fromStore = useRecipeStore((s) => s.recipe);
   const recipe = recipeProp ?? fromStore;
   const selectedId = useRecipeStore((s) => s.selectedId);
@@ -136,37 +137,28 @@ export function Canvas({
           size={size}
         />
         {recipe.layers.map((layer) => {
+          const isSelected = interactive && selectedId === layer.id;
+          const click = interactive ? () => setSelection(layer.id) : undefined;
+          const common = { canvasSize: size, selected: isSelected };
           if (layer.kind === 'icon') {
-            return (
-              <IconLayer
-                key={layer.id}
-                layer={layer}
-                canvasSize={size}
-                selected={selectedId === layer.id}
-                onClick={() => setSelection(layer.id)}
-              />
+            return click === undefined ? (
+              <IconLayer key={layer.id} layer={layer} {...common} />
+            ) : (
+              <IconLayer key={layer.id} layer={layer} {...common} onClick={click} />
             );
           }
           if (layer.kind === 'text') {
-            return (
-              <TextLayer
-                key={layer.id}
-                layer={layer}
-                canvasSize={size}
-                selected={selectedId === layer.id}
-                onClick={() => setSelection(layer.id)}
-              />
+            return click === undefined ? (
+              <TextLayer key={layer.id} layer={layer} {...common} />
+            ) : (
+              <TextLayer key={layer.id} layer={layer} {...common} onClick={click} />
             );
           }
           if (layer.kind === 'image') {
-            return (
-              <ImageLayer
-                key={layer.id}
-                layer={layer}
-                canvasSize={size}
-                selected={selectedId === layer.id}
-                onClick={() => setSelection(layer.id)}
-              />
+            return click === undefined ? (
+              <ImageLayer key={layer.id} layer={layer} {...common} />
+            ) : (
+              <ImageLayer key={layer.id} layer={layer} {...common} onClick={click} />
             );
           }
           return null;

@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import type { SaveSummary } from '@disccotools/shared';
 import { TagChips } from '../tags/TagChips.js';
+import { Canvas } from '../editor/Canvas.js';
+import { downloadBlob, renderToPng } from '../editor/render.js';
 
 function timeAgo(ms: number): string {
   const seconds = Math.max(0, Math.floor((Date.now() - ms) / 1000));
@@ -29,6 +31,21 @@ export function SaveCard({
   const [confirming, setConfirming] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState(save.name);
+  const [downloading, setDownloading] = useState(false);
+
+  async function handleDownload() {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      const blob = await renderToPng(save.recipe);
+      const slug = save.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'icon';
+      downloadBlob(blob, `disccotools-${slug}-${save.recipe.size}.png`);
+    } catch (err) {
+      console.error('download failed', err);
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   async function handleSaveName() {
     const next = draftName.trim();
@@ -58,33 +75,26 @@ export function SaveCard({
         to={`/editor/${save.id}`}
         aria-label={`Edit ${save.name}`}
         style={{
-          display: 'block',
+          display: 'flex',
           aspectRatio: '1 / 1',
           background: 'var(--color-surface-elev)',
           overflow: 'hidden',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 8,
         }}
       >
-        {save.thumbnailUrl ? (
-          <img
-            src={save.thumbnailUrl}
-            alt=""
-            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-          />
-        ) : (
-          <span
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              height: '100%',
-              fontSize: 12,
-              color: 'var(--color-text-muted)',
-            }}
-          >
-            No preview
-          </span>
-        )}
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Canvas recipe={save.recipe} displaySize={200} interactive={false} />
+        </div>
       </Link>
 
       <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -187,6 +197,14 @@ export function SaveCard({
           >
             Edit
           </Link>
+          <button
+            type="button"
+            onClick={() => void handleDownload()}
+            disabled={downloading}
+            style={ghostBtnStyle}
+          >
+            {downloading ? 'Rendering…' : 'Download'}
+          </button>
           <button type="button" onClick={onClone} style={ghostBtnStyle}>
             Clone
           </button>

@@ -17,14 +17,14 @@ import {
 } from './api.js';
 
 describe('SaveSummarySchema', () => {
-  it('accepts a populated summary with null thumbnailUrl', () => {
+  it('accepts a populated summary with a recipe', () => {
     const ok = {
       id: 'sv_1',
       name: 'design',
       isTemplate: false,
       createdAt: 1,
       updatedAt: 1,
-      thumbnailUrl: null,
+      recipe: createEmptyRecipe(),
       tags: [],
     };
     expect(SaveSummarySchema.parse(ok)).toEqual(ok);
@@ -37,7 +37,7 @@ describe('SaveSummarySchema', () => {
       isTemplate: false,
       createdAt: 1,
       updatedAt: 1,
-      thumbnailUrl: null,
+      recipe: createEmptyRecipe(),
       tags: ['icon', 'brand'],
     };
     expect(SaveSummarySchema.parse(ok).tags).toEqual(['icon', 'brand']);
@@ -51,11 +51,8 @@ describe('SaveDetailSchema', () => {
       name: 'design',
       recipe: createEmptyRecipe(),
       isTemplate: false,
-      renderedAt: null,
       createdAt: 1,
       updatedAt: 1,
-      thumbnailUrl: null,
-      downloadUrl: null,
       tags: [],
     };
     expect(SaveDetailSchema.parse(ok)).toEqual(ok);
