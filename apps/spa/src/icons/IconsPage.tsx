@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { SaveFilter, SaveSummary } from '@disccotools/shared';
 import { logout } from '../api/client.js';
 import {
   cloneSave,
   deleteSave,
   listSaves,
+  revokeShare,
+  shareTemplate,
   updateSave,
+  useTemplate,
 } from '../api/saves.js';
 import { LoginButton } from '../auth/LoginButton.js';
 import { UserPill } from '../auth/UserPill.js';
@@ -24,6 +27,7 @@ const FILTERS: { value: SaveFilter; label: string }[] = [
 
 export function IconsPage() {
   const userState = useUser();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<SaveFilter>('designs');
   const [saves, setSaves] = useState<SaveSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
