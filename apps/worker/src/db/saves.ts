@@ -14,6 +14,8 @@ type SaveRow = {
   created_at: number;
   updated_at: number;
   tags: string | null;
+  parent_template_id: string | null;
+  share_token: string | null;
 };
 
 export type RenderedFormat = 'png' | 'svg';
@@ -31,6 +33,8 @@ export type Save = {
   createdAt: number;
   updatedAt: number;
   tags: string[];
+  parentTemplateId: string | null;
+  shareToken: string | null;
 };
 
 export type SaveFilter = 'all' | 'designs' | 'templates';
@@ -73,6 +77,8 @@ function rowToSave(row: SaveRow): Save {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     tags: parseTagsColumn(row.tags),
+    parentTemplateId: row.parent_template_id,
+    shareToken: row.share_token,
   };
 }
 
@@ -91,6 +97,7 @@ export async function createSave(
     recipe: Recipe;
     isTemplate?: boolean;
     tags?: string[];
+    parentTemplateId?: string | null;
   },
 ): Promise<Save> {
   const now = Date.now();
@@ -98,8 +105,8 @@ export async function createSave(
   const tags = normalizeTags(input.tags);
   await db
     .prepare(
-      `INSERT INTO saves (id, user_id, name, recipe_json, is_template, created_at, updated_at, tags)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO saves (id, user_id, name, recipe_json, is_template, created_at, updated_at, tags, parent_template_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       id,
@@ -110,6 +117,7 @@ export async function createSave(
       now,
       now,
       JSON.stringify(tags),
+      input.parentTemplateId ?? null,
     )
     .run();
   const row = await db
@@ -235,5 +243,73 @@ export async function deleteSave(
   db: D1Database,
   id: string,
 ): Promise<void> {
+  // children remember their lineage via parent_template_id; null it before drop so
+  // they don't break referential integrity when the parent template goes away
+  await db
+    .prepare(`UPDATE saves SET parent_template_id = NULL WHERE parent_template_id = ?`)
+    .bind(id)
+    .run();
   await db.prepare(`DELETE FROM saves WHERE id = ?`).bind(id).run();
+}
+
+// "Use" a template: create a new child save under the current user that points
+// back to the template via parent_template_id. The child is never itself a
+// template, even if the source was; chains of templates aren't supported.
+export async function useTemplate(
+  db: D1Database,
+  templateId: string,
+  opts: { userId: string; newName?: string } = { userId: '' },
+): Promise<Save | null> {
+  const template = await getSave(db, templateId);
+  if (!template) return null;
+  return createSave(db, {
+    userId: opts.userId,
+    name: opts.newName ?? `${template.name} (from template)`,
+    recipe: template.recipe,
+    isTemplate: false,
+    tags: template.tags,
+    parentTemplateId: template.id,
+  });
+}
+
+function newShareToken(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID().replace(/-/g, '');
+  }
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+export async function setSaveShareToken(
+  db: D1Database,
+  id: string,
+  token: string | null,
+): Promise<Save | null> {
+  const now = Date.now();
+  await db
+    .prepare(`UPDATE saves SET share_token = ?, updated_at = ? WHERE id = ?`)
+    .bind(token, now, id)
+    .run();
+  return getSave(db, id);
+}
+
+// Ensure the save has a share token (idempotent). Returns the updated save.
+export async function ensureSaveShareToken(
+  db: D1Database,
+  id: string,
+): Promise<Save | null> {
+  const existing = await getSave(db, id);
+  if (!existing) return null;
+  if (existing.shareToken) return existing;
+  return setSaveShareToken(db, id, newShareToken());
+}
+
+export async function getSaveByShareToken(
+  db: D1Database,
+  token: string,
+): Promise<Save | null> {
+  const row = await db
+    .prepare(`SELECT * FROM saves WHERE share_token = ?`)
+    .bind(token)
+    .first<SaveRow>();
+  return row ? rowToSave(row) : null;
 }
