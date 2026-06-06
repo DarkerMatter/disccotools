@@ -25,6 +25,11 @@ import {
   listAssetsHandler,
   renameAssetHandler,
 } from './handlers/assets.js';
+import {
+  bakeColor,
+  listCustomIconsHandler,
+  validateColor,
+} from './handlers/iconPack.js';
 
 const app = new Hono<AppEnv>();
 
@@ -54,6 +59,8 @@ app.patch('/api/assets/:id', renameAssetHandler);
 app.delete('/api/assets/:id', deleteAssetHandler);
 app.get('/api/assets/:id/file', getAssetFileHandler);
 
+app.get('/api/icon-pack/custom', listCustomIconsHandler);
+
 app.get('/static/*', async (c) => {
   const path = c.req.path.replace(/^\/static\//, '');
   if (!path) {
@@ -63,9 +70,25 @@ app.get('/static/*', async (c) => {
   if (!object) {
     return c.json({ error: { code: 'NOT_FOUND', message: 'asset not found' } }, 404);
   }
+
+  const contentType = object.httpMetadata?.contentType ?? 'application/octet-stream';
+  const isSvg = contentType.includes('svg') || path.toLowerCase().endsWith('.svg');
+  const requestedColor = validateColor(c.req.query('color'));
+
+  if (isSvg && requestedColor) {
+    const text = await object.text();
+    const baked = bakeColor(text, requestedColor);
+    return new Response(baked, {
+      headers: {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'public, max-age=86400',
+      },
+    });
+  }
+
   return new Response(object.body, {
     headers: {
-      'Content-Type': object.httpMetadata?.contentType ?? 'application/octet-stream',
+      'Content-Type': contentType,
       'Content-Length': String(object.size),
       'Cache-Control': 'public, max-age=86400',
     },

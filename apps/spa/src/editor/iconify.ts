@@ -1,4 +1,6 @@
+// 'custom' goes first so the chip lands at the front of the row
 export const DEFAULT_PREFIXES = [
+  'custom',
   'lucide',
   'tabler',
   'ph',
@@ -7,6 +9,7 @@ export const DEFAULT_PREFIXES = [
 ] as const;
 
 export const PREFIX_LABELS: Record<string, string> = {
+  custom: 'Custom',
   lucide: 'Lucide',
   tabler: 'Tabler',
   ph: 'Phosphor',
@@ -24,7 +27,41 @@ export type IconHit = {
   name: string;
 };
 
+const CUSTOM_API_URL = '/api/icon-pack/custom';
+const CUSTOM_CACHE_TTL_MS = 60_000;
+
+let customCache: { hits: IconHit[]; expires: number } | null = null;
+
+export function _resetCustomCache() {
+  customCache = null;
+}
+
+async function loadCustomIcons(opts: { signal?: AbortSignal } = {}): Promise<IconHit[]> {
+  const now = Date.now();
+  if (customCache && customCache.expires > now) return customCache.hits;
+  try {
+    const init: RequestInit = opts.signal ? { signal: opts.signal } : {};
+    const res = await fetch(CUSTOM_API_URL, init);
+    if (!res.ok) return [];
+    const body = (await res.json()) as {
+      icons?: Array<{ id: string; prefix: string; name: string }>;
+    };
+    const hits: IconHit[] = (body.icons ?? []).map((i) => ({
+      id: i.id,
+      prefix: i.prefix,
+      name: i.name,
+    }));
+    customCache = { hits, expires: now + CUSTOM_CACHE_TTL_MS };
+    return hits;
+  } catch {
+    return [];
+  }
+}
+
 export function iconUrl(prefix: string, name: string, color: string): string {
+  if (prefix === 'custom') {
+    return `/static/icons/custom/${name}.svg?color=${encodeURIComponent(color)}`;
+  }
   const params = new URLSearchParams({ color });
   return `https://api.iconify.design/${prefix}/${name}.svg?${params.toString()}`;
 }
@@ -37,23 +74,36 @@ export async function searchIcons(
   const prefixes = opts.prefixes ?? DEFAULT_PREFIXES;
   const q = query.trim();
   if (q.length === 0) return [];
+
+  const wantsCustom = prefixes.includes('custom');
+  const iconifyPrefixes = prefixes.filter((p) => p !== 'custom');
+
+  const customHits: IconHit[] = wantsCustom
+    ? (await loadCustomIcons({ signal: opts.signal })).filter((h) =>
+        h.name.toLowerCase().includes(q.toLowerCase()),
+      )
+    : [];
+
+  if (iconifyPrefixes.length === 0) return customHits.slice(0, limit);
+
   const params = new URLSearchParams({
     query: q,
     limit: String(limit),
-    prefixes: prefixes.join(','),
+    prefixes: iconifyPrefixes.join(','),
   });
   const url = `https://api.iconify.design/search?${params.toString()}`;
   try {
     const init: RequestInit = opts.signal ? { signal: opts.signal } : {};
     const res = await fetch(url, init);
-    if (!res.ok) return [];
+    if (!res.ok) return customHits;
     const body = (await res.json()) as { icons?: string[] };
-    return (body.icons ?? []).map((id) => {
+    const iconifyHits: IconHit[] = (body.icons ?? []).map((id) => {
       const [prefix, ...rest] = id.split(':');
       return { id, prefix: prefix ?? '', name: rest.join(':') };
     });
+    return [...customHits, ...iconifyHits];
   } catch {
-    return [];
+    return customHits;
   }
 }
 
@@ -63,6 +113,12 @@ export async function browseIcons(
   opts: { limit?: number; signal?: AbortSignal } = {},
 ): Promise<IconHit[]> {
   const limit = Math.max(1, opts.limit ?? 10000);
+
+  if (prefix === 'custom') {
+    const all = await loadCustomIcons({ signal: opts.signal });
+    return all.slice(0, limit);
+  }
+
   const params = new URLSearchParams({ prefix, info: 'true' });
   const url = `https://api.iconify.design/collection?${params.toString()}`;
   try {
