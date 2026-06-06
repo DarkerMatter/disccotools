@@ -9,24 +9,55 @@ import { logout } from '../api/client.js';
 import { getSave } from '../api/saves.js';
 import { TopTabs } from '../TopTabs.js';
 import { Canvas } from './Canvas.js';
-import { Toolbox } from './Toolbox.js';
-import { LayerPanel } from './LayerPanel.js';
-import { PreviewChip } from './PreviewChip.js';
-import { PropertiesPanel } from './PropertiesPanel.js';
+import { CustomiseIconsPanel } from './CustomiseIconsPanel.js';
+import { CustomiseShapePanel } from './CustomiseShapePanel.js';
+import { DiscordPreview } from './DiscordPreview.js';
 import { DownloadButton } from './DownloadButton.js';
+import { EditorTabs, type EditorTabKey } from './EditorTabs.js';
+import { IconGrid } from './IconGrid.js';
+import { PreviewChip } from './PreviewChip.js';
 import { SaveButton } from './SaveButton.js';
 import { TutorialModal } from './TutorialModal.js';
 import { TutorialTour, type TourStep } from './TutorialTour.js';
+import type { IconHit } from './iconify.js';
 import { useRecipeStore } from './useRecipeStore.js';
 
 const TOUR_STEPS: TourStep[] = [
-  { target: 'shape', title: 'Pick a shape', body: 'Circle, hexagon, shield, star. The shape clips your icon, so it sets the outline.' },
-  { target: 'background', title: 'Pick a background', body: 'Solid, gradient, or transparent. This is the canvas behind everything.' },
-  { target: 'add-icon', title: 'Add an icon', body: 'Browse the icon library or search. Drop it onto the canvas and it lands in the center.' },
-  { target: 'properties', title: 'Tweak the layer', body: 'Use the Properties panel to move, scale, rotate, color, or set the opacity.' },
-  { target: 'resolution', title: 'Choose a resolution', body: 'Discord likes round numbers. 256 is a safe default.' },
-  { target: 'download', title: 'Download the PNG', body: 'Your icon is rendered in the browser and saved straight to your downloads. No signup needed for this part.' },
-  { target: 'save', title: 'Save it for later', body: 'Sign in with Discord to keep the design in your library. You can come back and tweak it anytime.' },
+  {
+    target: 'editor-tab-shape',
+    title: 'Pick your shape',
+    body: 'Circle, hexagon, shield, star. The shape clips your icon, so it sets the outline.',
+  },
+  {
+    target: 'background',
+    title: 'Style your background',
+    body: 'Solid, gradient, or transparent. This is the canvas behind everything.',
+  },
+  {
+    target: 'editor-tab-search',
+    title: 'Find an icon',
+    body: 'Browse the icon library or search. Click any icon to drop it onto the canvas.',
+  },
+  {
+    target: 'editor-tab-icons',
+    title: 'Tweak your layers',
+    body: 'Open the Customise Icons tab to move, scale, rotate, and color each layer.',
+  },
+  {
+    target: 'resolution',
+    title: 'Choose a resolution',
+    body: 'Discord likes round numbers. 256 is a safe default.',
+  },
+  {
+    target: 'download',
+    title: 'Download the PNG',
+    body: 'Your icon is rendered right in the browser and saved straight to your downloads.',
+  },
+  {
+    target: 'save',
+    title: 'Save it for later',
+    body: 'Sign in with Discord to keep the design in your library and come back to tweak it.',
+  },
 ];
 
 export function Editor() {
@@ -37,16 +68,25 @@ export function Editor() {
   const currentSave = useRecipeStore((s) => s.currentSave);
   const resetTo = useRecipeStore((s) => s.resetTo);
   const setCurrentSave = useRecipeStore((s) => s.setCurrentSave);
+  const addIconLayer = useRecipeStore((s) => s.addIconLayer);
+  const setSelection = useRecipeStore((s) => s.setSelection);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [confirmingClear, setConfirmingClear] = useState(false);
+  const [activeTab, setActiveTab] = useState<EditorTabKey>('icons');
 
   function handleClear() {
     resetTo(createEmptyRecipe());
     setCurrentSave(null);
     setConfirmingClear(false);
+  }
+
+  function handleAddIcon(hit: IconHit) {
+    addIconLayer({ iconset: hit.prefix, name: hit.name });
+    // hop into Customise Icons so the user sees their new layer card expand
+    setActiveTab('icons');
   }
 
   useEffect(() => {
@@ -75,8 +115,6 @@ export function Editor() {
         </Link>
         <TopTabs />
         <nav className="app-header__actions">
-          <SaveButton />
-          <DownloadButton />
           <ThemeToggle />
           <div className="auth-slot">
             {userState.status === 'anonymous' && <LoginButton />}
@@ -87,153 +125,118 @@ export function Editor() {
         </nav>
       </header>
 
-      <div className="editor-layout">
-        <aside aria-label="Tools" className="editor-aside-left">
-          <button
-            type="button"
-            onClick={() => setTutorialOpen(true)}
-            style={{
-              alignSelf: 'flex-start',
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--color-text)',
-              padding: '8px 12px',
-              fontSize: 13,
-              cursor: 'pointer',
-              marginBottom: 16,
-            }}
-          >
-            Tutorial
-          </button>
-          <Toolbox />
-          <p
-            style={{
-              marginTop: 'auto',
-              paddingTop: 16,
-              borderTop: '1px solid var(--color-border)',
-              fontSize: 11,
-              color: 'var(--color-text-muted)',
-              lineHeight: 1.55,
-              textAlign: 'center',
-            }}
-          >
-            Made for the No Text To Speach Community by{' '}
-            <a
-              href="https://dimitri.one"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: 'var(--color-text)', fontWeight: 600 }}
-            >
-              Dimitri
-            </a>
-          </p>
-        </aside>
-
-        <section aria-label="Canvas" className="editor-canvas-section">
-          {loading && (
-            <p
-              style={{
-                position: 'absolute',
-                top: 16,
-                left: 16,
-                color: 'var(--color-text-muted)',
-                fontSize: 13,
-              }}
-            >
-              Loading save…
-            </p>
-          )}
-          {loadError && (
-            <p
-              role="alert"
-              style={{
-                position: 'absolute',
-                top: 16,
-                left: 16,
-                color: 'var(--color-text-muted)',
-                fontSize: 13,
-              }}
-            >
-              {loadError}
-            </p>
-          )}
-          <Canvas />
-        </section>
-
-        <aside aria-label="Layers" className="editor-aside-right">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <PropertiesPanel />
-            <LayerPanel />
-            <PreviewChip />
+      <div className="editor-grid">
+        <div className="editor-card">
+          <EditorTabs active={activeTab} onChange={setActiveTab} />
+          <div className="editor-card__body" role="tabpanel" aria-labelledby={`editor-tab-${activeTab}`}>
+            {activeTab === 'search' && (
+              <IconGrid onSelect={handleAddIcon} />
+            )}
+            {activeTab === 'shape' && <CustomiseShapePanel />}
+            {activeTab === 'icons' && (
+              <CustomiseIconsPanel
+                onAddIconClick={() => {
+                  setSelection(null);
+                  setActiveTab('search');
+                }}
+              />
+            )}
           </div>
-          <div
-            style={{
-              marginTop: 'auto',
-              paddingTop: 16,
-              borderTop: '1px solid var(--color-border)',
-              display: 'flex',
-              gap: 6,
-            }}
-          >
-            {!confirmingClear && (
+          <div className="editor-card__footer">
+            <button
+              type="button"
+              className="editor-card__footer-button"
+              onClick={() => setTutorialOpen(true)}
+            >
+              Tutorial
+            </button>
+            <span>
+              Made for the No Text To Speach community by{' '}
+              <a href="https://dimitri.one" target="_blank" rel="noopener noreferrer">
+                Dimitri
+              </a>
+            </span>
+          </div>
+        </div>
+
+        <div className="editor-canvas-column">
+          <div className="editor-canvas-frame">
+            {loading && (
+              <p
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  left: 12,
+                  color: 'var(--color-text-muted)',
+                  fontSize: 12,
+                }}
+              >
+                Loading save…
+              </p>
+            )}
+            {loadError && (
+              <p
+                role="alert"
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  left: 12,
+                  color: 'var(--color-text-muted)',
+                  fontSize: 12,
+                }}
+              >
+                {loadError}
+              </p>
+            )}
+            <Canvas />
+          </div>
+
+          <DiscordPreview />
+          <PreviewChip />
+
+          <div className="editor-action-row">
+            <DownloadButton />
+            <SaveButton />
+          </div>
+
+          {!confirmingClear && (
+            <button
+              type="button"
+              className="cta-button cta-button--danger"
+              onClick={() => setConfirmingClear(true)}
+            >
+              Clear canvas
+            </button>
+          )}
+          {confirmingClear && (
+            <div className="editor-action-row">
               <button
                 type="button"
-                onClick={() => setConfirmingClear(true)}
+                onClick={handleClear}
                 style={{
                   flex: 1,
-                  background: 'transparent',
-                  color: '#ef4444',
-                  padding: '8px 12px',
+                  background: '#ef4444',
+                  color: 'white',
+                  padding: '10px 12px',
                   borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--color-border)',
+                  border: 'none',
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   cursor: 'pointer',
                 }}
               >
-                Clear canvas
+                Confirm clear
               </button>
-            )}
-            {confirmingClear && (
-              <>
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  style={{
-                    flex: 1,
-                    background: '#ef4444',
-                    color: 'white',
-                    padding: '8px 12px',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid #ef4444',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Confirm clear
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmingClear(false)}
-                  style={{
-                    background: 'var(--color-surface)',
-                    color: 'var(--color-text)',
-                    padding: '8px 12px',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--color-border)',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Cancel
-                </button>
-              </>
-            )}
-          </div>
-        </aside>
+              <button
+                type="button"
+                onClick={() => setConfirmingClear(false)}
+                className="cta-button cta-button--secondary"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <TutorialModal
