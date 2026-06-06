@@ -108,11 +108,17 @@ export function Canvas({
       viewBox={`0 0 ${size} ${size}`}
       width={size}
       height={size}
+      preserveAspectRatio="xMidYMid meet"
       style={{
         display: 'block',
         borderRadius: 'var(--radius-md)',
         boxShadow: 'var(--shadow-card)',
         background: 'transparent',
+        // never overflow whatever wraps us; the viewBox keeps it square
+        width: '100%',
+        height: 'auto',
+        maxWidth: size,
+        maxHeight: size,
       }}
     >
       <defs>
