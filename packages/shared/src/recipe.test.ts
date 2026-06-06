@@ -326,6 +326,7 @@ describe('RecipeSchema', () => {
       size: 256,
       background: { kind: 'transparent' },
       shape: 'circle',
+      shapeRotation: 0,
       layers: Array.from({ length: MAX_LAYERS + 1 }, (_, i) => ({
         id: `l${i}`,
         kind: 'icon' as const,

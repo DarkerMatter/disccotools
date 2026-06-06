@@ -116,6 +116,8 @@ export const RecipeSchema = z.object({
   size: SizeSchema,
   background: BackgroundSchema,
   shape: ShapeSchema,
+  // older saves don't include this; default keeps them rendering the same way
+  shapeRotation: z.number().default(0),
   layers: z.array(LayerSchema).max(50),
 });
 export type Recipe = z.infer<typeof RecipeSchema>;
@@ -134,6 +136,7 @@ export function createEmptyRecipe(): Recipe {
       opacity: 1,
     },
     shape: 'circle',
+    shapeRotation: 0,
     layers: [],
   };
 }

@@ -106,7 +106,9 @@ export function Canvas({
     >
       <defs>
         <clipPath id={clipId}>
-          <ShapeGeometry shape={recipe.shape} size={size} />
+          <g transform={`rotate(${recipe.shapeRotation ?? 0} ${size / 2} ${size / 2})`}>
+            <ShapeGeometry shape={recipe.shape} size={size} />
+          </g>
         </clipPath>
         {isGradient && recipe.background.kind === 'gradient' && (
           <linearGradient id={gradientId} {...gradientEndpoints(recipe.background.angle)}>

@@ -23,6 +23,7 @@ function ensureGradient(bg: Background): Extract<Background, { kind: 'gradient' 
 
 export function CustomiseShapePanel() {
   const shape = useRecipeStore((s) => s.recipe.shape);
+  const shapeRotation = useRecipeStore((s) => s.recipe.shapeRotation ?? 0);
   const bg = useRecipeStore((s) => s.recipe.background);
   const updateRecipe = useRecipeStore((s) => s.updateRecipe);
 
@@ -116,6 +117,21 @@ export function CustomiseShapePanel() {
         <div className="layer-card__body" id="shape-style-body">
           <div className="layer-card__body-inner">
             <div className="layer-card__body-content">
+              <div>
+                <h4 className="section-heading">Rotation</h4>
+                <SliderWithInput
+                  label="Z"
+                  shortLabel="Z"
+                  ariaLabel="Shape rotation"
+                  value={Math.round(shapeRotation)}
+                  min={-180}
+                  max={180}
+                  step={1}
+                  unit="°"
+                  onChange={(v) => updateRecipe((r) => ({ ...r, shapeRotation: v }))}
+                />
+              </div>
+
               {/* transparency toggle (off = uses color/gradient) */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text)' }}>
