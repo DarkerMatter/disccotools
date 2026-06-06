@@ -252,23 +252,25 @@ export async function deleteSave(
   await db.prepare(`DELETE FROM saves WHERE id = ?`).bind(id).run();
 }
 
-// "Use" a template: create a new child save under the current user that points
-// back to the template via parent_template_id. The child is never itself a
-// template, even if the source was; chains of templates aren't supported.
+// "Use" a save under the current user. If the source is a real template, the
+// child remembers it via parent_template_id so the lineage badge can show up;
+// for plain shared designs we just produce an orphan copy. Chains of templates
+// aren't supported — the child is never itself a template.
 export async function useTemplate(
   db: D1Database,
-  templateId: string,
+  sourceId: string,
   opts: { userId: string; newName?: string } = { userId: '' },
 ): Promise<Save | null> {
-  const template = await getSave(db, templateId);
-  if (!template) return null;
+  const source = await getSave(db, sourceId);
+  if (!source) return null;
+  const fallbackSuffix = source.isTemplate ? '(from template)' : '(shared copy)';
   return createSave(db, {
     userId: opts.userId,
-    name: opts.newName ?? `${template.name} (from template)`,
-    recipe: template.recipe,
+    name: opts.newName ?? `${source.name} ${fallbackSuffix}`,
+    recipe: source.recipe,
     isTemplate: false,
-    tags: template.tags,
-    parentTemplateId: template.id,
+    tags: source.tags,
+    parentTemplateId: source.isTemplate ? source.id : null,
   });
 }
 

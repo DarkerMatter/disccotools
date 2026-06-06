@@ -77,6 +77,8 @@ export async function useTemplateHandler(c: Context<AppEnv>): Promise<Response> 
 }
 
 // POST /api/saves/:id/share — owner-only. Generate (or reuse) a share token.
+// v2.0.1: works for any save, not just templates. Non-template shares
+// produce orphan copies on import; templates still get the parent linkage.
 export async function createShareHandler(c: Context<AppEnv>): Promise<Response> {
   const id = c.req.param('id');
   if (!id) return validation(c, 'missing id');
@@ -85,7 +87,6 @@ export async function createShareHandler(c: Context<AppEnv>): Promise<Response> 
   const save = await getSave(c.env.DB, id);
   if (!save) return notFound(c);
   if (save.userId !== user.id) return forbidden(c);
-  if (!save.isTemplate) return conflict(c, 'only templates can be shared');
 
   const updated = await ensureSaveShareToken(c.env.DB, id);
   if (!updated) return notFound(c);
@@ -108,15 +109,15 @@ export async function revokeShareHandler(c: Context<AppEnv>): Promise<Response> 
   return c.json({ save: toDetail(updated) }, 200);
 }
 
-// GET /api/templates/share/:token — public, no auth. Returns the template's
-// recipe + display metadata so anyone with the link can preview it.
+// GET /api/templates/share/:token — public, no auth. Returns the save's recipe
+// + display metadata so anyone with the link can preview it. Works for any
+// shared save, template or design.
 export async function getSharedTemplateHandler(c: Context<AppEnv>): Promise<Response> {
   const token = c.req.param('token');
   if (!token) return validation(c, 'missing token');
 
   const save = await getSaveByShareToken(c.env.DB, token);
-  if (!save) return notFound(c);
-  if (!save.isTemplate || !save.shareToken) return notFound(c);
+  if (!save || !save.shareToken) return notFound(c);
 
   const owner = await getUser(c.env.DB, save.userId);
   const ownerName = owner ? (owner.globalName ?? owner.username) : 'Someone';
@@ -135,8 +136,9 @@ export async function getSharedTemplateHandler(c: Context<AppEnv>): Promise<Resp
   return c.json(body, 200);
 }
 
-// POST /api/templates/share/:token/import — auth. Creates a child save under the
-// current user from the shared template, regardless of who owns the template.
+// POST /api/templates/share/:token/import — auth. Creates a copy under the
+// current user. If the source is a real template, the child remembers its
+// lineage via parent_template_id; for plain designs the import is unbound.
 export async function importSharedTemplateHandler(
   c: Context<AppEnv>,
 ): Promise<Response> {
@@ -145,8 +147,7 @@ export async function importSharedTemplateHandler(
   const user = c.var.user!;
 
   const save = await getSaveByShareToken(c.env.DB, token);
-  if (!save) return notFound(c);
-  if (!save.isTemplate || !save.shareToken) return notFound(c);
+  if (!save || !save.shareToken) return notFound(c);
 
   const body = (await safeJson(c)) ?? {};
   const parsed = UseTemplateBodySchema.safeParse(body);

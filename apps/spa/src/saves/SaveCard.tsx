@@ -269,7 +269,7 @@ export function SaveCard({
           >
             {save.isTemplate ? 'Edit template' : 'Edit'}
           </Link>
-          {save.isTemplate && onShare && (
+          {onShare && (
             <button
               type="button"
               onClick={() => void handleShareToggle()}
@@ -326,7 +326,7 @@ export function SaveCard({
           )}
         </div>
 
-        {sharing && save.isTemplate && save.shareToken && (
+        {sharing && save.shareToken && (
           <div
             style={{
               marginTop: 4,

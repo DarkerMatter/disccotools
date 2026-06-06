@@ -6,7 +6,7 @@ describe('GET /api/health', () => {
     const res = await SELF.fetch('http://example.com/api/health');
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toEqual({ status: 'ok', apiVersion: '1.0.2' });
+    expect(body).toEqual({ status: 'ok', apiVersion: '2.0.1' });
   });
 });
 
