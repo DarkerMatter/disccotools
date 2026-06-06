@@ -14,6 +14,7 @@ import { CustomiseShapePanel } from './CustomiseShapePanel.js';
 import { DiscordPreview } from './DiscordPreview.js';
 import { DownloadButton } from './DownloadButton.js';
 import { EditorTabs, type EditorTabKey } from './EditorTabs.js';
+import { ResolutionPicker } from './controls/ResolutionPicker.js';
 import { IconGrid } from './IconGrid.js';
 import { PreviewChip } from './PreviewChip.js';
 import { SaveButton } from './SaveButton.js';
@@ -199,48 +200,52 @@ export function Editor() {
           <DiscordPreview />
           <PreviewChip />
 
-          <div className="editor-action-row">
-            <DownloadButton />
-            <SaveButton />
-          </div>
-
-          {!confirmingClear && (
-            <button
-              type="button"
-              className="cta-button cta-button--danger"
-              onClick={() => setConfirmingClear(true)}
-            >
-              Clear canvas
-            </button>
-          )}
-          {confirmingClear && (
-            <div className="editor-action-row">
-              <button
-                type="button"
-                onClick={handleClear}
-                style={{
-                  flex: 1,
-                  background: '#ef4444',
-                  color: 'white',
-                  padding: '10px 12px',
-                  borderRadius: 'var(--radius-md)',
-                  border: 'none',
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                Confirm clear
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmingClear(false)}
-                className="cta-button cta-button--secondary"
-              >
-                Cancel
-              </button>
+          <div className="editor-actions">
+            <div className="editor-actions__primary">
+              <ResolutionPicker />
+              <div className="editor-actions__download">
+                <DownloadButton />
+              </div>
             </div>
-          )}
+            <SaveButton />
+            {!confirmingClear && (
+              <button
+                type="button"
+                className="cta-button cta-button--danger"
+                onClick={() => setConfirmingClear(true)}
+              >
+                Clear canvas
+              </button>
+            )}
+            {confirmingClear && (
+              <div className="editor-actions__primary">
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  style={{
+                    flex: 1,
+                    background: '#ef4444',
+                    color: 'white',
+                    padding: '10px 12px',
+                    borderRadius: 'var(--radius-md)',
+                    border: 'none',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Confirm clear
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingClear(false)}
+                  className="cta-button cta-button--secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

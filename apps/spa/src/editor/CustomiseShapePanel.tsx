@@ -4,13 +4,10 @@ import {
   SHAPE_LABELS,
   shapePathD,
   type Background,
-  type Size,
 } from '@disccotools/shared';
 import { useRecipeStore } from './useRecipeStore.js';
 import { SliderWithInput } from './controls/SliderWithInput.js';
 import { Toggle } from './controls/Toggle.js';
-
-const SIZES: Size[] = [32, 64, 128, 256, 512, 1024];
 
 function ensureSolid(bg: Background): Extract<Background, { kind: 'solid' }> {
   if (bg.kind === 'solid') return bg;
@@ -27,7 +24,6 @@ function ensureGradient(bg: Background): Extract<Background, { kind: 'gradient' 
 export function CustomiseShapePanel() {
   const shape = useRecipeStore((s) => s.recipe.shape);
   const bg = useRecipeStore((s) => s.recipe.background);
-  const size = useRecipeStore((s) => s.recipe.size);
   const updateRecipe = useRecipeStore((s) => s.updateRecipe);
 
   const [stylePanelOpen, setStylePanelOpen] = useState(true);
@@ -216,32 +212,6 @@ export function CustomiseShapePanel() {
                   />
                 </>
               )}
-
-              <div data-tour-id="resolution">
-                <h4 className="section-heading">Resolution</h4>
-                <select
-                  aria-label="Resolution"
-                  value={size}
-                  onChange={(e) =>
-                    updateRecipe((r) => ({ ...r, size: Number(e.target.value) as Size }))
-                  }
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    fontSize: 13,
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--color-border)',
-                    background: 'var(--color-bg)',
-                    color: 'var(--color-text)',
-                  }}
-                >
-                  {SIZES.map((s) => (
-                    <option key={s} value={s}>
-                      {s} × {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
           </div>
         </div>

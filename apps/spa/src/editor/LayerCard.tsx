@@ -1,9 +1,19 @@
+import type { DragEvent } from 'react';
 import type { IconColor, Layer } from '@disccotools/shared';
 import { iconUrl } from './iconify.js';
 import { useTheme } from '../theme/ThemeContext.js';
 import { useRecipeStore } from './useRecipeStore.js';
 import { SliderWithInput } from './controls/SliderWithInput.js';
 import { Toggle } from './controls/Toggle.js';
+
+export type LayerDragHandlers = {
+  isDraggingThis: boolean;
+  dropPosition: 'before' | 'after' | null;
+  onDragStart: (id: string) => void;
+  onDragEnd: () => void;
+  onDragOver: (id: string, position: 'before' | 'after') => void;
+  onDrop: (id: string) => void;
+};
 
 function layerTitle(layer: Layer): string {
   if (layer.kind === 'icon') return prettyIconName(layer.name);
@@ -38,7 +48,13 @@ function prefixLabel(p: string): string {
   return map[p] ?? p;
 }
 
-export function LayerCard({ layer }: { layer: Layer }) {
+export function LayerCard({
+  layer,
+  drag,
+}: {
+  layer: Layer;
+  drag?: LayerDragHandlers;
+}) {
   const { theme } = useTheme();
   const selectedId = useRecipeStore((s) => s.selectedId);
   const setSelection = useRecipeStore((s) => s.setSelection);
@@ -52,12 +68,73 @@ export function LayerCard({ layer }: { layer: Layer }) {
     updateLayer(layer.id, p);
   }
 
+  function handleDragStart(e: DragEvent<HTMLDivElement>) {
+    if (!drag) {
+      e.preventDefault();
+      return;
+    }
+    const target = e.target as HTMLElement;
+    // skip drag if the user grabbed a control inside the body
+    if (target.closest('input, select, textarea, [type="color"]')) {
+      e.preventDefault();
+      return;
+    }
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', layer.id);
+    drag.onDragStart(layer.id);
+  }
+
+  function handleDragOver(e: DragEvent<HTMLDivElement>) {
+    if (!drag) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const rect = e.currentTarget.getBoundingClientRect();
+    const position = e.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+    drag.onDragOver(layer.id, position);
+  }
+
+  function handleDrop(e: DragEvent<HTMLDivElement>) {
+    if (!drag) return;
+    e.preventDefault();
+    drag.onDrop(layer.id);
+  }
+
+  function handleDragEnd() {
+    drag?.onDragEnd();
+  }
+
+  const isDraggingThis = drag?.isDraggingThis ?? false;
+  const dropPos = drag?.dropPosition ?? null;
+  const cardClasses = [
+    'layer-card',
+    expanded ? 'layer-card--expanded' : '',
+    isDraggingThis ? 'layer-card--dragging' : '',
+    dropPos === 'before' ? 'layer-card--drop-before' : '',
+    dropPos === 'after' ? 'layer-card--drop-after' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div
-      className={`layer-card ${expanded ? 'layer-card--expanded' : ''}`}
+      className={cardClasses}
       data-tour-id={expanded ? 'properties' : undefined}
+      draggable={drag ? true : undefined}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       <div style={{ display: 'flex', alignItems: 'center' }}>
+        {drag && (
+          <span
+            className="layer-card__grip"
+            aria-hidden="true"
+            title="Drag to reorder"
+          >
+            ⋮⋮
+          </span>
+        )}
         <button
           type="button"
           className="layer-card__header"
