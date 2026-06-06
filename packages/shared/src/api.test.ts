@@ -26,6 +26,8 @@ describe('SaveSummarySchema', () => {
       updatedAt: 1,
       recipe: createEmptyRecipe(),
       tags: [],
+      parentTemplateId: null,
+      shareToken: null,
     };
     expect(SaveSummarySchema.parse(ok)).toEqual(ok);
   });
@@ -39,6 +41,8 @@ describe('SaveSummarySchema', () => {
       updatedAt: 1,
       recipe: createEmptyRecipe(),
       tags: ['icon', 'brand'],
+      parentTemplateId: null,
+      shareToken: null,
     };
     expect(SaveSummarySchema.parse(ok).tags).toEqual(['icon', 'brand']);
   });
@@ -54,6 +58,8 @@ describe('SaveDetailSchema', () => {
       createdAt: 1,
       updatedAt: 1,
       tags: [],
+      parentTemplateId: null,
+      shareToken: null,
     };
     expect(SaveDetailSchema.parse(ok)).toEqual(ok);
   });
