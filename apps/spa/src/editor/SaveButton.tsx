@@ -19,7 +19,7 @@ export function SaveButton() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const isAuthed = userState.status === 'authenticated';
-  const disabled = !isAuthed || busy;
+  const disabled = busy;
 
   async function doSave(name: string, existingId: string | null) {
     setBusy(true);
@@ -45,7 +45,11 @@ export function SaveButton() {
   }
 
   function handleClick() {
-    if (disabled) return;
+    if (busy) return;
+    if (!isAuthed) {
+      window.location.href = '/api/auth/login';
+      return;
+    }
     if (currentSave) {
       void doSave(currentSave.name, currentSave.id);
     } else {
@@ -73,20 +77,20 @@ export function SaveButton() {
         data-tour-id="save"
         onClick={handleClick}
         disabled={disabled}
-        title={isAuthed ? undefined : 'Sign in to save'}
+        title={isAuthed ? undefined : 'Sign in to save your design'}
         style={{
-          background: 'var(--color-surface)',
+          background: 'var(--color-surface-elev)',
           color: 'var(--color-text)',
-          padding: '8px 14px',
+          padding: '10px 14px',
           borderRadius: 'var(--radius-md)',
           fontWeight: 600,
           fontSize: 13,
           border: '1px solid var(--color-border)',
-          cursor: disabled ? (busy ? 'wait' : 'not-allowed') : 'pointer',
-          opacity: disabled && !busy ? 0.6 : 1,
+          cursor: busy ? 'wait' : 'pointer',
+          whiteSpace: 'nowrap',
         }}
       >
-        {busy ? 'Saving…' : currentSave ? 'Save' : 'Save…'}
+        {busy ? 'Saving…' : !isAuthed ? '🔒 Sign in to save' : currentSave ? 'Save' : 'Save…'}
       </button>
       {dialogOpen && (
         <NameDialog

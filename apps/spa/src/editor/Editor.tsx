@@ -206,8 +206,8 @@ export function Editor() {
               <div className="editor-actions__download">
                 <DownloadButton />
               </div>
+              <SaveButton />
             </div>
-            <SaveButton />
             {!confirmingClear && (
               <button
                 type="button"

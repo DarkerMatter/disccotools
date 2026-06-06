@@ -68,28 +68,40 @@ export function LayerCard({
     updateLayer(layer.id, p);
   }
 
-  function handleDragStart(e: DragEvent<HTMLDivElement>) {
+  // grip is the only drag source, so the body sliders and buttons never start a drag
+  function handleGripDragStart(e: DragEvent<HTMLSpanElement>) {
     if (!drag) {
-      e.preventDefault();
-      return;
-    }
-    const target = e.target as HTMLElement;
-    // skip drag if the user grabbed a control inside the body
-    if (target.closest('input, select, textarea, [type="color"]')) {
       e.preventDefault();
       return;
     }
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', layer.id);
+    // use the whole card as the ghost so users see what they're dragging
+    const card = e.currentTarget.closest<HTMLElement>('.layer-card');
+    if (card) {
+      e.dataTransfer.setDragImage(card, 20, 20);
+    }
     drag.onDragStart(layer.id);
   }
 
+  function handleGripDragEnd() {
+    drag?.onDragEnd();
+  }
+
+  // 40/60 split with a 20% deadzone in the middle so the indicator doesn't flap
+  // when the cursor hovers near the boundary
   function handleDragOver(e: DragEvent<HTMLDivElement>) {
     if (!drag) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     const rect = e.currentTarget.getBoundingClientRect();
-    const position = e.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+    if (rect.height <= 0) return;
+    const ratio = (e.clientY - rect.top) / rect.height;
+    let position: 'before' | 'after';
+    if (ratio < 0.4) position = 'before';
+    else if (ratio > 0.6) position = 'after';
+    else if (drag.dropPosition) position = drag.dropPosition;
+    else position = ratio < 0.5 ? 'before' : 'after';
     drag.onDragOver(layer.id, position);
   }
 
@@ -99,18 +111,14 @@ export function LayerCard({
     drag.onDrop(layer.id);
   }
 
-  function handleDragEnd() {
-    drag?.onDragEnd();
-  }
-
   const isDraggingThis = drag?.isDraggingThis ?? false;
   const dropPos = drag?.dropPosition ?? null;
   const cardClasses = [
     'layer-card',
     expanded ? 'layer-card--expanded' : '',
     isDraggingThis ? 'layer-card--dragging' : '',
-    dropPos === 'before' ? 'layer-card--drop-before' : '',
-    dropPos === 'after' ? 'layer-card--drop-after' : '',
+    !isDraggingThis && dropPos === 'before' ? 'layer-card--drop-before' : '',
+    !isDraggingThis && dropPos === 'after' ? 'layer-card--drop-after' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -119,9 +127,6 @@ export function LayerCard({
     <div
       className={cardClasses}
       data-tour-id={expanded ? 'properties' : undefined}
-      draggable={drag ? true : undefined}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
@@ -131,6 +136,9 @@ export function LayerCard({
             className="layer-card__grip"
             aria-hidden="true"
             title="Drag to reorder"
+            draggable
+            onDragStart={handleGripDragStart}
+            onDragEnd={handleGripDragEnd}
           >
             ⋮⋮
           </span>
