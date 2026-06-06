@@ -29,12 +29,13 @@ describe('<ImageLayer />', () => {
     expect(href).toBe('/api/assets/asset_abc/file');
   });
 
-  it('renders a dashed selection rect when selected', () => {
+  it('renders a static dashed selection rect when selected', () => {
     const { container } = renderInSvg(
       <ImageLayer layer={baseLayer} canvasSize={480} selected={true} />,
     );
     const rect = container.querySelector('rect[stroke-dasharray]');
     expect(rect).not.toBeNull();
+    expect(rect!.getAttribute('class')).toBeNull();
   });
 
   it('does not render selection rect when not selected', () => {

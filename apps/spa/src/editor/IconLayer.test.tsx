@@ -32,12 +32,14 @@ describe('<IconLayer />', () => {
     expect(href).toContain('color=%23fff');
   });
 
-  it('renders a dashed selection rect when selected', () => {
+  it('renders a static dashed selection rect when selected', () => {
     const { container } = renderInSvg(
       <IconLayer layer={baseLayer} canvasSize={480} selected={true} />,
     );
     const rect = container.querySelector('rect[stroke-dasharray]');
     expect(rect).not.toBeNull();
+    // no marching animation class — just a stationary highlight
+    expect(rect!.getAttribute('class')).toBeNull();
   });
 
   it('does not render selection rect when not selected', () => {

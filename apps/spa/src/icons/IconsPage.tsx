@@ -13,6 +13,7 @@ import { UserPill } from '../auth/UserPill.js';
 import { useUser } from '../auth/useUser.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
 import { SaveCard } from '../saves/SaveCard.js';
+import { SiteFooter } from '../SiteFooter.js';
 import { TopTabs } from '../TopTabs.js';
 
 const FILTERS: { value: SaveFilter; label: string }[] = [
@@ -324,6 +325,8 @@ export function IconsPage() {
           </div>
         )}
       </section>
+
+      <SiteFooter />
     </main>
   );
 }

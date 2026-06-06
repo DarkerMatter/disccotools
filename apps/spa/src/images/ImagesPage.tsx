@@ -16,6 +16,7 @@ import { UserPill } from '../auth/UserPill.js';
 import { useUser } from '../auth/useUser.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
 import { AssetCard } from '../assets/AssetCard.js';
+import { SiteFooter } from '../SiteFooter.js';
 import { TopTabs } from '../TopTabs.js';
 
 function defaultName(file: File): string {
@@ -407,6 +408,8 @@ export function ImagesPage() {
           </>
         )}
       </section>
+
+      <SiteFooter />
     </main>
   );
 }

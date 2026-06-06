@@ -43,10 +43,12 @@ describe('<TextLayer />', () => {
     expect(text.getAttribute('fill')).toBe('#abcdef');
   });
 
-  it('renders a dashed selection rect when selected', () => {
+  it('renders a static dashed selection rect when selected', () => {
     const { container } = renderInSvg(
       <TextLayer layer={baseLayer} canvasSize={480} selected={true} />,
     );
-    expect(container.querySelector('rect[stroke-dasharray]')).not.toBeNull();
+    const rect = container.querySelector('rect[stroke-dasharray]');
+    expect(rect).not.toBeNull();
+    expect(rect!.getAttribute('class')).toBeNull();
   });
 });

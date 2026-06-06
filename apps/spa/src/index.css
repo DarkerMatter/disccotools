@@ -191,21 +191,6 @@ h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
   }
 }
 
-/* marching ants, two dash cycles (-14px) per second for a seamless loop */
-.layer-selection {
-  animation: layer-selection-march 1s linear infinite;
-}
-
-@keyframes layer-selection-march {
-  from { stroke-dashoffset: 0; }
-  to   { stroke-dashoffset: -14; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .layer-selection {
-    animation: none;
-  }
-}
 
 /* guided tour highlight ring — the giant outer box-shadow IS the backdrop dim */
 .tour-ring {
@@ -1141,4 +1126,93 @@ h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
 .cta-button--danger:hover {
   background: rgba(239, 68, 68, 0.28);
   box-shadow: none;
+}
+
+/* shared site footer used by every page */
+.site-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.site-footer__credit {
+  margin: 0;
+}
+
+.site-footer__credit a {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.site-footer__links {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.site-footer__links a {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.site-footer__links a:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}
+
+.site-footer__links span {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+/* legal page content (terms / privacy) — readable column of text */
+.legal-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 32px);
+  color: var(--color-text);
+  line-height: 1.65;
+}
+
+.legal-page h1 {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.legal-page__updated {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  margin-bottom: 24px;
+}
+
+.legal-page h2 {
+  font-size: 16px;
+  margin-top: 28px;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+
+.legal-page p,
+.legal-page ul {
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.legal-page ul {
+  padding-left: 20px;
+}
+
+.legal-page ul li {
+  margin-bottom: 4px;
+}
+
+.legal-page a {
+  color: var(--color-accent);
+  text-decoration: underline;
 }

@@ -136,7 +136,7 @@ describe('<Editor />', () => {
 
   it('shows the community footer in the editor card', () => {
     renderEditor();
-    expect(screen.getByText(/Made for the No Text To Speach community/i)).toBeInTheDocument();
+    expect(screen.getByText(/Made for the No Text To Speech community/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /dimitri/i })).toHaveAttribute('href', 'https://dimitri.one');
   });
 });

@@ -80,7 +80,7 @@ export function UserPill({
       {user.isHomeMember && (
         <span
           className="ntts-badge"
-          title="Verified member of the No Text To Speach Discord community"
+          title="Verified member of the No Text To Speech Discord community"
         >
           NTTS
         </span>

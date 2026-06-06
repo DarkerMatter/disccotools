@@ -91,13 +91,32 @@ function gearPathD(size: number): string {
   const outerR = size / 2;
   const innerR = size * 0.4;
   const teeth = 12;
-  const pts: string[] = [];
-  for (let i = 0; i < teeth * 2; i++) {
-    const r = i % 2 === 0 ? outerR : innerR;
-    const a = (i / (teeth * 2)) * 2 * Math.PI - Math.PI / 2;
-    pts.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
+  // how much each tip arc subtends, in angle. small = teeth stay pointy with
+  // just the very crest softened along the outer circle
+  const tipHalfAngle = ((2 * Math.PI) / teeth) * 0.05;
+  let d = '';
+  for (let i = 0; i < teeth; i++) {
+    const aTip = -Math.PI / 2 + (i / teeth) * 2 * Math.PI;
+    const aValley = aTip + Math.PI / teeth;
+    const aTipL = aTip - tipHalfAngle;
+    const aTipR = aTip + tipHalfAngle;
+    const xTipL = cx + outerR * Math.cos(aTipL);
+    const yTipL = cy + outerR * Math.sin(aTipL);
+    const xTipR = cx + outerR * Math.cos(aTipR);
+    const yTipR = cy + outerR * Math.sin(aTipR);
+    const xValley = cx + innerR * Math.cos(aValley);
+    const yValley = cy + innerR * Math.sin(aValley);
+    if (i === 0) d += `M ${xTipL},${yTipL}`;
+    // tiny arc along outerR, so the very crest of each tooth follows the
+    // outer circle instead of meeting at a single sharp point
+    d += ` A ${outerR},${outerR} 0 0 1 ${xTipR},${yTipR}`;
+    d += ` L ${xValley},${yValley}`;
+    const aNextTipL = aTip + (2 * Math.PI) / teeth - tipHalfAngle;
+    const xNextL = cx + outerR * Math.cos(aNextTipL);
+    const yNextL = cy + outerR * Math.sin(aNextTipL);
+    d += ` L ${xNextL},${yNextL}`;
   }
-  return `M ${pts.join(' L ')} Z`;
+  return d + ' Z';
 }
 
 function shieldRoundedPointedPathD(size: number): string {

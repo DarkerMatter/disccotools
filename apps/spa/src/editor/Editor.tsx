@@ -15,6 +15,7 @@ import { DiscordPreview } from './DiscordPreview.js';
 import { DownloadButton } from './DownloadButton.js';
 import { EditorTabs, type EditorTabKey } from './EditorTabs.js';
 import { ResolutionPicker } from './controls/ResolutionPicker.js';
+import { SiteFooter } from '../SiteFooter.js';
 import { IconGrid } from './IconGrid.js';
 import { PreviewChip } from './PreviewChip.js';
 import { SaveButton } from './SaveButton.js';
@@ -153,15 +154,10 @@ export function Editor() {
               type="button"
               className="editor-card__footer-button"
               onClick={() => setTutorialOpen(true)}
+              style={{ margin: '0 auto' }}
             >
               Tutorial
             </button>
-            <span>
-              Made for the No Text To Speach community by{' '}
-              <a href="https://dimitri.one" target="_blank" rel="noopener noreferrer">
-                Dimitri
-              </a>
-            </span>
           </div>
         </div>
 
@@ -245,6 +241,7 @@ export function Editor() {
                 </button>
               </div>
             )}
+            <SiteFooter />
           </div>
         </div>
       </div>

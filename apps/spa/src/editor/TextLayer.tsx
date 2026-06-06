@@ -15,7 +15,7 @@ export function TextLayer({
   const cx = layer.x * canvasSize;
   const cy = layer.y * canvasSize;
 
-  // not measuring live, just guessing a bbox for the selection rect
+  // not measuring live, just guessing a bbox for the highlight rect
   const approxWidth = Math.max(fontSize * 0.6 * layer.text.length, fontSize * 0.6);
   const approxHeight = fontSize * 1.2;
   const boxX = cx - approxWidth / 2;
@@ -52,7 +52,6 @@ export function TextLayer({
           strokeWidth={2}
           strokeDasharray="4 3"
           pointerEvents="none"
-          className="layer-selection"
         />
       )}
     </g>
