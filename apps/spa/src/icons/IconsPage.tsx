@@ -371,6 +371,9 @@ export function IconsPage() {
                 onToggleTemplate={() => void handleToggleTemplate(s)}
                 onRename={(name) => handleRename(s, name)}
                 onTagsChange={(tags) => handleTagsChange(s, tags)}
+                onUse={() => handleUse(s)}
+                onShare={() => handleShare(s)}
+                onRevokeShare={() => handleRevokeShare(s)}
               />
             ))}
           </div>
