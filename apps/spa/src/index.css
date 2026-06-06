@@ -1003,14 +1003,81 @@ h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
   line-height: 1.4;
 }
 
-/* the new editor layout collapses below 1000px */
+/* the new editor layout collapses below 1000px and unlocks the page scroll
+   so phones / small tablets get a natural top-to-bottom flow */
 @media (max-width: 999px) {
+  .app-shell {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow: visible;
+  }
+
   .editor-grid {
     grid-template-columns: 1fr;
-    overflow-y: auto;
+    overflow: visible;
+    padding: 12px;
+    gap: 12px;
+    flex: 0 0 auto;
   }
-  .editor-canvas-column { overflow-y: visible; }
-  .editor-card { max-height: none; }
+
+  .editor-card {
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .editor-card__body {
+    overflow-y: visible;
+    max-height: none;
+    /* search-icons tab still has its own scroll because the grid can be huge */
+  }
+
+  .editor-canvas-column {
+    overflow: visible;
+  }
+
+  .editor-canvas-frame {
+    aspect-ratio: 1;
+    min-height: 0;
+    max-width: 100%;
+  }
+
+  /* keep the search-icons grid scrollable independently so it doesn't push everything down */
+  .editor-card__body > div[style*="overflow"] {
+    max-height: 60dvh;
+  }
+
+  .editor-actions__primary {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .editor-actions__download {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 599px) {
+  .editor-card__tab {
+    padding: 10px 6px;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+  }
+
+  .shape-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .discord-preview {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .editor-card__footer {
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
 }
 
 /* a "selected" purple-ring pop, briefer than mount-in */
