@@ -63,21 +63,68 @@ export function IconsPage() {
     void fetchSaves(filter);
   }, [filter, authenticated, fetchSaves]);
 
+  function detailToSummary(detail: {
+    id: string;
+    name: string;
+    recipe: SaveSummary['recipe'];
+    isTemplate: boolean;
+    createdAt: number;
+    updatedAt: number;
+    tags: SaveSummary['tags'];
+    parentTemplateId: string | null;
+    shareToken: string | null;
+  }): SaveSummary {
+    return {
+      id: detail.id,
+      name: detail.name,
+      isTemplate: detail.isTemplate,
+      createdAt: detail.createdAt,
+      updatedAt: detail.updatedAt,
+      recipe: detail.recipe,
+      tags: detail.tags,
+      parentTemplateId: detail.parentTemplateId,
+      shareToken: detail.shareToken,
+    };
+  }
+
   async function handleClone(save: SaveSummary) {
     const cloned = await cloneSave(save.id);
-    setSaves((prev) =>
-      prev
-        ? [{
-            id: cloned.id,
-            name: cloned.name,
-            isTemplate: cloned.isTemplate,
-            createdAt: cloned.createdAt,
-            updatedAt: cloned.updatedAt,
-            recipe: cloned.recipe,
-            tags: cloned.tags,
-          }, ...prev]
-        : prev,
-    );
+    setSaves((prev) => (prev ? [detailToSummary(cloned), ...prev] : prev));
+  }
+
+  async function handleUse(save: SaveSummary) {
+    try {
+      const child = await useTemplate(save.id);
+      navigate(`/editor/${child.id}`);
+    } catch (err) {
+      console.error('useTemplate failed', err);
+    }
+  }
+
+  async function handleShare(save: SaveSummary) {
+    try {
+      const updated = await shareTemplate(save.id);
+      setSaves((prev) =>
+        prev
+          ? prev.map((s) => (s.id === save.id ? { ...s, shareToken: updated.shareToken } : s))
+          : prev,
+      );
+    } catch (err) {
+      console.error('shareTemplate failed', err);
+    }
+  }
+
+  async function handleRevokeShare(save: SaveSummary) {
+    try {
+      const updated = await revokeShare(save.id);
+      setSaves((prev) =>
+        prev
+          ? prev.map((s) => (s.id === save.id ? { ...s, shareToken: updated.shareToken } : s))
+          : prev,
+      );
+    } catch (err) {
+      console.error('revokeShare failed', err);
+    }
   }
 
   async function handleDelete(save: SaveSummary) {
