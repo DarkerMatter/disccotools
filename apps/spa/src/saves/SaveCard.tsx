@@ -13,6 +13,11 @@ function timeAgo(ms: number): string {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
+function shareUrlFor(token: string): string {
+  if (typeof window === 'undefined') return `/templates/${token}`;
+  return `${window.location.origin}/templates/${token}`;
+}
+
 export function SaveCard({
   save,
   onClone,
@@ -20,6 +25,9 @@ export function SaveCard({
   onToggleTemplate,
   onRename,
   onTagsChange,
+  onUse,
+  onShare,
+  onRevokeShare,
 }: {
   save: SaveSummary;
   onClone: () => void;
@@ -27,11 +35,30 @@ export function SaveCard({
   onToggleTemplate: () => void;
   onRename: (name: string) => Promise<void> | void;
   onTagsChange: (tags: string[]) => Promise<void> | void;
+  /** templates only — clone into a child save under the current user, navigate to it */
+  onUse?: () => Promise<void> | void;
+  /** templates only — generate / refresh a public share token */
+  onShare?: () => Promise<void> | void;
+  /** templates only — drop the share token */
+  onRevokeShare?: () => Promise<void> | void;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState(save.name);
   const [downloading, setDownloading] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function handleSaveName() {
+    const next = draftName.trim();
+    if (!next || next === save.name) {
+      setEditingName(false);
+      setDraftName(save.name);
+      return;
+    }
+    await onRename(next);
+    setEditingName(false);
+  }
 
   async function handleDownload() {
     if (downloading) return;
@@ -47,15 +74,25 @@ export function SaveCard({
     }
   }
 
-  async function handleSaveName() {
-    const next = draftName.trim();
-    if (!next || next === save.name) {
-      setEditingName(false);
-      setDraftName(save.name);
-      return;
+  async function handleShareToggle() {
+    if (save.shareToken) {
+      setSharing(true);
+    } else if (onShare) {
+      await onShare();
+      setSharing(true);
     }
-    await onRename(next);
-    setEditingName(false);
+  }
+
+  async function handleCopyShare() {
+    if (!save.shareToken) return;
+    const url = shareUrlFor(save.shareToken);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // clipboard might be blocked; fallback to selecting input
+    }
   }
 
   return (
@@ -183,6 +220,22 @@ export function SaveCard({
               TEMPLATE
             </span>
           )}
+          {!save.isTemplate && save.parentTemplateId && !editingName && (
+            <span
+              title="Made from a template"
+              style={{
+                background: 'rgba(16, 185, 129, 0.12)',
+                color: 'var(--color-success)',
+                padding: '2px 6px',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+              }}
+            >
+              FROM TEMPLATE
+            </span>
+          )}
         </div>
         <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: 0 }}>
           Updated {timeAgo(save.updatedAt)}
@@ -190,13 +243,42 @@ export function SaveCard({
 
         <TagChips tags={save.tags ?? []} onChange={onTagsChange} />
 
+        {save.isTemplate && onUse && (
+          <button
+            type="button"
+            onClick={() => void onUse()}
+            style={{
+              background: 'var(--color-accent)',
+              color: 'white',
+              border: 'none',
+              borderRadius: 'var(--radius-sm)',
+              padding: '8px 12px',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            ✨ Use template
+          </button>
+        )}
+
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           <Link
             to={`/editor/${save.id}`}
             style={ghostBtnStyle}
           >
-            Edit
+            {save.isTemplate ? 'Edit template' : 'Edit'}
           </Link>
+          {save.isTemplate && onShare && (
+            <button
+              type="button"
+              onClick={() => void handleShareToggle()}
+              style={ghostBtnStyle}
+              aria-expanded={sharing}
+            >
+              {save.shareToken ? 'Share link' : 'Share'}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => void handleDownload()}
@@ -243,6 +325,58 @@ export function SaveCard({
             </>
           )}
         </div>
+
+        {sharing && save.isTemplate && save.shareToken && (
+          <div
+            style={{
+              marginTop: 4,
+              padding: 8,
+              border: '1px dashed var(--color-border)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-bg)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+            }}
+          >
+            <div style={{ display: 'flex', gap: 4 }}>
+              <input
+                type="text"
+                readOnly
+                value={shareUrlFor(save.shareToken)}
+                aria-label="Share URL"
+                onFocus={(e) => e.currentTarget.select()}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  padding: '4px 6px',
+                  fontSize: 11,
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--color-surface)',
+                  color: 'var(--color-text)',
+                }}
+              />
+              <button type="button" onClick={() => void handleCopyShare()} style={ghostBtnStyle}>
+                {copied ? '✓ Copied' : 'Copy'}
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {onRevokeShare && (
+                <button
+                  type="button"
+                  onClick={() => void onRevokeShare()}
+                  style={{ ...ghostBtnStyle, color: '#ef4444' }}
+                >
+                  Stop sharing
+                </button>
+              )}
+              <button type="button" onClick={() => setSharing(false)} style={ghostBtnStyle}>
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </article>
   );
