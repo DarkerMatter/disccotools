@@ -32,25 +32,15 @@ afterEach(() => {
 });
 
 describe('<CustomiseShapePanel />', () => {
-  it('renders the shape grid and a resolution dropdown', () => {
+  it('renders the shape grid', () => {
     render(<CustomiseShapePanel />);
     expect(screen.getByRole('radiogroup', { name: /canvas shape/i })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: /resolution/i })).toBeInTheDocument();
   });
 
   it('changes the shape when a shape tile is clicked', async () => {
     render(<CustomiseShapePanel />);
     await userEvent.click(screen.getByRole('radio', { name: /^hexagon$/i }));
     expect(useRecipeStore.getState().recipe.shape).toBe('hexagon');
-  });
-
-  it('changes the resolution when a different size is selected', async () => {
-    render(<CustomiseShapePanel />);
-    await userEvent.selectOptions(
-      screen.getByRole('combobox', { name: /resolution/i }),
-      '512',
-    );
-    expect(useRecipeStore.getState().recipe.size).toBe(512);
   });
 
   it('flips the background to transparent when the transparency toggle is on', async () => {

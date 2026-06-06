@@ -35,8 +35,8 @@ export function PreviewChip() {
       >
         Preview
       </h3>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{ flex: 1 }}>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-start' }}>
+        <div style={{ width: TILE_SIZE }}>
           <div
             data-testid="preview-light"
             style={{
@@ -57,7 +57,7 @@ export function PreviewChip() {
           </div>
           <p style={tileLabelStyle}>Light</p>
         </div>
-        <div style={{ flex: 1 }}>
+        <div style={{ width: TILE_SIZE }}>
           <div
             data-testid="preview-dark"
             style={{
