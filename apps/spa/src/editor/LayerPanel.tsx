@@ -50,6 +50,7 @@ export function LayerPanel() {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button
           type="button"
+          data-tour-id="add-icon"
           onClick={() => setPickerOpen(true)}
           disabled={atCap}
           style={{

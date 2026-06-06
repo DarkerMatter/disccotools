@@ -46,7 +46,7 @@ export function BackgroundControl() {
   }
 
   return (
-    <section aria-label="Background">
+    <section aria-label="Background" data-tour-id="background">
       <h3
         style={{
           fontSize: 11,

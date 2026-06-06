@@ -15,7 +15,7 @@ export function ShapeControl() {
   const updateRecipe = useRecipeStore((s) => s.updateRecipe);
 
   return (
-    <section aria-label="Shape">
+    <section aria-label="Shape" data-tour-id="shape">
       <h3 style={headingStyle}>Shape</h3>
       <div
         role="radiogroup"

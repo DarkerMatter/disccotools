@@ -70,6 +70,7 @@ export function SaveButton() {
       )}
       <button
         type="button"
+        data-tour-id="save"
         onClick={handleClick}
         disabled={disabled}
         title={isAuthed ? undefined : 'Sign in to save'}

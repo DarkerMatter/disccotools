@@ -60,7 +60,7 @@ export function PropertiesPanel() {
 
   if (!layer) {
     return (
-      <section aria-label="Properties">
+      <section aria-label="Properties" data-tour-id="properties">
         <h3 style={headingStyle}>Properties</h3>
         <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
           Select a layer to edit its properties.
@@ -74,7 +74,7 @@ export function PropertiesPanel() {
   }
 
   return (
-    <section aria-label="Properties">
+    <section aria-label="Properties" data-tour-id="properties">
       <h3 style={headingStyle}>Properties</h3>
 
       {layer.kind === 'image' && (

@@ -8,7 +8,7 @@ export function ResolutionControl() {
   const updateRecipe = useRecipeStore((s) => s.updateRecipe);
 
   return (
-    <section aria-label="Resolution">
+    <section aria-label="Resolution" data-tour-id="resolution">
       <h3
         style={{
           fontSize: 11,

@@ -5,12 +5,14 @@ import { TutorialModal } from './TutorialModal.js';
 
 describe('<TutorialModal />', () => {
   it('renders nothing when closed', () => {
-    const { container } = render(<TutorialModal open={false} onClose={() => {}} />);
+    const { container } = render(
+      <TutorialModal open={false} onClose={() => {}} onStartTour={() => {}} />,
+    );
     expect(container.firstChild).toBeNull();
   });
 
   it('renders the steps when open', () => {
-    render(<TutorialModal open onClose={() => {}} />);
+    render(<TutorialModal open onClose={() => {}} onStartTour={() => {}} />);
     expect(screen.getByRole('dialog', { name: /tutorial/i })).toBeInTheDocument();
     expect(screen.getByText(/Pick a background/i)).toBeInTheDocument();
     expect(screen.getByText(/Choose a shape/i)).toBeInTheDocument();
@@ -22,8 +24,15 @@ describe('<TutorialModal />', () => {
 
   it('calls onClose when "Got it" is clicked', async () => {
     const onClose = vi.fn();
-    render(<TutorialModal open onClose={onClose} />);
+    render(<TutorialModal open onClose={onClose} onStartTour={() => {}} />);
     await userEvent.click(screen.getByRole('button', { name: /got it/i }));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('calls onStartTour when "Take the guided tour" is clicked', async () => {
+    const onStartTour = vi.fn();
+    render(<TutorialModal open onClose={() => {}} onStartTour={onStartTour} />);
+    await userEvent.click(screen.getByRole('button', { name: /take the guided tour/i }));
+    expect(onStartTour).toHaveBeenCalled();
   });
 });

@@ -207,6 +207,21 @@ h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
   }
 }
 
+/* guided tour highlight ring — the giant outer box-shadow IS the backdrop dim */
+.tour-ring {
+  position: fixed;
+  pointer-events: none;
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55), 0 0 18px 4px var(--color-accent);
+  transition: top 220ms ease, left 220ms ease, width 220ms ease, height 220ms ease, box-shadow 220ms ease;
+  z-index: 1501;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-ring { transition: none; }
+}
+
 /* shared shell across Editor/Icons/Images */
 .app-shell {
   min-height: 100%;

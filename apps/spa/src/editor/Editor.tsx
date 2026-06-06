@@ -16,7 +16,18 @@ import { PropertiesPanel } from './PropertiesPanel.js';
 import { DownloadButton } from './DownloadButton.js';
 import { SaveButton } from './SaveButton.js';
 import { TutorialModal } from './TutorialModal.js';
+import { TutorialTour, type TourStep } from './TutorialTour.js';
 import { useRecipeStore } from './useRecipeStore.js';
+
+const TOUR_STEPS: TourStep[] = [
+  { target: 'shape', title: 'Pick a shape', body: 'Circle, hexagon, shield, star. The shape clips your icon, so it sets the outline.' },
+  { target: 'background', title: 'Pick a background', body: 'Solid, gradient, or transparent. This is the canvas behind everything.' },
+  { target: 'add-icon', title: 'Add an icon', body: 'Browse the icon library or search. Drop it onto the canvas and it lands in the center.' },
+  { target: 'properties', title: 'Tweak the layer', body: 'Use the Properties panel to move, scale, rotate, color, or set the opacity.' },
+  { target: 'resolution', title: 'Choose a resolution', body: 'Discord likes round numbers. 256 is a safe default.' },
+  { target: 'download', title: 'Download the PNG', body: 'Your icon is rendered in the browser and saved straight to your downloads. No signup needed for this part.' },
+  { target: 'save', title: 'Save it for later', body: 'Sign in with Discord to keep the design in your library. You can come back and tweak it anytime.' },
+];
 
 export function Editor() {
   const userState = useUser();
@@ -29,6 +40,7 @@ export function Editor() {
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
   const [confirmingClear, setConfirmingClear] = useState(false);
 
   function handleClear() {
@@ -224,7 +236,19 @@ export function Editor() {
         </aside>
       </div>
 
-      <TutorialModal open={tutorialOpen} onClose={() => setTutorialOpen(false)} />
+      <TutorialModal
+        open={tutorialOpen}
+        onClose={() => setTutorialOpen(false)}
+        onStartTour={() => {
+          setTutorialOpen(false);
+          setTourOpen(true);
+        }}
+      />
+      <TutorialTour
+        open={tourOpen}
+        steps={TOUR_STEPS}
+        onClose={() => setTourOpen(false)}
+      />
     </main>
   );
 }

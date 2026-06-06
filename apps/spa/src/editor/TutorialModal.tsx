@@ -1,9 +1,11 @@
 export function TutorialModal({
   open,
   onClose,
+  onStartTour,
 }: {
   open: boolean;
   onClose: () => void;
+  onStartTour: () => void;
 }) {
   if (!open) return null;
 
@@ -62,7 +64,23 @@ export function TutorialModal({
           <li>Choose a resolution and click Download PNG.</li>
           <li>Sign in with Discord to save your work and come back later.</li>
         </ol>
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <button
+            type="button"
+            onClick={onStartTour}
+            style={{
+              padding: '8px 14px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-surface)',
+              color: 'var(--color-text)',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Take the guided tour
+          </button>
           <button
             type="button"
             onClick={onClose}

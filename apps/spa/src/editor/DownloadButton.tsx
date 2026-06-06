@@ -39,6 +39,7 @@ export function DownloadButton() {
       )}
       <button
         type="button"
+        data-tour-id="download"
         onClick={handleClick}
         disabled={busy}
         aria-label="Download PNG"
