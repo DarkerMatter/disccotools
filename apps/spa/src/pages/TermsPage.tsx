@@ -97,7 +97,7 @@ export function TermsPage() {
         <h2>8. Contact</h2>
         <p>
           Reach the maintainer at{' '}
-          <a href="mailto:dimitri@dimitri.one">dimitri@dimitri.one</a>.
+          <a href="mailto:fwd@dimitri.one">fwd@dimitri.one</a>.
         </p>
       </article>
 
