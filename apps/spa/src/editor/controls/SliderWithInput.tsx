@@ -9,6 +9,7 @@ export function SliderWithInput({
   unit = '',
   onChange,
   ariaLabel,
+  shortLabel,
 }: {
   label: string;
   value: number;
@@ -18,6 +19,8 @@ export function SliderWithInput({
   unit?: string;
   onChange: (next: number) => void;
   ariaLabel?: string;
+  /** one-letter prefix that lives in the left grid column (e.g. "X", "Y", "Z"). default is none. */
+  shortLabel?: string;
 }) {
   const a11y = ariaLabel ?? label;
   // keep typed text separate so half-typed values like "-" or "" don't snap mid-edit
@@ -40,18 +43,26 @@ export function SliderWithInput({
   }
 
   return (
-    <div style={{ marginBottom: 12 }}>
-      <label
-        style={{
-          display: 'block',
-          fontSize: 12,
-          color: 'var(--color-text-muted)',
-          marginBottom: 4,
-        }}
-      >
-        {label}
-      </label>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div>
+      {!shortLabel && (
+        <label
+          style={{
+            display: 'block',
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-muted)',
+            marginBottom: 6,
+          }}
+        >
+          {label}
+        </label>
+      )}
+      <div className="slider-row">
+        <span className="slider-row__label" aria-hidden="true">
+          {shortLabel ?? ''}
+        </span>
         <input
           type="range"
           aria-label={a11y}
@@ -60,16 +71,9 @@ export function SliderWithInput({
           step={step}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          style={{ flex: 1 }}
+          className="slider-input"
         />
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 2,
-            width: 72,
-          }}
-        >
+        <div className="slider-value">
           <input
             type="number"
             aria-label={`${a11y} value`}
@@ -86,23 +90,8 @@ export function SliderWithInput({
                 target.blur();
               }
             }}
-            style={{
-              flex: 1,
-              minWidth: 0,
-              padding: '4px 6px',
-              fontSize: 12,
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--color-bg)',
-              color: 'var(--color-text)',
-              ['MozAppearance' as never]: 'textfield',
-            }}
           />
-          {unit && (
-            <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-              {unit}
-            </span>
-          )}
+          {unit && <span className="slider-value__unit">{unit}</span>}
         </div>
       </div>
     </div>
