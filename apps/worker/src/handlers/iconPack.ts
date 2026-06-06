@@ -43,9 +43,10 @@ function parseKey(key: string): { category: string; basename: string } | null {
   const parts = rest.split('/');
   if (parts.length !== 2) return null;
   const [category, filename] = parts;
+  if (!category || !filename) return null;
   if (!filename.toLowerCase().endsWith('.svg')) return null;
   const basename = filename.slice(0, -'.svg'.length);
-  if (!category || !basename) return null;
+  if (!basename) return null;
   return { category, basename };
 }
 

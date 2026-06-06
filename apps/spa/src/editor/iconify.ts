@@ -79,8 +79,8 @@ export async function searchIcons(
   const iconifyPrefixes = prefixes.filter((p) => p !== 'custom');
 
   const customHits: IconHit[] = wantsCustom
-    ? (await loadCustomIcons({ signal: opts.signal })).filter((h) =>
-        h.name.toLowerCase().includes(q.toLowerCase()),
+    ? (await loadCustomIcons(opts.signal ? { signal: opts.signal } : {})).filter(
+        (h) => h.name.toLowerCase().includes(q.toLowerCase()),
       )
     : [];
 
@@ -115,7 +115,7 @@ export async function browseIcons(
   const limit = Math.max(1, opts.limit ?? 10000);
 
   if (prefix === 'custom') {
-    const all = await loadCustomIcons({ signal: opts.signal });
+    const all = await loadCustomIcons(opts.signal ? { signal: opts.signal } : {});
     return all.slice(0, limit);
   }
 

@@ -4,7 +4,7 @@
 //
 // drop new icons in import/raw/<category>/<name>.svg and re-run; it overwrites.
 
-import { promises as fs } from 'node:fs';
+import { promises as fs, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
@@ -16,6 +16,18 @@ const RAW_DIR = path.join(REPO_ROOT, 'import', 'raw');
 const BUCKET = 'disccotools';
 const KEY_PREFIX = 'static/icons/custom';
 const PARALLELISM = 6;
+
+// resolve wrangler however we can: bundled binary first, then corepack pnpm exec,
+// then pnpm exec, then bare npx. picked once at startup so every spawn agrees.
+function resolveWrangler() {
+  const localBin = path.join(REPO_ROOT, 'apps', 'worker', 'node_modules', '.bin', 'wrangler');
+  if (existsSync(localBin)) {
+    return { cmd: localBin, prefix: [] };
+  }
+  return { cmd: 'corepack', prefix: ['pnpm', '--filter', '@disccotools/worker', 'exec', 'wrangler'] };
+}
+
+const WRANGLER = resolveWrangler();
 
 const DANGEROUS = [
   /<script\b[\s\S]*?<\/script>/gi,
@@ -55,7 +67,7 @@ async function collectFiles(root) {
 
 function runWrangler(args) {
   return new Promise((resolve, reject) => {
-    const cp = spawn('pnpm', ['--filter', '@disccotools/worker', 'exec', 'wrangler', ...args], {
+    const cp = spawn(WRANGLER.cmd, [...WRANGLER.prefix, ...args], {
       cwd: REPO_ROOT,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
@@ -128,6 +140,16 @@ async function main() {
 
   if (all.length === 0) {
     console.error('No SVGs found. Run scripts/extract-import.mjs first, or drop SVGs in import/raw/.');
+    process.exit(1);
+  }
+
+  // sanity-check wrangler before firing off 286 doomed spawns
+  try {
+    await runWrangler(['--version']);
+  } catch (e) {
+    console.error(`Could not run wrangler: ${e.message}`);
+    console.error(`Tried: ${WRANGLER.cmd} ${WRANGLER.prefix.join(' ')}`);
+    console.error('Install pnpm or enable corepack, then retry.');
     process.exit(1);
   }
 

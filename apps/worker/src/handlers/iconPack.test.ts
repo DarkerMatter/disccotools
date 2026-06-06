@@ -88,7 +88,7 @@ describe('GET /api/icon-pack/custom', () => {
     const res = await SELF.fetch('http://example.com/api/icon-pack/custom');
     const body = (await res.json()) as { icons: Array<{ name: string }> };
     expect(body.icons.length).toBe(1);
-    expect(body.icons[0].name).toBe('discord/voice');
+    expect(body.icons[0]!.name).toBe('discord/voice');
   });
 });
 
