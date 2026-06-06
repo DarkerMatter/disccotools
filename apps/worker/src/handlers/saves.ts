@@ -27,6 +27,8 @@ function toSummary(save: Save): SaveSummary {
     updatedAt: save.updatedAt,
     recipe: save.recipe,
     tags: save.tags,
+    parentTemplateId: save.parentTemplateId,
+    shareToken: save.shareToken,
   };
 }
 
@@ -39,6 +41,8 @@ function toDetail(save: Save): SaveDetail {
     createdAt: save.createdAt,
     updatedAt: save.updatedAt,
     tags: save.tags,
+    parentTemplateId: save.parentTemplateId,
+    shareToken: save.shareToken,
   };
 }
 
