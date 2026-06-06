@@ -1,9 +1,7 @@
-/** Denylist for revoked JWT session ids. A row invalidates that jti pre-exp. */
-
 export async function revokeSession(
   db: D1Database,
   jti: string,
-  expiresAt: number,   // unix seconds, matches JWT exp claim
+  expiresAt: number,
 ): Promise<void> {
   await db
     .prepare(
@@ -25,7 +23,6 @@ export async function isSessionRevoked(
   return row !== null;
 }
 
-/** Opportunistic cleanup; called from sessionMiddleware on a probability roll. */
 export async function purgeExpiredRevokedSessions(
   db: D1Database,
 ): Promise<void> {

@@ -1,9 +1,7 @@
 import { z } from 'zod';
 
-/** A hex color string like "#5865F2". Validation is permissive (any CSS color). */
 export const ColorSchema = z.string().min(1);
 
-/** Export resolution. Discord role icons are usually small; up to 1024 is fine. */
 export const SizeSchema = z.union([
   z.literal(32),
   z.literal(64),
@@ -14,10 +12,8 @@ export const SizeSchema = z.union([
 ]);
 export type Size = z.infer<typeof SizeSchema>;
 
-/** A 0..1 opacity. */
 export const OpacitySchema = z.number().min(0).max(1);
 
-/** Background variants. */
 export const BackgroundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('transparent') }),
   z.object({
@@ -29,46 +25,41 @@ export const BackgroundSchema = z.discriminatedUnion('kind', [
     kind: z.literal('gradient'),
     from: ColorSchema,
     to: ColorSchema,
-    angle: z.number(), // degrees, 0..360
+    angle: z.number(),
     opacity: OpacitySchema,
   }),
 ]);
 export type Background = z.infer<typeof BackgroundSchema>;
 
-/** Clip shape applied to the whole canvas. */
 export const ShapeSchema = z.enum([
   'circle',
-  'square',                       // legacy: kept for back-compat, banished from the UI
+  'square',
   'rounded-square',
-  'scalloped',                    // wavy-edged flower/badge
-  'gear',                         // spiky-edged cog/seal
-  'shield-rounded-pointed',       // rounded top, pointed bottom
-  'shield-flat-pointed',          // flat top, pointed bottom
-  'shield-narrow-pointed',        // narrower, pointed bottom
-  'shield-rounded-curved',        // rounded top, slightly curved sides
-  'shield-wide-curved',           // wider, curved sides, pointed bottom
-  'banner',                       // flat top, pointed bottom (shield with straight sides)
+  'scalloped',
+  'gear',
+  'shield-rounded-pointed',
+  'shield-flat-pointed',
+  'shield-narrow-pointed',
+  'shield-rounded-curved',
+  'shield-wide-curved',
+  'banner',
   'hexagon',
   'diamond',
-  'star',                         // 5-pointed
-  'triangle',                     // pointing up
+  'star',
+  'triangle',
 ]);
 export type Shape = z.infer<typeof ShapeSchema>;
 
-/** Shared layer transform / identity fields. */
 export const LayerBaseSchema = z.object({
-  id: z.string().min(1),     // UUID v4 generated client-side
-  x: z.number(),             // 0..1 normalized to canvas size
-  y: z.number(),             // 0..1 normalized
-  rotation: z.number(),      // degrees
-  scale: z.number().positive(), // multiplier; 1 = "natural"
+  id: z.string().min(1),
+  x: z.number(),
+  y: z.number(),
+  rotation: z.number(),
+  scale: z.number().positive(),
   opacity: OpacitySchema,
 });
 
-/**
- * Icon fill color. Legacy bare strings parse as solid; output is always the
- * structured `{ kind: 'solid' | 'gradient', ... }` form.
- */
+// legacy string colors parse as solid; output is always the structured form
 export const IconColorSchema = z
   .union([
     z.string().min(1),
@@ -90,26 +81,23 @@ export type IconColor =
   | { kind: 'solid'; color: string }
   | { kind: 'gradient'; from: string; to: string; angle: number };
 
-/** Layer kind: Iconify icon (icon set + name + color). */
 export const IconLayerSchema = LayerBaseSchema.extend({
   kind: z.literal('icon'),
-  iconset: z.string().min(1),  // e.g. "lucide", "tabler"
-  name: z.string().min(1),     // e.g. "rocket"
+  iconset: z.string().min(1),
+  name: z.string().min(1),
   color: IconColorSchema,
 });
 export type IconLayer = z.infer<typeof IconLayerSchema>;
 
-/** Layer kind: text. */
 export const TextLayerSchema = LayerBaseSchema.extend({
   kind: z.literal('text'),
   text: z.string().max(200),
-  font: z.string().min(1).max(120), // CSS font-family
+  font: z.string().min(1).max(120),
   color: ColorSchema,
-  size: z.number().positive(),      // font-size in "design units" (0..1 of canvas)
+  size: z.number().positive(),
 });
 export type TextLayer = z.infer<typeof TextLayerSchema>;
 
-/** Layer kind: image (custom upload referenced by asset id). */
 export const ImageLayerSchema = LayerBaseSchema.extend({
   kind: z.literal('image'),
   assetId: z.string().min(1),
@@ -123,7 +111,6 @@ export const LayerSchema = z.discriminatedUnion('kind', [
 ]);
 export type Layer = z.infer<typeof LayerSchema>;
 
-/** The full recipe: what the editor mutates and the worker stores. */
 export const RecipeSchema = z.object({
   version: z.literal(1),
   size: SizeSchema,
@@ -137,7 +124,6 @@ export const RECIPE_VERSION = 1 as const;
 export const DEFAULT_SIZE: Size = 256;
 export const MAX_LAYERS = 50;
 
-/** Initial recipe for a fresh editor session. */
 export function createEmptyRecipe(): Recipe {
   return {
     version: RECIPE_VERSION,

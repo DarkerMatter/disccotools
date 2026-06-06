@@ -35,7 +35,6 @@ app.get('/api/auth/callback', callbackHandler);
 app.get('/api/auth/me', meHandler);
 app.post('/api/auth/logout', logoutHandler);
 
-// Saves: all routes require authentication.
 app.use('/api/saves/*', requireAuth);
 app.get('/api/saves', listSavesHandler);
 app.post('/api/saves', createSaveHandler);
@@ -47,7 +46,6 @@ app.post('/api/saves/:id/render', uploadRenderHandler);
 app.get('/api/saves/:id/download', downloadHandler);
 app.get('/api/saves/:id/thumbnail', thumbnailHandler);
 
-// Assets: all routes require authentication.
 app.use('/api/assets/*', requireAuth);
 app.post('/api/assets', createAssetHandler);
 app.get('/api/assets', listAssetsHandler);
@@ -56,7 +54,6 @@ app.patch('/api/assets/:id', renameAssetHandler);
 app.delete('/api/assets/:id', deleteAssetHandler);
 app.get('/api/assets/:id/file', getAssetFileHandler);
 
-// Public static assets stored in R2 under `static/`. No auth, cached.
 app.get('/static/*', async (c) => {
   const path = c.req.path.replace(/^\/static\//, '');
   if (!path) {

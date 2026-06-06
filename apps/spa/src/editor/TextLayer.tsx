@@ -11,12 +11,11 @@ export function TextLayer({
   selected: boolean;
   onClick?: () => void;
 }) {
-  // Font size is normalized 0..~1 of canvas. Multiply by scale for live resizing.
   const fontSize = layer.size * canvasSize * layer.scale;
   const cx = layer.x * canvasSize;
   const cy = layer.y * canvasSize;
 
-  // Approximate bbox for the dashed selection rect; we don't measure live.
+  // not measuring live, just guessing a bbox for the selection rect
   const approxWidth = Math.max(fontSize * 0.6 * layer.text.length, fontSize * 0.6);
   const approxHeight = fontSize * 1.2;
   const boxX = cx - approxWidth / 2;
@@ -29,6 +28,7 @@ export function TextLayer({
       opacity={layer.opacity}
       onMouseDown={onClick}
       style={{ cursor: onClick ? 'pointer' : 'default' }}
+      className="layer-mount-in"
     >
       <text
         x={cx}

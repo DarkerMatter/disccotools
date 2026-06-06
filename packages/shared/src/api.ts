@@ -1,14 +1,9 @@
 import { z } from 'zod';
 import { RecipeSchema } from './recipe.js';
 
-/**
- * Tag list for a save or asset. Flat array of short strings, lowercased
- * on storage. Capped at 8 entries, each up to 24 chars.
- */
 export const TagsSchema = z.array(z.string().min(1).max(24)).max(8);
 export type Tags = z.infer<typeof TagsSchema>;
 
-/** Gallery-row summary: no recipe body, just a same-origin thumbnail URL. */
 export const SaveSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -20,7 +15,6 @@ export const SaveSummarySchema = z.object({
 });
 export type SaveSummary = z.infer<typeof SaveSummarySchema>;
 
-/** Full save row, used by GET /:id and after a create/update. */
 export const SaveDetailSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -69,10 +63,6 @@ export const CloneSaveBodySchema = z.object({
 });
 export type CloneSaveBody = z.infer<typeof CloneSaveBodySchema>;
 
-/**
- * Asset library entry: uploaded image referenced by recipe image layers.
- * `url` is a relative path so the SPA uses it as-is across deployments.
- */
 export const AssetSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -95,22 +85,15 @@ export const AssetResponseSchema = z.object({
 });
 export type AssetResponse = z.infer<typeof AssetResponseSchema>;
 
-/**
- * PATCH body for an asset. Originally rename-only; now also accepts a tags
- * patch. The legacy `RenameAssetBody` alias is kept so the SPA's existing
- * imports keep working until they migrate to `UpdateAssetBody`.
- */
 export const UpdateAssetBodySchema = z.object({
   name: z.string().min(1).max(120).optional(),
   tags: TagsSchema.optional(),
 });
 export type UpdateAssetBody = z.infer<typeof UpdateAssetBodySchema>;
 
-/** Legacy name for the asset PATCH body. New code should use `UpdateAssetBodySchema`. */
 export const RenameAssetBodySchema = UpdateAssetBodySchema;
 export type RenameAssetBody = UpdateAssetBody;
 
-/** Returned on DELETE when references exist (409). */
 export const AssetInUseResponseSchema = z.object({
   error: z.object({
     code: z.literal('CONFLICT'),

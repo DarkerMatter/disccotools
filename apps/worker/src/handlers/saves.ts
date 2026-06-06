@@ -138,7 +138,6 @@ export async function deleteSaveHandler(c: Context<AppEnv>): Promise<Response> {
   if (!id) return validation(c, 'missing id');
   const result = await loadOwnedSave(c, id);
   if ('error' in result) return result.error;
-  // Best-effort R2 cleanup.
   const { renderedKey, thumbKey } = result.save;
   await Promise.allSettled([
     renderedKey ? c.env.R2.delete(renderedKey) : Promise.resolve(),

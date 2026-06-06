@@ -17,8 +17,8 @@ const arrowBtnStyle: React.CSSProperties = {
 
 function layerLabel(layer: ReturnType<typeof useRecipeStore.getState>['recipe']['layers'][number]) {
   if (layer.kind === 'icon') return `${layer.iconset}:${layer.name}`;
-  if (layer.kind === 'text') return `Text — "${layer.text || '(empty)'}"`;
-  return `Image — ${layer.assetId}`;
+  if (layer.kind === 'text') return `Text: "${layer.text || '(empty)'}"`;
+  return `Image: ${layer.assetId}`;
 }
 
 export function LayerPanel() {
@@ -115,10 +115,10 @@ export function LayerPanel() {
             No layers yet. Click “Add icon” to insert one.
           </p>
         )}
-        {layers.map((layer, idx) => {
+        {[...layers].reverse().map((layer, displayIdx) => {
           const active = layer.id === selectedId;
-          const isFirst = idx === 0;
-          const isLast = idx === layers.length - 1;
+          const isTopOfPanel = displayIdx === 0;
+          const isBottomOfPanel = displayIdx === layers.length - 1;
           return (
             <div
               key={layer.id}
@@ -153,26 +153,26 @@ export function LayerPanel() {
               </button>
               <button
                 type="button"
-                onClick={() => moveLayer(layer.id, -1)}
-                disabled={isFirst}
+                onClick={() => moveLayer(layer.id, 1)}
+                disabled={isTopOfPanel}
                 aria-label={`Move ${layerLabel(layer)} up`}
                 style={{
                   ...arrowBtnStyle,
-                  opacity: isFirst ? 0.3 : 1,
-                  cursor: isFirst ? 'default' : 'pointer',
+                  opacity: isTopOfPanel ? 0.3 : 1,
+                  cursor: isTopOfPanel ? 'default' : 'pointer',
                 }}
               >
                 ▲
               </button>
               <button
                 type="button"
-                onClick={() => moveLayer(layer.id, 1)}
-                disabled={isLast}
+                onClick={() => moveLayer(layer.id, -1)}
+                disabled={isBottomOfPanel}
                 aria-label={`Move ${layerLabel(layer)} down`}
                 style={{
                   ...arrowBtnStyle,
-                  opacity: isLast ? 0.3 : 1,
-                  cursor: isLast ? 'default' : 'pointer',
+                  opacity: isBottomOfPanel ? 0.3 : 1,
+                  cursor: isBottomOfPanel ? 'default' : 'pointer',
                 }}
               >
                 ▼

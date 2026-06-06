@@ -1,6 +1,4 @@
-// Pages Function: proxy /static/* to the worker so R2-stored public assets
-// (favicon, etc.) are reachable at /static/foo.png on the SPA origin.
-
+// pages.dev fallback: proxy /static/* to the worker so R2-stored public assets work on the SPA origin
 const WORKER_URL = 'https://disccotools-worker.fts-gg.workers.dev';
 
 const STRIP_HEADERS = [

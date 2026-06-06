@@ -1,7 +1,3 @@
-/**
- * Tag normalization shared by `saves` and `assets`. Tags are stored as a
- * JSON-stringified array of lowercase strings, capped at 8 entries x 24 chars.
- */
 export function normalizeTags(input: unknown): string[] {
   if (!Array.isArray(input)) return [];
   const seen = new Set<string>();

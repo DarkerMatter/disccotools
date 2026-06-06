@@ -4,8 +4,8 @@ import type { AppEnv } from '../env.js';
 import { getSave, setSaveRender, type Save } from '../db/saves.js';
 import { renderKey, thumbKey } from '../r2.js';
 
-const MAX_FULL_BYTES = 2 * 1024 * 1024; // 2 MB
-const MAX_THUMB_BYTES = 200 * 1024;     // 200 KB
+const MAX_FULL_BYTES = 2 * 1024 * 1024;
+const MAX_THUMB_BYTES = 200 * 1024;
 
 function validation(c: Context<AppEnv>, message: string) {
   return c.json({ error: { code: 'VALIDATION', message } }, 400);

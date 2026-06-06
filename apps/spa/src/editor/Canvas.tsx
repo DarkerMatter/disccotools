@@ -6,7 +6,6 @@ import { IconLayer } from './IconLayer.js';
 import { ImageLayer } from './ImageLayer.js';
 import { TextLayer } from './TextLayer.js';
 
-/** The on-screen display size of the canvas (independent of recipe.size). */
 const DISPLAY_SIZE = 480;
 
 function ShapeGeometry({ shape, size }: { shape: Shape; size: number }) {
@@ -23,7 +22,7 @@ function BackgroundFill({
   size: number;
 }) {
   if (background.kind === 'transparent') {
-    // Show a subtle checker so the user knows it's transparent.
+    // checker so users see that transparent is, you know, transparent
     return (
       <g aria-hidden="true">
         <rect width={size} height={size} fill="#f3f4f6" />
@@ -52,7 +51,6 @@ function BackgroundFill({
       />
     );
   }
-  // gradient
   return (
     <rect
       width={size}
@@ -64,8 +62,6 @@ function BackgroundFill({
 }
 
 function gradientEndpoints(angleDeg: number) {
-  // Convert angle to two points on the unit square diagonal so the gradient
-  // sweeps across the canvas. 0deg = left-to-right, 90deg = top-to-bottom.
   const rad = (angleDeg * Math.PI) / 180;
   const dx = Math.cos(rad);
   const dy = Math.sin(rad);

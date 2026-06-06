@@ -44,9 +44,7 @@ export function AssetCard({
     try {
       await onDelete();
     } catch (err) {
-      // `instanceof AssetInUseError` is the canonical check; we also tolerate
-      // duck-typed errors so that mocked test classes (whose identity may not
-      // match across module boundaries) still produce the in-use UI.
+      // mocked tests can break instanceof across module boundaries, hence the name fallback
       if (err instanceof AssetInUseError) {
         setInUseRefs(err.references);
         return;

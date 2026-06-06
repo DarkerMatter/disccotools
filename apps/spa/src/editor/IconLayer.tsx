@@ -12,7 +12,6 @@ export function IconLayer({
   selected: boolean;
   onClick?: () => void;
 }) {
-  // Natural size: 40% of canvas at scale=1. Centered on (x, y).
   const naturalSize = canvasSize * 0.4 * layer.scale;
   const cx = layer.x * canvasSize;
   const cy = layer.y * canvasSize;
@@ -56,7 +55,6 @@ export function IconLayer({
     );
   }
 
-  // gradient
   const maskId = `mask-${layer.id}`;
   const gradId = `grad-${layer.id}`;
   const eps = gradientEndpoints(layer.color.angle);
@@ -67,6 +65,7 @@ export function IconLayer({
       opacity={layer.opacity}
       onMouseDown={onClick}
       style={{ cursor: onClick ? 'pointer' : 'default' }}
+      className="layer-mount-in"
     >
       <defs>
         <mask id={maskId}>

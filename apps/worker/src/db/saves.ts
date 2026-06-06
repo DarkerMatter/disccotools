@@ -1,7 +1,6 @@
 import { RecipeSchema, type Recipe } from '@disccotools/shared';
 import { normalizeTags } from './tags.js';
 
-/** Raw D1 row shape (snake_case). */
 type SaveRow = {
   id: string;
   user_id: string;
@@ -19,7 +18,6 @@ type SaveRow = {
 
 export type RenderedFormat = 'png' | 'svg';
 
-/** Domain shape used by handlers and clients (camelCase). */
 export type Save = {
   id: string;
   userId: string;

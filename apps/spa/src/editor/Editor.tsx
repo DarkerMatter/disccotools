@@ -39,7 +39,7 @@ export function Editor() {
 
   useEffect(() => {
     if (!id) return;
-    if (currentSave?.id === id) return; // already loaded
+    if (currentSave?.id === id) return;
     setLoading(true);
     setLoadError(null);
     getSave(id)

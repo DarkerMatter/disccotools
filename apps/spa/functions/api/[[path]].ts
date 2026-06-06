@@ -1,12 +1,5 @@
-// Pages Function: proxy /api/* to the worker so SPA and worker share an origin.
-// Needed on *.pages.dev where there's no Workers Route binding /api/* to the
-// worker. In production the Workers Route handles /api/* directly and Pages
-// never sees the request.
-//
-// Header hygiene: any client-supplied IP/origin header is stripped so
-// downstream code can't be tricked by spoofed values. Cloudflare's
-// `cf-connecting-ip` is the canonical trusted source for the real client IP.
-
+// pages.dev fallback: proxy /api/* to the worker when no Workers Route is bound. prod skips this.
+// cloudflare gives us cf-connecting-ip, don't trust whatever the client pasted
 const WORKER_URL = 'https://disccotools-worker.fts-gg.workers.dev';
 
 const STRIP_HEADERS = [

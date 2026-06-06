@@ -15,21 +15,17 @@ import {
 } from '../db/assets.js';
 import { assetKey, extForMime } from '../r2.js';
 
-const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_BYTES = 10 * 1024 * 1024;
 const ALLOWED_MIMES = new Set([
   'image/png',
   'image/jpeg',
   'image/webp',
 ]);
 
-/**
- * Sniff magic bytes to detect the real MIME type. Defense-in-depth against a
- * client lying about `file.type`; the bytes themselves are harder to fake.
- */
+// magic bytes are harder to fake than file.type, so we never trust the client mime alone
 async function sniffImageMime(blob: Blob): Promise<string | null> {
   if (blob.size < 12) return null;
   const head = new Uint8Array(await blob.slice(0, 16).arrayBuffer());
-  // PNG: 89 50 4E 47 0D 0A 1A 0A
   if (
     head[0] === 0x89 &&
     head[1] === 0x50 &&
@@ -42,20 +38,18 @@ async function sniffImageMime(blob: Blob): Promise<string | null> {
   ) {
     return 'image/png';
   }
-  // JPEG: FF D8 FF (SOI marker)
   if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) {
     return 'image/jpeg';
   }
-  // WebP: "RIFF????WEBP" (bytes 0-3 "RIFF", bytes 8-11 "WEBP")
   if (
-    head[0] === 0x52 && // R
-    head[1] === 0x49 && // I
-    head[2] === 0x46 && // F
-    head[3] === 0x46 && // F
-    head[8] === 0x57 && // W
-    head[9] === 0x45 && // E
-    head[10] === 0x42 && // B
-    head[11] === 0x50 // P
+    head[0] === 0x52 &&
+    head[1] === 0x49 &&
+    head[2] === 0x46 &&
+    head[3] === 0x46 &&
+    head[8] === 0x57 &&
+    head[9] === 0x45 &&
+    head[10] === 0x42 &&
+    head[11] === 0x50
   ) {
     return 'image/webp';
   }
@@ -126,7 +120,7 @@ export async function createAssetHandler(c: Context<AppEnv>): Promise<Response> 
   if (typeof nameRaw !== 'string') return validation(c, 'missing name');
   const name = nameRaw.trim();
   if (name.length < 1 || name.length > 120) {
-    return validation(c, 'name must be 1–120 characters');
+    return validation(c, 'name must be 1 to 120 characters');
   }
   if (file.size > MAX_BYTES) {
     return validation(c, `file exceeds ${MAX_BYTES} bytes`);
@@ -138,7 +132,6 @@ export async function createAssetHandler(c: Context<AppEnv>): Promise<Response> 
   if (!ALLOWED_MIMES.has(declaredMime)) {
     return validation(c, 'unsupported mime type');
   }
-  // Magic-byte sniff: defense-in-depth against a lying file.type.
   const sniffed = await sniffImageMime(file);
   if (sniffed === null) {
     return validation(c, 'unsupported file format');
@@ -146,7 +139,6 @@ export async function createAssetHandler(c: Context<AppEnv>): Promise<Response> 
   if (sniffed !== declaredMime) {
     return validation(c, 'file content does not match declared type');
   }
-  // From here on, trust the sniffed MIME (not the client-declared one).
   const mime = sniffed;
 
   const id = crypto.randomUUID();
@@ -169,7 +161,7 @@ export async function createAssetHandler(c: Context<AppEnv>): Promise<Response> 
       sizeBytes: file.size,
     });
   } catch (err) {
-    // Roll back R2 so we don't leak orphan objects.
+    // don't leak orphan r2 objects if d1 write fails
     await c.env.R2.delete(key).catch(() => undefined);
     throw err;
   }
@@ -233,7 +225,6 @@ export async function deleteAssetHandler(c: Context<AppEnv>): Promise<Response> 
     );
   }
 
-  // Best-effort R2 delete.
   await c.env.R2.delete(result.asset.r2Key).catch(() => undefined);
   await deleteAsset(c.env.DB, id);
   return c.body(null, 204);

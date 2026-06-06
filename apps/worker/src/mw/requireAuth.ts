@@ -11,16 +11,7 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   await next();
 });
 
-/**
- * Opt-in middleware that gates a route to home-guild members only.
- *
- * IMPORTANT: this app is open to anyone with a Discord account; home-guild
- * members just get a badge. This middleware exists for future per-route
- * opt-in and is intentionally NOT applied anywhere right now. Adding it to
- * a route changes the product surface, so don't apply it casually.
- *
- * Assumes `requireAuth` has already attached `c.var.user`.
- */
+// not applied anywhere by default, the app is open to all discord users, this is just here for future per-route opt-in
 export const requireHomeMember = createMiddleware<AppEnv>(async (c, next) => {
   const user = c.var.user;
   if (!user) {

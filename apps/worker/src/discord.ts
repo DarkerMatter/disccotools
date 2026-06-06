@@ -38,7 +38,6 @@ export async function fetchMe(accessToken: string): Promise<DiscordUser> {
   return (await res.json()) as DiscordUser;
 }
 
-/** True if `guildId` is in the user's guild list. Non-2xx logs + false. */
 export async function fetchIsMember(
   accessToken: string,
   guildId: string,

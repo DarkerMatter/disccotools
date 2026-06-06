@@ -24,7 +24,7 @@ export function getInitialTheme(): Theme {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored === 'light' || stored === 'dark') return stored;
   } catch {
-    // localStorage may be unavailable
+    // localStorage isn't always there
   }
   if (
     typeof window.matchMedia === 'function' &&
@@ -43,7 +43,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       window.localStorage.setItem(STORAGE_KEY, theme);
     } catch {
-      // ignore
+      // shrug
     }
   }, [theme]);
 

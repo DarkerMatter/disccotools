@@ -56,7 +56,7 @@ async function mintDevSession(c: Context<AppEnv>): Promise<void> {
 }
 
 export async function loginHandler(c: Context<AppEnv>): Promise<Response> {
-  // Dev bypass needs BOTH flags. One wasn't enough humiliation, apparently.
+  // dev bypass needs both flags, one wasn't enough humiliation
   if (
     c.env.DEV_BYPASS_AUTH === 'true' &&
     c.env.ALLOW_DEV_BYPASS === 'true'
@@ -68,9 +68,7 @@ export async function loginHandler(c: Context<AppEnv>): Promise<Response> {
   setCookie(c, OAUTH_STATE_COOKIE, state, {
     httpOnly: true,
     secure: true,
-    // Lax (not Strict): the OAuth callback is a top-level nav from discord.com,
-    // and Strict drops the cookie on that cross-site return. CSRF is still
-    // covered because the callback compares this cookie to the query state.
+    // strict drops the cookie on the cross-site return from discord, callback compares to query state anyway
     sameSite: 'Lax',
     path: '/',
     maxAge: OAUTH_STATE_TTL_SECONDS,
@@ -171,7 +169,7 @@ export async function logoutHandler(c: Context<AppEnv>): Promise<Response> {
       const claims = SessionClaimsSchema.parse(payload);
       await revokeSession(c.env.DB, claims.jti, claims.exp);
     } catch {
-      // Cookie missing or invalid, nothing to revoke.
+      // nothing to revoke
     }
   }
   clearSessionCookie(c);

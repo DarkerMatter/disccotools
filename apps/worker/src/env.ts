@@ -6,10 +6,7 @@ export type Bindings = {
   DISCORD_REDIRECT_URI: string;
   HOME_GUILD_ID: string;
   DEV_BYPASS_AUTH: string;
-  /**
-   * Secondary safety flag. Dev-bypass fires only when both this and
-   * DEV_BYPASS_AUTH are "true". Must be "false" in production.
-   */
+  // dev bypass fires only when both flags are "true", keep this "false" in prod
   ALLOW_DEV_BYPASS: string;
   SESSION_SIGNING_SECRET: string;
   DB: D1Database;

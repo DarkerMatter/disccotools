@@ -32,7 +32,6 @@ export function AssetPicker({
   const [assets, setAssets] = useState<Asset[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // upload tab state
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
   const [upload, setUpload] = useState<UploadState>({ status: 'idle' });
@@ -315,7 +314,7 @@ export function AssetPicker({
                 />
               </label>
               <p style={{ margin: 0, fontSize: 11, color: 'var(--color-text-muted)' }}>
-                PNG, JPEG, WebP — up to 10 MB.
+                PNG, JPEG, WebP, up to 10 MB.
               </p>
               {upload.status === 'uploading' && (
                 <div role="status" aria-live="polite">

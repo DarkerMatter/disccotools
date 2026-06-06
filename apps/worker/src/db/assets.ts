@@ -1,8 +1,5 @@
-/** D1 layer for the user asset library. Bytes live in R2 under `r2_key`. */
-
 import { normalizeTags } from './tags.js';
 
-/** Raw D1 row shape (snake_case). */
 type AssetRow = {
   id: string;
   user_id: string;
@@ -15,7 +12,6 @@ type AssetRow = {
   tags: string | null;
 };
 
-/** Domain shape used by handlers and clients (camelCase). */
 export type Asset = {
   id: string;
   userId: string;
@@ -67,10 +63,7 @@ function newId(): string {
 export async function createAsset(
   db: D1Database,
   input: {
-    /**
-     * Optional pre-generated id. The handler mints id up-front so the R2 key
-     * (which embeds the id) can be written before the D1 row. Tests can omit.
-     */
+    // handler mints id up front so the r2 key (which embeds it) lands before the d1 row
     id?: string;
     userId: string;
     name: string;
@@ -173,13 +166,7 @@ export async function deleteAsset(
   await db.prepare(`DELETE FROM assets WHERE id = ?`).bind(id).run();
 }
 
-/**
- * Find saves owned by `userId` whose `recipe_json` mentions `assetId`.
- *
- * D1 has no native JSON ops, so a quoted LIKE pattern stands in. The asset id
- * is a UUID; a false positive would require it appearing verbatim quoted
- * inside `recipe_json`, which only happens in a real `"assetId":"…"` field.
- */
+// d1 has no json ops, so quoted LIKE on a uuid is good enough
 export async function findSavesReferencingAsset(
   db: D1Database,
   userId: string,

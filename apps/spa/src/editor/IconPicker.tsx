@@ -113,7 +113,6 @@ export function IconPicker({
   for (const p of DEFAULT_PREFIXES) {
     if (grouped.has(p)) orderedPrefixes.push(p);
   }
-  // Defensive: hits with prefixes outside DEFAULT_PREFIXES land at the end.
   for (const p of grouped.keys()) {
     if (!orderedPrefixes.includes(p)) orderedPrefixes.push(p);
   }
@@ -149,10 +148,7 @@ export function IconPicker({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          // CSS containment hints so the browser can skip painting off-screen
-          // icons when the grid holds thousands of buttons. Both keys are
-          // valid CSS but missing from older React CSSProperties typings, so
-          // we cast through `as never` per the codebase pattern.
+          // skip painting off-screen icons when the grid is huge; types miss these so we cast
           ['contentVisibility' as never]: 'auto',
           ['containIntrinsicSize' as never]: '56px 56px',
         }}

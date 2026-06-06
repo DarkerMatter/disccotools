@@ -11,7 +11,6 @@ export function ImageLayer({
   selected: boolean;
   onClick?: () => void;
 }) {
-  // Natural size: 40% of canvas at scale=1. Centered on (x, y).
   const naturalSize = canvasSize * 0.4 * layer.scale;
   const cx = layer.x * canvasSize;
   const cy = layer.y * canvasSize;
@@ -25,6 +24,7 @@ export function ImageLayer({
       opacity={layer.opacity}
       onMouseDown={onClick}
       style={{ cursor: onClick ? 'pointer' : 'default' }}
+      className="layer-mount-in"
     >
       <image
         href={`/api/assets/${layer.assetId}/file`}

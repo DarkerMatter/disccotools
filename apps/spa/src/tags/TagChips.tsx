@@ -3,11 +3,6 @@ import { useState } from 'react';
 const MAX_TAGS = 8;
 const MAX_TAG_LEN = 24;
 
-/**
- * A row of tag chips with inline add/remove. Tags are normalized on commit
- * (trim + lowercase) and deduped. Calls `onChange` with the new array; the
- * caller is responsible for persistence.
- */
 export function TagChips({
   tags,
   onChange,

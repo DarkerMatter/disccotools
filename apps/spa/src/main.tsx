@@ -20,7 +20,6 @@ createRoot(rootEl).render(
           <Route path="/editor/:id" element={<Editor />} />
           <Route path="/icons" element={<IconsPage />} />
           <Route path="/images" element={<ImagesPage />} />
-          {/* Back-compat redirects */}
           <Route path="/saves" element={<Navigate to="/icons" replace />} />
           <Route path="/assets" element={<Navigate to="/icons" replace />} />
         </Routes>

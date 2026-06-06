@@ -10,36 +10,21 @@ const HISTORY_LIMIT = 50;
 type EditorState = {
   recipe: Recipe;
   selectedId: string | null;
-  /** The persisted save being edited, if any. null = unsaved/new design. */
   currentSave: { id: string; name: string } | null;
-  /** Past recipes for undo (newest at end). */
   history: Recipe[];
-  /** Future recipes for redo (newest at start). */
   future: Recipe[];
 
-  /** Replace the recipe and push the previous one onto the history stack. */
   setRecipe: (r: Recipe) => void;
-  /** Replace the recipe WITHOUT pushing history (e.g., loading a saved doc). */
   resetTo: (r: Recipe) => void;
-  /** Convenience: produce a new recipe from the current one. */
   updateRecipe: (mutator: (current: Recipe) => Recipe) => void;
-  /** Selection is UI state, not undoable. */
   setSelection: (id: string | null) => void;
-  /** Set the persisted save identity. Does not push history. */
   setCurrentSave: (value: { id: string; name: string } | null) => void;
-  /** Convenience for /editor/:id load: swap recipe and identity together. */
   loadFromSave: (save: { id: string; name: string; recipe: Recipe }) => void;
-  /** Append a new icon layer with default geometry and select it. */
   addIconLayer: (args: { iconset: string; name: string; color?: string }) => void;
-  /** Append a default text layer and select it. */
   addTextLayer: (args?: { text?: string }) => void;
-  /** Append a new image layer referencing the given asset and select it. */
   addImageLayer: (args: { assetId: string }) => void;
-  /** Partial update of an existing layer. */
   updateLayer: <L extends Layer>(id: string, patch: Partial<L>) => void;
-  /** Remove a layer by id. Clears selection if it was the selected one. */
   removeLayer: (id: string) => void;
-  /** Move the layer with `id` by `delta` positions in the layers array. Clamped. */
   moveLayer: (id: string, delta: number) => void;
   undo: () => void;
   redo: () => void;

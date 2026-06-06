@@ -1,14 +1,13 @@
--- 0002_saves.sql: persistent saves table + indexes. Recipes are JSON; R2 keys
--- for the render and thumbnail are remembered here so downloads can be served.
+-- 0002_saves.sql: saves table and indexes.
 
 CREATE TABLE saves (
-  id                  TEXT PRIMARY KEY,        -- UUID v4/v7
+  id                  TEXT PRIMARY KEY,
   user_id             TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name                TEXT NOT NULL,
   recipe_json         TEXT NOT NULL,
-  rendered_key        TEXT,                    -- R2 key for full render
-  thumb_key           TEXT,                    -- R2 key for thumbnail
-  rendered_format     TEXT,                    -- 'png' | 'svg'
+  rendered_key        TEXT,
+  thumb_key           TEXT,
+  rendered_format     TEXT,
   rendered_at         INTEGER,
   is_template         INTEGER NOT NULL DEFAULT 0,
   created_at          INTEGER NOT NULL,

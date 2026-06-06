@@ -1,6 +1,5 @@
 import type { Shape } from './recipe.js';
 
-/** The set of shapes shown in the UI, in display order. */
 export const SHAPES_FOR_UI: readonly Shape[] = [
   'circle',
   'rounded-square',
@@ -143,8 +142,6 @@ function shieldNarrowPointedPathD(size: number): string {
 }
 
 function shieldRoundedCurvedPathD(size: number): string {
-  // Clamp curve control points to the bounding box so the shape stays inside
-  // the size x size frame even at small preview sizes.
   const s = size;
   return [
     `M ${s * 0.1},${s * 0.0}`,

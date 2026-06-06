@@ -55,10 +55,10 @@ export function TutorialModal({
             color: 'var(--color-text)',
           }}
         >
-          <li>Pick a background — solid color, gradient, or transparent.</li>
-          <li>Choose a shape — circle, square, or rounded square.</li>
-          <li>Add layers — icons, text, or your uploaded images.</li>
-          <li>Adjust each layer — position, scale, rotation, opacity.</li>
+          <li>Pick a background: solid color, gradient, or transparent.</li>
+          <li>Choose a shape: circle, square, or rounded square.</li>
+          <li>Add layers: icons, text, or your uploaded images.</li>
+          <li>Adjust each layer: position, scale, rotation, opacity.</li>
           <li>Choose a resolution and click Download PNG.</li>
           <li>Sign in with Discord to save your work and come back later.</li>
         </ol>

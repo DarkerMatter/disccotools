@@ -1,5 +1,4 @@
--- 0003_assets.sql: user asset library. Bytes live in R2 under
--- assets/{user_id}/{asset_id}.{ext}; recipe image layers reference assets by id.
+-- 0003_assets.sql: user asset library.
 
 CREATE TABLE assets (
   id          TEXT PRIMARY KEY,

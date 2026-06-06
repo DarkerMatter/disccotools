@@ -17,16 +17,13 @@ export function SliderWithInput({
   step?: number;
   unit?: string;
   onChange: (next: number) => void;
-  /** Optional accessible name for both inputs. Defaults to `label`. */
   ariaLabel?: string;
 }) {
   const a11y = ariaLabel ?? label;
-  // Track the input's text state separately so users can type intermediate
-  // values (like an empty box or "-" while typing) without snapping mid-edit.
+  // keep typed text separate so half-typed values like "-" or "" don't snap mid-edit
   const [text, setText] = useState(String(value));
 
   useEffect(() => {
-    // External value changes (slider drag, another control) sync into the field.
     setText(String(value));
   }, [value]);
 

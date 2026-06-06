@@ -6,10 +6,9 @@ export type UpsertUserInput = {
   globalName: string | null;
   avatarHash: string | null;
   isHomeMember: boolean;
-  homeCheckedAt: number; // unix ms
+  homeCheckedAt: number;
 };
 
-/** Upsert a user row via ON CONFLICT and return the post-write state. */
 export async function upsertUser(
   db: D1Database,
   input: UpsertUserInput,

@@ -116,22 +116,26 @@ describe('<LayerPanel />', () => {
     expect(useRecipeStore.getState().selectedId).toBe(layers[0]!.id);
   });
 
-  it('moves a layer down with the down-arrow button', async () => {
+  it('moves a layer down (toward bottom of panel and bottom of canvas)', async () => {
     renderPanel();
+    // "one" added first => array[0] => bottom of panel.
+    // "two" added second => array[1] => top of panel.
     useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'one' });
     useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'two' });
     const idsBefore = useRecipeStore.getState().recipe.layers.map((l) => l.id);
-    const downOne = await screen.findByRole('button', { name: /move lucide:one down/i });
-    await userEvent.click(downOne);
+    // Click "down" on "two" (the top-of-panel row); it should swap with "one".
+    const downTwo = await screen.findByRole('button', { name: /move lucide:two down/i });
+    await userEvent.click(downTwo);
     const idsAfter = useRecipeStore.getState().recipe.layers.map((l) => l.id);
     expect(idsAfter).toEqual([idsBefore[1], idsBefore[0]]);
   });
 
-  it('disables the up button on the top row', async () => {
+  it('disables the up button on the top row (highest array index)', async () => {
     renderPanel();
     useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'one' });
     useRecipeStore.getState().addIconLayer({ iconset: 'lucide', name: 'two' });
-    const upOne = await screen.findByRole('button', { name: /move lucide:one up/i }) as HTMLButtonElement;
-    expect(upOne.disabled).toBe(true);
+    // "two" is array[1] = top of panel; its up button should be disabled.
+    const upTwo = await screen.findByRole('button', { name: /move lucide:two up/i }) as HTMLButtonElement;
+    expect(upTwo.disabled).toBe(true);
   });
 });

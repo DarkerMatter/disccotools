@@ -7,16 +7,6 @@ import type {
 import { shapePathD } from '@disccotools/shared';
 import { iconUrl } from './iconify.js';
 
-/**
- * Build a standalone SVG document string for `recipe` at its export size.
- *
- * The SVG references Iconify icons and asset images via `<image href>`. Both
- * sources are CORS-friendly so a downstream `drawImage` won't taint the
- * canvas. When `assetUrlOverrides` is provided, each computed URL is replaced
- * with its mapped substitute (typically a `data:` URI), because many browsers
- * won't synchronously composite externally-href'd `<image>` children when
- * rasterizing an SVG via `drawImage`.
- */
 export function recipeToSvgString(
   recipe: Recipe,
   assetUrlOverrides?: Map<string, string>,
@@ -86,7 +76,7 @@ function layerToSvg(
         `</g>`,
       ].join('');
     }
-    // gradient: mask the white-fill icon SVG and fill a rect with the gradient.
+    // gradient: mask the white-fill icon and fill a rect through it
     const url = iconUrl(layer.iconset, layer.name, '#ffffff');
     const finalHref = assetUrlOverrides?.get(url) ?? url;
     const maskId = `mask-${layer.id}`;
@@ -149,17 +139,7 @@ function gradientEndpoints(angleDeg: number) {
   };
 }
 
-/**
- * Pre-fetch each unique asset referenced by `recipe` (Iconify icons and
- * uploaded images) and return a map from URL to `data:` URI. Data URIs are
- * required because many browsers won't synchronously fetch externally-href'd
- * `<image>` children when rasterizing an SVG via `drawImage`.
- *
- * For icon layers the mime defaults to `image/svg+xml`; for image layers we
- * read `Content-Type` and fall back to the blob's `type`. On per-asset fetch
- * failure we log and map the URL to itself so the rest of the export still
- * renders.
- */
+// browsers won't fetch externally-href'd <image> children when drawImage rasterizes the svg, so inline them as data uris
 async function prefetchAssetDataUris(recipe: Recipe): Promise<Map<string, string>> {
   const seen = new Map<string, string>();
   for (const layer of recipe.layers) {
@@ -201,7 +181,6 @@ function bytesToBase64(bytes: Uint8Array): string {
   return btoa(s);
 }
 
-/** Render `recipe` to a PNG Blob via an offscreen canvas. Browser-only. */
 export async function renderToPng(recipe: Recipe): Promise<Blob> {
   const overrides = await prefetchAssetDataUris(recipe);
   const svg = recipeToSvgString(recipe, overrides);
@@ -235,12 +214,10 @@ export async function renderToPng(recipe: Recipe): Promise<Blob> {
   }
 }
 
-/** Render at a specific size without mutating the input recipe. */
 export function renderRecipeAtSize(recipe: Recipe, size: Recipe['size']): Promise<Blob> {
   return renderToPng({ ...recipe, size });
 }
 
-/** Trigger a browser download for the given blob. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -249,6 +226,6 @@ export function downloadBlob(blob: Blob, filename: string): void {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  // Defer revoke so the browser has time to start the download.
+  // give the browser a beat to start the download before we yank the url
   setTimeout(() => URL.revokeObjectURL(url), 100);
 }

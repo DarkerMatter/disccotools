@@ -1,8 +1,3 @@
-/**
- * Thin client for the public Iconify CDN. We trust it not to turn evil.
- * Docs: https://docs.iconify.design/api/queries.html
- */
-
 export const DEFAULT_PREFIXES = [
   'lucide',
   'tabler',
@@ -24,21 +19,16 @@ export function prefixLabel(prefix: string): string {
 }
 
 export type IconHit = {
-  /** Full id like "lucide:rocket" */
   id: string;
-  /** Prefix only, e.g. "lucide" */
   prefix: string;
-  /** Name only, e.g. "rocket" */
   name: string;
 };
 
-/** Build the SVG URL for a given icon set/name and color. */
 export function iconUrl(prefix: string, name: string, color: string): string {
   const params = new URLSearchParams({ color });
   return `https://api.iconify.design/${prefix}/${name}.svg?${params.toString()}`;
 }
 
-/** Search the Iconify catalogue. Falls back to `[]` on any failure. */
 export async function searchIcons(
   query: string,
   opts: { limit?: number; prefixes?: readonly string[]; signal?: AbortSignal } = {},
@@ -67,7 +57,7 @@ export async function searchIcons(
   }
 }
 
-/** Browse every icon in a single Iconify set. Failures resolve to `[]`. */
+// iconify gives us the whole catalog, we just slice
 export async function browseIcons(
   prefix: string,
   opts: { limit?: number; signal?: AbortSignal } = {},

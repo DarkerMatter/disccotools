@@ -69,7 +69,7 @@ function Dropzone({
         {disabled ? 'Uploading…' : 'Drop an image here, or click to pick.'}
       </p>
       <p style={{ margin: '6px 0 0 0', fontSize: 11 }}>
-        PNG, JPEG, WebP — up to 10 MB.
+        PNG, JPEG, WebP, up to 10 MB.
       </p>
       <input
         ref={ref}
@@ -192,16 +192,12 @@ export function ImagesPage() {
   }
 
   async function handleDelete(asset: Asset) {
-    // Non-optimistic: keep the card mounted until the delete confirms. That
-    // way, if the API returns 409 (in-use), AssetCard still has its local
-    // state to surface "in use by N saves" without remount churn.
+    // not optimistic on purpose: a 409 surfaces "in use by N saves" without the card remounting
     try {
       await deleteAsset(asset.id);
       setAssets((prev) => (prev ? prev.filter((a) => a.id !== asset.id) : prev));
     } catch (err) {
-      // `instanceof AssetInUseError` is the canonical check; we also tolerate
-      // duck-typed errors so that mocked test classes (which can drift in
-      // identity across module boundaries) are still recognised.
+      // mocked tests can break instanceof across module boundaries, hence the name fallback
       if (
         err instanceof AssetInUseError ||
         (err instanceof Error && err.name === 'AssetInUseError')
