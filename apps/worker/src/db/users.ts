@@ -1,5 +1,33 @@
 import type { User } from '@disccotools/shared';
 
+type UserRow = {
+  id: string;
+  username: string;
+  global_name: string | null;
+  avatar_hash: string | null;
+  is_home_member: number;
+  home_checked_at: number;
+};
+
+export async function getUser(db: D1Database, id: string): Promise<User | null> {
+  const row = await db
+    .prepare(
+      `SELECT id, username, global_name, avatar_hash, is_home_member, home_checked_at
+       FROM users WHERE id = ?`,
+    )
+    .bind(id)
+    .first<UserRow>();
+  if (!row) return null;
+  return {
+    id: row.id,
+    username: row.username,
+    globalName: row.global_name,
+    avatarHash: row.avatar_hash,
+    isHomeMember: row.is_home_member === 1,
+    memberCheckedAt: row.home_checked_at,
+  };
+}
+
 export type UpsertUserInput = {
   id: string;
   username: string;
