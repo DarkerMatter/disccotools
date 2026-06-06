@@ -74,11 +74,12 @@ afterEach(() => {
 });
 
 describe('<SaveButton />', () => {
-  it('is disabled and titled "Sign in to save" when anonymous', () => {
+  it('shows a "Sign in to save" prompt and a sign-in tooltip when anonymous', () => {
     mockedUseUser.mockReturnValue({ status: 'anonymous' });
     renderBtn();
     const btn = screen.getByRole('button') as HTMLButtonElement;
-    expect(btn.disabled).toBe(true);
+    expect(btn.disabled).toBe(false);
+    expect(btn.textContent).toMatch(/sign in to save/i);
     expect(btn.title).toMatch(/sign in/i);
   });
 

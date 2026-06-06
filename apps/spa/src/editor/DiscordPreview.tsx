@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
 import { useUser } from '../auth/useUser.js';
 import { useRecipeStore } from './useRecipeStore.js';
-import { iconUrl } from './iconify.js';
+import { Canvas } from './Canvas.js';
 
 const NOW = '11:23 PM';
 
@@ -15,24 +14,10 @@ export function DiscordPreview() {
   const recipe = useRecipeStore((s) => s.recipe);
   const userState = useUser();
 
-  const topIcon = useMemo(() => {
-    for (let i = recipe.layers.length - 1; i >= 0; i--) {
-      const l = recipe.layers[i];
-      if (l && l.kind === 'icon') return l;
-    }
-    return null;
-  }, [recipe.layers]);
-
-  const previewColor = useMemo(() => {
-    if (!topIcon) return '#a3a3a3';
-    if (topIcon.color.kind === 'solid') return topIcon.color.color;
-    return topIcon.color.from;
-  }, [topIcon]);
-
   const isAuthed = userState.status === 'authenticated';
   const topName = isAuthed
     ? userState.user.globalName ?? userState.user.username
-    : 'Captain Astro';
+    : 'Randy';
   const topAvatar =
     isAuthed && userState.user.avatarHash
       ? discordAvatarUrl(userState.user.id, userState.user.avatarHash)
@@ -42,22 +27,21 @@ export function DiscordPreview() {
     : 'disccotools is really cool! Look at my role icon!';
   const bottomMsg = isAuthed
     ? 'yo that goes hard, drop the link'
-    : "How can I get the same cool icon? You're so lucky...";
+    : "how do I get one of those? you're so lucky...";
 
   return (
     <div className="discord-preview" aria-label="Discord preview">
       <DiscordRow
         name={topName}
-        nameModifier=""
         avatarUrl={topAvatar}
-        iconSrc={topIcon ? iconUrl(topIcon.iconset, topIcon.name, previewColor) : null}
+        recipe={recipe}
         msg={topMsg}
       />
       <DiscordRow
-        name="Rookie"
+        name="Justin"
         nameModifier="alt"
         avatarModifier="alt"
-        iconSrc={topIcon ? iconUrl(topIcon.iconset, topIcon.name, previewColor) : null}
+        recipe={recipe}
         msg={bottomMsg}
       />
     </div>
@@ -69,14 +53,14 @@ function DiscordRow({
   nameModifier,
   avatarModifier,
   avatarUrl,
-  iconSrc,
+  recipe,
   msg,
 }: {
   name: string;
   nameModifier?: string;
   avatarModifier?: string;
   avatarUrl?: string | null;
-  iconSrc: string | null;
+  recipe: ReturnType<typeof useRecipeStore.getState>['recipe'];
   msg: string;
 }) {
   return (
@@ -86,9 +70,7 @@ function DiscordRow({
         aria-hidden="true"
         style={
           avatarUrl
-            ? {
-                background: `center/cover no-repeat url(${avatarUrl})`,
-              }
+            ? { background: `center/cover no-repeat url(${avatarUrl})` }
             : undefined
         }
       />
@@ -97,11 +79,9 @@ function DiscordRow({
           <span className={`discord-row__name ${nameModifier ? `discord-row__name--${nameModifier}` : ''}`}>
             {name}
           </span>
-          {iconSrc && (
-            <span className="discord-row__role-icon" aria-hidden="true">
-              <img src={iconSrc} alt="" />
-            </span>
-          )}
+          <span className="discord-row__role-icon" aria-hidden="true">
+            <Canvas recipe={recipe} displaySize={18} />
+          </span>
           <span className="discord-row__time">Today at {NOW}</span>
         </div>
         <p className="discord-row__msg">{msg}</p>
