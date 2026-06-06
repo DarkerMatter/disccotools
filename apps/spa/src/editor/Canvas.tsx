@@ -8,8 +8,18 @@ import { TextLayer } from './TextLayer.js';
 
 const DISPLAY_SIZE = 480;
 
-function ShapeGeometry({ shape, size }: { shape: Shape; size: number }) {
-  return <path d={shapePathD(shape, size)} />;
+function ShapeGeometry({
+  shape,
+  size,
+  rotation = 0,
+}: {
+  shape: Shape;
+  size: number;
+  rotation?: number;
+}) {
+  const transform =
+    rotation === 0 ? undefined : `rotate(${rotation} ${size / 2} ${size / 2})`;
+  return <path d={shapePathD(shape, size)} transform={transform} />;
 }
 
 function BackgroundFill({
@@ -106,9 +116,11 @@ export function Canvas({
     >
       <defs>
         <clipPath id={clipId}>
-          <g transform={`rotate(${recipe.shapeRotation ?? 0} ${size / 2} ${size / 2})`}>
-            <ShapeGeometry shape={recipe.shape} size={size} />
-          </g>
+          <ShapeGeometry
+            shape={recipe.shape}
+            size={size}
+            rotation={recipe.shapeRotation ?? 0}
+          />
         </clipPath>
         {isGradient && recipe.background.kind === 'gradient' && (
           <linearGradient id={gradientId} {...gradientEndpoints(recipe.background.angle)}>
