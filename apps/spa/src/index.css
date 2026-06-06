@@ -715,39 +715,46 @@ h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
   .layer-card__body, .layer-card__chevron { transition: none; }
 }
 
-/* drag handle in the layer card header */
+/* drag handle in the layer card header — bigger target, clearer affordance */
 .layer-card__grip {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 32px;
+  width: 22px;
+  height: 38px;
   color: var(--color-text-muted);
   cursor: grab;
   user-select: none;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1;
   margin-left: 4px;
+  border-radius: var(--radius-sm);
+  transition: background 140ms ease, color 140ms ease;
+}
+.layer-card__grip:hover {
+  color: var(--color-text);
+  background: var(--color-surface-elev);
 }
 .layer-card__grip:active { cursor: grabbing; }
 
-/* a card being dragged dims out, the drop targets show a thin blue line */
+/* a card being dragged dims out, the drop targets show a chunky blue line */
 .layer-card--dragging {
-  opacity: 0.4;
+  opacity: 0.35;
 }
 
 .layer-card--drop-before {
-  box-shadow: 0 -2px 0 0 var(--color-accent);
+  box-shadow:
+    0 -3px 0 0 var(--color-accent),
+    0 -10px 14px -6px var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .layer-card--drop-after {
-  box-shadow: 0 2px 0 0 var(--color-accent);
-}
-
-.layer-card--drop-before.layer-card--expanded,
-.layer-card--drop-after.layer-card--expanded {
-  box-shadow: 0 0 0 1px var(--color-accent);
+  box-shadow:
+    0 3px 0 0 var(--color-accent),
+    0 10px 14px -6px var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 /* slider, restyled. accent-color fills the track up to the thumb */
