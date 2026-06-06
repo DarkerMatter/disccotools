@@ -13,6 +13,13 @@ import {
   updateSaveHandler,
 } from './handlers/saves.js';
 import {
+  createShareHandler,
+  getSharedTemplateHandler,
+  importSharedTemplateHandler,
+  revokeShareHandler,
+  useTemplateHandler,
+} from './handlers/templates.js';
+import {
   createAssetHandler,
   deleteAssetHandler,
   getAssetFileHandler,
@@ -42,6 +49,15 @@ app.get('/api/saves/:id', getSaveHandler);
 app.patch('/api/saves/:id', updateSaveHandler);
 app.delete('/api/saves/:id', deleteSaveHandler);
 app.post('/api/saves/:id/clone', cloneSaveHandler);
+app.post('/api/saves/:id/use', useTemplateHandler);
+app.post('/api/saves/:id/share', createShareHandler);
+app.delete('/api/saves/:id/share', revokeShareHandler);
+
+// public template share endpoints — no auth gate so anyone with the link can view
+app.get('/api/templates/share/:token', getSharedTemplateHandler);
+// import does need auth, since it writes a save under the caller
+app.use('/api/templates/share/:token/import', requireAuth);
+app.post('/api/templates/share/:token/import', importSharedTemplateHandler);
 
 app.use('/api/assets/*', requireAuth);
 app.post('/api/assets', createAssetHandler);
