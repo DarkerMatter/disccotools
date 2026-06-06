@@ -24,29 +24,34 @@ import { useRecipeStore } from './useRecipeStore.js';
 
 const TOUR_STEPS: TourStep[] = [
   {
-    target: 'editor-tab-shape',
+    tab: 'shape',
+    target: 'shape',
     title: 'Pick your shape',
     body: 'Circle, hexagon, shield, star. The shape clips your icon, so it sets the outline.',
   },
   {
+    tab: 'shape',
     target: 'background',
     title: 'Style your background',
     body: 'Solid, gradient, or transparent. This is the canvas behind everything.',
   },
   {
+    tab: 'shape',
+    target: 'resolution',
+    title: 'Choose a resolution',
+    body: 'Discord likes round numbers. 256 is a safe default.',
+  },
+  {
+    tab: 'search',
     target: 'editor-tab-search',
     title: 'Find an icon',
     body: 'Browse the icon library or search. Click any icon to drop it onto the canvas.',
   },
   {
-    target: 'editor-tab-icons',
+    tab: 'icons',
+    target: 'add-icon',
     title: 'Tweak your layers',
-    body: 'Open the Customise Icons tab to move, scale, rotate, and color each layer.',
-  },
-  {
-    target: 'resolution',
-    title: 'Choose a resolution',
-    body: 'Discord likes round numbers. 256 is a safe default.',
+    body: 'Customise Icons is where each layer becomes a collapsible card. Click one to expand its sliders.',
   },
   {
     target: 'download',
@@ -251,6 +256,7 @@ export function Editor() {
         open={tourOpen}
         steps={TOUR_STEPS}
         onClose={() => setTourOpen(false)}
+        onTabChange={(t) => setActiveTab(t as EditorTabKey)}
       />
     </main>
   );

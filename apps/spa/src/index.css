@@ -606,9 +606,13 @@ h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
 .layer-card__meta {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
 .layer-card__title {
+  display: block;
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text);
@@ -618,6 +622,7 @@ h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
 }
 
 .layer-card__sub {
+  display: block;
   font-size: 11px;
   color: var(--color-text-muted);
   white-space: nowrap;

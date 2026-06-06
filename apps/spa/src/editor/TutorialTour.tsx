@@ -6,6 +6,8 @@ export type TourStep = {
   target: string;
   title: string;
   body: string;
+  /** If set, the tour asks the parent to switch to this editor tab before showing the step. */
+  tab?: string;
 };
 
 type Rect = {
@@ -149,10 +151,13 @@ export function TutorialTour({
   open,
   steps,
   onClose,
+  onTabChange,
 }: {
   open: boolean;
   steps: TourStep[];
   onClose: () => void;
+  /** Optional. Fired when a step has a `tab` field; the host swaps the editor tab. */
+  onTabChange?: (tab: string) => void;
 }): JSX.Element | null {
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
@@ -163,6 +168,13 @@ export function TutorialTour({
   }, [open]);
 
   const step = open && steps.length > 0 ? steps[Math.min(stepIndex, steps.length - 1)] : null;
+
+  // Ask the host to switch tabs when a step says so. Done before re-measuring,
+  // and we wait one frame so the new tab content has time to mount.
+  useEffect(() => {
+    if (!open || !step || !step.tab || !onTabChange) return;
+    onTabChange(step.tab);
+  }, [open, step, onTabChange]);
 
   const recompute = useCallback(() => {
     if (!step) {
@@ -179,13 +191,15 @@ export function TutorialTour({
 
   useLayoutEffect(() => {
     if (!open || !step) return;
-    recompute();
+    // first paint may not have the new tab content yet, give it a frame
+    const raf = requestAnimationFrame(recompute);
     function handle() {
       recompute();
     }
     window.addEventListener('resize', handle);
     window.addEventListener('scroll', handle, { passive: true });
     return () => {
+      cancelAnimationFrame(raf);
       window.removeEventListener('resize', handle);
       window.removeEventListener('scroll', handle);
     };
