@@ -114,11 +114,13 @@ export function Canvas({
         borderRadius: 'var(--radius-md)',
         boxShadow: 'var(--shadow-card)',
         background: 'transparent',
-        // never overflow whatever wraps us; the viewBox keeps it square
-        width: '100%',
+        // never overflow whatever wraps us. browsers preserve the viewBox
+        // aspect when one dimension is constrained and the other is auto.
+        maxWidth: '100%',
+        maxHeight: '100%',
+        width: 'auto',
         height: 'auto',
-        maxWidth: size,
-        maxHeight: size,
+        aspectRatio: '1 / 1',
       }}
     >
       <defs>

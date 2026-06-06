@@ -468,11 +468,18 @@ h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
   justify-content: center;
   padding: 24px;
   position: relative;
-  min-height: 280px;
   overflow: hidden;
+  /* the frame stays square at any viewport — width is capped by both the
+     column width (100%) and a vh-relative budget so it never overflows
+     vertically into the discord chips / actions below */
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  max-width: min(540px, 48dvh);
+  flex-shrink: 0;
+  margin: 0 auto;
 }
 
-/* whatever Canvas renders inside the frame, keep it within bounds */
+/* defensive: even if a parent forces an odd size, the SVG never exceeds it */
 .editor-canvas-frame > svg {
   max-width: 100%;
   max-height: 100%;
