@@ -13,6 +13,8 @@ export const SaveSummarySchema = z.object({
   updatedAt: z.number(),
   recipe: RecipeSchema,
   tags: TagsSchema,
+  parentTemplateId: z.string().nullable(),
+  shareToken: z.string().nullable(),
 });
 export type SaveSummary = z.infer<typeof SaveSummarySchema>;
 
@@ -24,8 +26,32 @@ export const SaveDetailSchema = z.object({
   createdAt: z.number(),
   updatedAt: z.number(),
   tags: TagsSchema,
+  parentTemplateId: z.string().nullable(),
+  shareToken: z.string().nullable(),
 });
 export type SaveDetail = z.infer<typeof SaveDetailSchema>;
+
+// Public view of a shared template (no owner identity beyond a display name)
+export const SharedTemplateSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  recipe: RecipeSchema,
+  tags: TagsSchema,
+  ownerName: z.string(),
+  createdAt: z.number(),
+  shareToken: z.string(),
+});
+export type SharedTemplate = z.infer<typeof SharedTemplateSchema>;
+
+export const SharedTemplateResponseSchema = z.object({
+  template: SharedTemplateSchema,
+});
+export type SharedTemplateResponse = z.infer<typeof SharedTemplateResponseSchema>;
+
+export const UseTemplateBodySchema = z.object({
+  name: z.string().min(1).max(120).optional(),
+});
+export type UseTemplateBody = z.infer<typeof UseTemplateBodySchema>;
 
 export const SaveFilterSchema = z.enum(['all', 'designs', 'templates']);
 export type SaveFilter = z.infer<typeof SaveFilterSchema>;
