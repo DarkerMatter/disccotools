@@ -5,14 +5,12 @@ type UserRow = {
   username: string;
   global_name: string | null;
   avatar_hash: string | null;
-  is_home_member: number;
-  home_checked_at: number;
 };
 
 export async function getUser(db: D1Database, id: string): Promise<User | null> {
   const row = await db
     .prepare(
-      `SELECT id, username, global_name, avatar_hash, is_home_member, home_checked_at
+      `SELECT id, username, global_name, avatar_hash
        FROM users WHERE id = ?`,
     )
     .bind(id)
@@ -23,8 +21,6 @@ export async function getUser(db: D1Database, id: string): Promise<User | null> 
     username: row.username,
     globalName: row.global_name,
     avatarHash: row.avatar_hash,
-    isHomeMember: row.is_home_member === 1,
-    memberCheckedAt: row.home_checked_at,
   };
 }
 
@@ -33,8 +29,6 @@ export type UpsertUserInput = {
   username: string;
   globalName: string | null;
   avatarHash: string | null;
-  isHomeMember: boolean;
-  homeCheckedAt: number;
 };
 
 export async function upsertUser(
@@ -44,14 +38,12 @@ export async function upsertUser(
   const now = Date.now();
   await db
     .prepare(
-      `INSERT INTO users (id, username, global_name, avatar_hash, is_home_member, home_checked_at, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO users (id, username, global_name, avatar_hash, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          username = excluded.username,
          global_name = excluded.global_name,
          avatar_hash = excluded.avatar_hash,
-         is_home_member = excluded.is_home_member,
-         home_checked_at = excluded.home_checked_at,
          updated_at = excluded.updated_at`,
     )
     .bind(
@@ -59,8 +51,6 @@ export async function upsertUser(
       input.username,
       input.globalName,
       input.avatarHash,
-      input.isHomeMember ? 1 : 0,
-      input.homeCheckedAt,
       now,
       now,
     )
@@ -71,7 +61,5 @@ export async function upsertUser(
     username: input.username,
     globalName: input.globalName,
     avatarHash: input.avatarHash,
-    isHomeMember: input.isHomeMember,
-    memberCheckedAt: input.homeCheckedAt,
   };
 }

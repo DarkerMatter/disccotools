@@ -37,8 +37,6 @@ describe('useUser', () => {
         username: 'mitri',
         globalName: 'Dimitri',
         avatarHash: null,
-        isHomeMember: true,
-        memberCheckedAt: 1,
       },
     });
     const { result } = renderHook(() => useUser());

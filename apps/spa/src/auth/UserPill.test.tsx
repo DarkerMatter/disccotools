@@ -9,8 +9,6 @@ const baseUser: User = {
   username: 'mitri',
   globalName: 'Dimitri',
   avatarHash: 'a_abc123',
-  isHomeMember: true,
-  memberCheckedAt: 1717000000000,
 };
 
 describe('<UserPill />', () => {
@@ -26,16 +24,9 @@ describe('<UserPill />', () => {
     expect(screen.getByText('mitri')).toBeInTheDocument();
   });
 
-  it('shows the NTTS badge when isHomeMember is true', () => {
+  it('shows the NTTS badge for everyone', () => {
     render(<UserPill user={baseUser} onLogout={() => {}} />);
     expect(screen.getByText(/ntts/i)).toBeInTheDocument();
-  });
-
-  it('omits the badge when isHomeMember is false', () => {
-    render(
-      <UserPill user={{ ...baseUser, isHomeMember: false }} onLogout={() => {}} />,
-    );
-    expect(screen.queryByText(/ntts/i)).toBeNull();
   });
 
   it('calls onLogout when the log-out button is clicked', async () => {

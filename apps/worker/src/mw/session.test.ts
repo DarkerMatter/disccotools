@@ -18,8 +18,6 @@ const baseClaims = {
   username: 'mitri',
   globalName: 'Dimitri',
   avatarHash: 'a_abc123',
-  isHomeMember: true,
-  memberCheckedAt: 1717000000000,
   jti: 'test-jti-base',
 };
 

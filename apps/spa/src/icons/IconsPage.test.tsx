@@ -26,7 +26,6 @@ function authenticated() {
     status: 'authenticated',
     user: {
       id: '1', username: 'mitri', globalName: null, avatarHash: null,
-      isHomeMember: false, memberCheckedAt: 0,
     },
   });
 }

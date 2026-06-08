@@ -24,10 +24,10 @@ beforeEach(async () => {
     env.DB.prepare('DELETE FROM saves'),
     env.DB.prepare('DELETE FROM users'),
     env.DB.prepare(
-      'INSERT INTO users (id, username, is_home_member, created_at, updated_at) VALUES (?, ?, 1, ?, ?)',
+      'INSERT INTO users (id, username, created_at, updated_at) VALUES (?, ?, ?, ?)',
     ).bind(USER_ID, 'test', now, now),
     env.DB.prepare(
-      'INSERT INTO users (id, username, is_home_member, created_at, updated_at) VALUES (?, ?, 0, ?, ?)',
+      'INSERT INTO users (id, username, created_at, updated_at) VALUES (?, ?, ?, ?)',
     ).bind(OTHER_USER_ID, 'other', now, now),
   ]);
 });

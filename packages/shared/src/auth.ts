@@ -5,8 +5,6 @@ export const UserSchema = z.object({
   username: z.string(),
   globalName: z.string().nullable(),
   avatarHash: z.string().nullable(),
-  isHomeMember: z.boolean(),
-  memberCheckedAt: z.number().nullable(),
 });
 export type User = z.infer<typeof UserSchema>;
 
@@ -15,8 +13,6 @@ export const SessionClaimsSchema = z.object({
   username: z.string(),
   globalName: z.string().nullable(),
   avatarHash: z.string().nullable(),
-  isHomeMember: z.boolean(),
-  memberCheckedAt: z.number(),
   jti: z.string(),
   iat: z.number(),
   exp: z.number(),
@@ -34,7 +30,5 @@ export function userFromClaims(claims: SessionClaims): User {
     username: claims.username,
     globalName: claims.globalName,
     avatarHash: claims.avatarHash,
-    isHomeMember: claims.isHomeMember,
-    memberCheckedAt: claims.memberCheckedAt,
   };
 }

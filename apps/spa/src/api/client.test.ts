@@ -80,14 +80,12 @@ describe('fetchMe', () => {
           username: 'mitri',
           globalName: 'Dimitri',
           avatarHash: 'a_abc123',
-          isHomeMember: true,
-          memberCheckedAt: 1717000000000,
         },
       }),
     });
     const result = await fetchMe();
     expect(result?.user.id).toBe('714517219026927767');
-    expect(result?.user.isHomeMember).toBe(true);
+    expect(result?.user.username).toBe('mitri');
   });
 });
 

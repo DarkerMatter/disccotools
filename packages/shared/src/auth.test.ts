@@ -15,26 +15,22 @@ describe('UserSchema', () => {
       username: 'mitri',
       globalName: 'Dimitri',
       avatarHash: 'a_abc123',
-      isHomeMember: true,
-      memberCheckedAt: 1717000000000,
     };
     expect(UserSchema.parse(user)).toEqual(user);
   });
 
-  it('accepts null globalName, avatarHash, and memberCheckedAt', () => {
+  it('accepts null globalName and avatarHash', () => {
     const user: User = {
       id: '123',
       username: 'anon',
       globalName: null,
       avatarHash: null,
-      isHomeMember: false,
-      memberCheckedAt: null,
     };
     expect(UserSchema.parse(user)).toEqual(user);
   });
 
-  it('rejects a missing isHomeMember', () => {
-    expect(() => UserSchema.parse({ id: '1', username: 'a' })).toThrow();
+  it('rejects a missing username', () => {
+    expect(() => UserSchema.parse({ id: '1' })).toThrow();
   });
 });
 
@@ -45,8 +41,6 @@ describe('SessionClaimsSchema', () => {
       username: 'mitri',
       globalName: 'Dimitri',
       avatarHash: 'a_abc123',
-      isHomeMember: true,
-      memberCheckedAt: 1717000000000,
       jti: 'test-jti-full',
       iat: 1717000000,
       exp: 1717604800,
@@ -58,7 +52,7 @@ describe('SessionClaimsSchema', () => {
     expect(() =>
       SessionClaimsSchema.parse({
         sub: '1', username: 'a', globalName: null, avatarHash: null,
-        isHomeMember: false, memberCheckedAt: 0, jti: 'j', iat: 1,
+        jti: 'j', iat: 1,
       }),
     ).toThrow();
   });
@@ -67,7 +61,7 @@ describe('SessionClaimsSchema', () => {
     expect(() =>
       SessionClaimsSchema.parse({
         sub: '1', username: 'a', globalName: null, avatarHash: null,
-        isHomeMember: false, memberCheckedAt: 0, iat: 1, exp: 2,
+        iat: 1, exp: 2,
       }),
     ).toThrow();
   });
@@ -80,8 +74,6 @@ describe('userFromClaims', () => {
       username: 'mitri',
       globalName: 'Dimitri',
       avatarHash: 'a_abc123',
-      isHomeMember: true,
-      memberCheckedAt: 1717000000000,
       jti: 'test-jti-drop',
       iat: 1717000000,
       exp: 1717604800,
@@ -92,8 +84,6 @@ describe('userFromClaims', () => {
       username: 'mitri',
       globalName: 'Dimitri',
       avatarHash: 'a_abc123',
-      isHomeMember: true,
-      memberCheckedAt: 1717000000000,
     });
     expect(UserSchema.parse(user)).toEqual(user);
   });
@@ -104,7 +94,6 @@ describe('AuthMeResponseSchema', () => {
     const body = {
       user: {
         id: '1', username: 'a', globalName: null, avatarHash: null,
-        isHomeMember: false, memberCheckedAt: null,
       },
     };
     expect(AuthMeResponseSchema.parse(body)).toEqual(body);

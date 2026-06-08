@@ -9,7 +9,7 @@ import {
   clearSessionCookie,
   SESSION_COOKIE,
 } from '../mw/session.js';
-import { exchangeCode, fetchIsMember, fetchMe } from '../discord.js';
+import { exchangeCode, fetchMe } from '../discord.js';
 import { upsertUser } from '../db/users.js';
 import { revokeSession } from '../db/revokedSessions.js';
 
@@ -26,7 +26,7 @@ function discordAuthorizeUrl(env: AppEnv['Bindings'], state: string): string {
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: env.DISCORD_CLIENT_ID,
-    scope: 'identify guilds',
+    scope: 'identify',
     state,
     redirect_uri: env.DISCORD_REDIRECT_URI,
   });
@@ -34,22 +34,17 @@ function discordAuthorizeUrl(env: AppEnv['Bindings'], state: string): string {
 }
 
 async function mintDevSession(c: Context<AppEnv>): Promise<void> {
-  const now = Date.now();
   const claims = {
     sub: '0',
     username: 'dev',
     globalName: 'Dev User',
     avatarHash: null,
-    isHomeMember: true,
-    memberCheckedAt: now,
   };
   await upsertUser(c.env.DB, {
     id: claims.sub,
     username: claims.username,
     globalName: claims.globalName,
     avatarHash: claims.avatarHash,
-    isHomeMember: claims.isHomeMember,
-    homeCheckedAt: now,
   });
   const token = await signSession(c.env.SESSION_SIGNING_SECRET, claims);
   setSessionCookie(c, token);
@@ -121,16 +116,11 @@ export async function callbackHandler(c: Context<AppEnv>): Promise<Response> {
     );
   }
 
-  const isHomeMember = await fetchIsMember(accessToken, c.env.HOME_GUILD_ID);
-  const now = Date.now();
-
   const user = await upsertUser(c.env.DB, {
     id: me.id,
     username: me.username,
     globalName: me.global_name,
     avatarHash: me.avatar,
-    isHomeMember,
-    homeCheckedAt: now,
   });
 
   const token = await signSession(c.env.SESSION_SIGNING_SECRET, {
@@ -138,8 +128,6 @@ export async function callbackHandler(c: Context<AppEnv>): Promise<Response> {
     username: user.username,
     globalName: user.globalName,
     avatarHash: user.avatarHash,
-    isHomeMember: user.isHomeMember,
-    memberCheckedAt: now,
   });
   setSessionCookie(c, token);
   return c.redirect('/', 302);

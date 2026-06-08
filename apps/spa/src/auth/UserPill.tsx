@@ -77,14 +77,12 @@ export function UserPill({
         style={{ borderRadius: '50%' }}
       />
       <span>{displayName}</span>
-      {user.isHomeMember && (
-        <span
-          className="ntts-badge"
-          title="Verified member of the No Text To Speech Discord community"
-        >
-          NTTS
-        </span>
-      )}
+      <span
+        className="ntts-badge"
+        title="No Text To Speech Discord community"
+      >
+        NTTS
+      </span>
       {isDev && <DevBadge />}
       <button
         type="button"

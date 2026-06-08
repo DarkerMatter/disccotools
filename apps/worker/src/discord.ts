@@ -37,18 +37,3 @@ export async function fetchMe(accessToken: string): Promise<DiscordUser> {
   if (!res.ok) throw new Error(`discord /users/@me failed: ${res.status}`);
   return (await res.json()) as DiscordUser;
 }
-
-export async function fetchIsMember(
-  accessToken: string,
-  guildId: string,
-): Promise<boolean> {
-  const res = await fetch(`${DISCORD_API}/users/@me/guilds`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!res.ok) {
-    console.warn(`discord /users/@me/guilds returned ${res.status}`);
-    return false;
-  }
-  const guilds = (await res.json()) as Array<{ id: string }>;
-  return Array.isArray(guilds) && guilds.some((g) => g.id === guildId);
-}

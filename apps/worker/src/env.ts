@@ -4,7 +4,6 @@ export type Bindings = {
   DISCORD_CLIENT_ID: string;
   DISCORD_CLIENT_SECRET: string;
   DISCORD_REDIRECT_URI: string;
-  HOME_GUILD_ID: string;
   DEV_BYPASS_AUTH: string;
   // dev bypass fires only when both flags are "true", keep this "false" in prod
   ALLOW_DEV_BYPASS: string;

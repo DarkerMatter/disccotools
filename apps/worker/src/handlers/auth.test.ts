@@ -106,7 +106,8 @@ describe('GET /api/auth/login', () => {
     const location = res.headers.get('location')!;
     expect(location.startsWith('https://discord.com/oauth2/authorize?')).toBe(true);
     expect(location).toContain(`client_id=${env.DISCORD_CLIENT_ID}`);
-    expect(location).toContain('scope=identify+guilds');
+    expect(location).toContain('scope=identify');
+    expect(location).not.toContain('guilds');
     expect(location).toMatch(/state=[a-f0-9]{64}/);
     const setCookie = res.headers.get('set-cookie') ?? '';
     expect(setCookie).toContain('oauth_state=');
@@ -170,7 +171,7 @@ describe('GET /api/auth/callback', () => {
     expect(body.error?.code).toBe('VALIDATION');
   });
 
-  it('completes happy path: exchanges code, fetches user + member, upserts, sets session cookie, redirects to /', async () => {
+  it('completes happy path: exchanges code, fetches user, upserts, sets session cookie, redirects to /', async () => {
     mockDiscord('/api/v10/oauth2/token', 'POST', 200, {
       access_token: 'test-access-token',
       token_type: 'Bearer',
@@ -181,12 +182,6 @@ describe('GET /api/auth/callback', () => {
       global_name: 'Dimitri',
       avatar: 'a_abc123',
     });
-    mockDiscord(
-      `/api/v10/users/@me/guilds`,
-      'GET',
-      200,
-      [{ id: env.HOME_GUILD_ID, name: 'NTTS' }],
-    );
 
     const app = makeApp();
     const res = await app.fetch(
@@ -204,16 +199,15 @@ describe('GET /api/auth/callback', () => {
 
     // Verify D1 row exists
     const row = await env.DB.prepare(
-      'SELECT id, username, is_home_member FROM users WHERE id = ?',
+      'SELECT id, username FROM users WHERE id = ?',
     )
       .bind('714517219026927767')
-      .first();
+      .first<{ id: string; username: string }>();
     expect(row).not.toBeNull();
     expect(row!.username).toBe('mitri');
-    expect(row!.is_home_member).toBe(1);
   });
 
-  it('marks user as non-member when home guild is not in their guild list', async () => {
+  it('does not call the guilds endpoint anymore (no guilds scope)', async () => {
     mockDiscord('/api/v10/oauth2/token', 'POST', 200, {
       access_token: 'test-access-token',
       token_type: 'Bearer',
@@ -224,12 +218,7 @@ describe('GET /api/auth/callback', () => {
       global_name: null,
       avatar: null,
     });
-    mockDiscord(
-      `/api/v10/users/@me/guilds`,
-      'GET',
-      200,
-      [{ id: 'some-other-guild', name: 'Elsewhere' }],
-    );
+    // Intentionally NO mock for /users/@me/guilds — would throw if called.
 
     const app = makeApp();
     const res = await app.fetch(
@@ -239,12 +228,6 @@ describe('GET /api/auth/callback', () => {
       env,
     );
     expect(res.status).toBe(302);
-    const row = await env.DB.prepare(
-      'SELECT is_home_member FROM users WHERE id = ?',
-    )
-      .bind('999')
-      .first();
-    expect(row!.is_home_member).toBe(0);
   });
 
   it('502s when token exchange fails', async () => {
@@ -288,8 +271,6 @@ describe('GET /api/auth/me', () => {
         username: 'mitri',
         globalName: 'Dimitri',
         avatarHash: 'a_abc123',
-        isHomeMember: true,
-        memberCheckedAt: 1717000000000,
         jti: 'test-jti-me-valid',
         iat: now,
         exp: now + 3600,
@@ -306,11 +287,10 @@ describe('GET /api/auth/me', () => {
     );
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
-      user: { id: string; username: string; isHomeMember: boolean };
+      user: { id: string; username: string };
     };
     expect(body.user.id).toBe('714517219026927767');
     expect(body.user.username).toBe('mitri');
-    expect(body.user.isHomeMember).toBe(true);
   });
 });
 
@@ -347,8 +327,6 @@ describe('POST /api/auth/logout', () => {
         username: 'mitri',
         globalName: 'Dimitri',
         avatarHash: 'a_abc123',
-        isHomeMember: true,
-        memberCheckedAt: 1717000000000,
         jti,
         iat: now,
         exp: now + 3600,

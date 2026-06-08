@@ -72,7 +72,6 @@ describe('<SaveButton />', () => {
       status: 'authenticated',
       user: {
         id: '1', username: 'mitri', globalName: null, avatarHash: null,
-        isHomeMember: false, memberCheckedAt: 0,
       },
     });
     mockedCreate.mockResolvedValue(detail({ name: 'fresh' }));
@@ -91,7 +90,6 @@ describe('<SaveButton />', () => {
       status: 'authenticated',
       user: {
         id: '1', username: 'mitri', globalName: null, avatarHash: null,
-        isHomeMember: false, memberCheckedAt: 0,
       },
     });
     useRecipeStore.setState((s) => ({ ...s, currentSave: { id: 'sv1', name: 'a' } }));
@@ -107,7 +105,6 @@ describe('<SaveButton />', () => {
       status: 'authenticated',
       user: {
         id: '1', username: 'mitri', globalName: null, avatarHash: null,
-        isHomeMember: false, memberCheckedAt: 0,
       },
     });
     useRecipeStore.setState((s) => ({ ...s, currentSave: { id: 'sv1', name: 'a' } }));

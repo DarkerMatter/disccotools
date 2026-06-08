@@ -45,8 +45,6 @@ async function sessionCookieFor(userId: string): Promise<string> {
       username: 'test',
       globalName: null,
       avatarHash: null,
-      isHomeMember: false,
-      memberCheckedAt: 0,
       jti: `tpl-test-${userId}-${now}-${Math.random().toString(36).slice(2)}`,
       iat: now,
       exp: now + 3600,
@@ -93,10 +91,10 @@ beforeEach(async () => {
     env.DB.prepare('DELETE FROM saves'),
     env.DB.prepare('DELETE FROM users'),
     env.DB.prepare(
-      'INSERT INTO users (id, username, global_name, is_home_member, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?)',
+      'INSERT INTO users (id, username, global_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
     ).bind(OWNER_ID, 'mitri', 'Mitri', now, now),
     env.DB.prepare(
-      'INSERT INTO users (id, username, is_home_member, created_at, updated_at) VALUES (?, ?, 0, ?, ?)',
+      'INSERT INTO users (id, username, created_at, updated_at) VALUES (?, ?, ?, ?)',
     ).bind(VISITOR_ID, 'visitor', now, now),
   ]);
 });
