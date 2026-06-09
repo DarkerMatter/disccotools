@@ -24,7 +24,7 @@ function renderInSvg(node: React.ReactNode) {
 describe('<TextLayer />', () => {
   it('renders the text content', () => {
     const { container } = renderInSvg(
-      <TextLayer layer={baseLayer} canvasSize={480} selected={false} />,
+      <TextLayer layer={baseLayer} canvasSize={480} />,
     );
     const text = container.querySelector('text');
     expect(text?.textContent).toBe('hi');
@@ -35,20 +35,10 @@ describe('<TextLayer />', () => {
       <TextLayer
         layer={{ ...baseLayer, font: 'Georgia', color: '#abcdef' }}
         canvasSize={480}
-        selected={false}
       />,
     );
     const text = container.querySelector('text')!;
     expect(text.getAttribute('font-family')).toBe('Georgia');
     expect(text.getAttribute('fill')).toBe('#abcdef');
-  });
-
-  it('renders a static dashed selection rect when selected', () => {
-    const { container } = renderInSvg(
-      <TextLayer layer={baseLayer} canvasSize={480} selected={true} />,
-    );
-    const rect = container.querySelector('rect[stroke-dasharray]');
-    expect(rect).not.toBeNull();
-    expect(rect!.getAttribute('class')).toBeNull();
   });
 });
