@@ -43,7 +43,6 @@ describe('createSave + getSave', () => {
     });
     expect(created.userId).toBe(USER_ID);
     expect(created.name).toBe('first');
-    expect(created.isTemplate).toBe(false);
     expect(created.recipe).toEqual(recipe);
 
     const fetched = await getSave(env.DB, created.id);
@@ -61,7 +60,7 @@ describe('listSavesByUser', () => {
   beforeEach(async () => {
     const recipe = createEmptyRecipe();
     await createSave(env.DB, { userId: USER_ID, name: 'a', recipe });
-    await createSave(env.DB, { userId: USER_ID, name: 'b', recipe, isTemplate: true });
+    await createSave(env.DB, { userId: USER_ID, name: 'b', recipe });
     await createSave(env.DB, { userId: USER_ID, name: 'c', recipe });
     await createSave(env.DB, { userId: OTHER_USER_ID, name: 'x', recipe });
   });
@@ -72,18 +71,6 @@ describe('listSavesByUser', () => {
     for (const s of list) expect(s.userId).toBe(USER_ID);
   });
 
-  it('filters to designs only when requested', async () => {
-    const list = await listSavesByUser(env.DB, USER_ID, { filter: 'designs' });
-    expect(list).toHaveLength(2);
-    for (const s of list) expect(s.isTemplate).toBe(false);
-  });
-
-  it('filters to templates only when requested', async () => {
-    const list = await listSavesByUser(env.DB, USER_ID, { filter: 'templates' });
-    expect(list).toHaveLength(1);
-    expect(list[0]!.name).toBe('b');
-  });
-
   it('respects limit', async () => {
     const list = await listSavesByUser(env.DB, USER_ID, { limit: 1 });
     expect(list).toHaveLength(1);
@@ -91,7 +78,7 @@ describe('listSavesByUser', () => {
 });
 
 describe('updateSave', () => {
-  it('patches name + recipe + isTemplate', async () => {
+  it('patches name + recipe', async () => {
     const created = await createSave(env.DB, {
       userId: USER_ID,
       name: 'old',
@@ -101,12 +88,10 @@ describe('updateSave', () => {
     const updated = await updateSave(env.DB, created.id, {
       name: 'new',
       recipe: newRecipe,
-      isTemplate: true,
     });
     expect(updated).not.toBeNull();
     expect(updated!.name).toBe('new');
     expect(updated!.recipe.shape).toBe('square');
-    expect(updated!.isTemplate).toBe(true);
     expect(updated!.updatedAt).toBeGreaterThanOrEqual(created.updatedAt);
   });
 
@@ -197,19 +182,17 @@ describe('setSaveRender', () => {
 });
 
 describe('cloneSave', () => {
-  it('duplicates a save into a new id with `(copy)` suffix and is_template=false', async () => {
+  it('duplicates a save into a new id with `(copy)` suffix', async () => {
     const recipe = { ...createEmptyRecipe(), shape: 'square' as const };
     const source = await createSave(env.DB, {
       userId: USER_ID,
       name: 'tpl',
       recipe,
-      isTemplate: true,
     });
     const cloned = await cloneSave(env.DB, source.id);
     expect(cloned).not.toBeNull();
     expect(cloned!.id).not.toBe(source.id);
     expect(cloned!.name).toBe('tpl (copy)');
-    expect(cloned!.isTemplate).toBe(false);
     expect(cloned!.recipe).toEqual(recipe);
   });
 

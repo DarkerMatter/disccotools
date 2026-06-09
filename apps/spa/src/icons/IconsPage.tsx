@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import type { SaveFilter, SaveSummary } from '@disccotools/shared';
+import { Link } from 'react-router-dom';
+import type { SaveSummary } from '@disccotools/shared';
 import { logout } from '../api/client.js';
 import {
   cloneSave,
   deleteSave,
   listSaves,
   revokeShare,
-  shareTemplate,
+  shareSave,
   updateSave,
-  useTemplate,
 } from '../api/saves.js';
 import { LoginButton } from '../auth/LoginButton.js';
 import { UserPill } from '../auth/UserPill.js';
@@ -19,16 +18,8 @@ import { SaveCard } from '../saves/SaveCard.js';
 import { SiteFooter } from '../SiteFooter.js';
 import { TopTabs } from '../TopTabs.js';
 
-const FILTERS: { value: SaveFilter; label: string }[] = [
-  { value: 'designs', label: 'Designs' },
-  { value: 'templates', label: 'Templates' },
-  { value: 'all', label: 'All' },
-];
-
 export function IconsPage() {
   const userState = useUser();
-  const navigate = useNavigate();
-  const [filter, setFilter] = useState<SaveFilter>('designs');
   const [saves, setSaves] = useState<SaveSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -46,10 +37,10 @@ export function IconsPage() {
     );
   }, [saves, query]);
 
-  const fetchSaves = useCallback(async (f: SaveFilter) => {
+  const fetchSaves = useCallback(async () => {
     setError(null);
     try {
-      const list = await listSaves(f);
+      const list = await listSaves();
       setSaves(list);
     } catch (err) {
       console.error('listSaves failed', err);
@@ -60,29 +51,25 @@ export function IconsPage() {
 
   useEffect(() => {
     if (!authenticated) return;
-    void fetchSaves(filter);
-  }, [filter, authenticated, fetchSaves]);
+    void fetchSaves();
+  }, [authenticated, fetchSaves]);
 
   function detailToSummary(detail: {
     id: string;
     name: string;
     recipe: SaveSummary['recipe'];
-    isTemplate: boolean;
     createdAt: number;
     updatedAt: number;
     tags: SaveSummary['tags'];
-    parentTemplateId: string | null;
     shareToken: string | null;
   }): SaveSummary {
     return {
       id: detail.id,
       name: detail.name,
-      isTemplate: detail.isTemplate,
       createdAt: detail.createdAt,
       updatedAt: detail.updatedAt,
       recipe: detail.recipe,
       tags: detail.tags,
-      parentTemplateId: detail.parentTemplateId,
       shareToken: detail.shareToken,
     };
   }
@@ -92,25 +79,16 @@ export function IconsPage() {
     setSaves((prev) => (prev ? [detailToSummary(cloned), ...prev] : prev));
   }
 
-  async function handleUse(save: SaveSummary) {
-    try {
-      const child = await useTemplate(save.id);
-      navigate(`/editor/${child.id}`);
-    } catch (err) {
-      console.error('useTemplate failed', err);
-    }
-  }
-
   async function handleShare(save: SaveSummary) {
     try {
-      const updated = await shareTemplate(save.id);
+      const updated = await shareSave(save.id);
       setSaves((prev) =>
         prev
           ? prev.map((s) => (s.id === save.id ? { ...s, shareToken: updated.shareToken } : s))
           : prev,
       );
     } catch (err) {
-      console.error('shareTemplate failed', err);
+      console.error('shareSave failed', err);
     }
   }
 
@@ -133,22 +111,7 @@ export function IconsPage() {
       await deleteSave(save.id);
     } catch (err) {
       console.error('deleteSave failed', err);
-      void fetchSaves(filter);
-    }
-  }
-
-  async function handleToggleTemplate(save: SaveSummary) {
-    const next = !save.isTemplate;
-    setSaves((prev) =>
-      prev
-        ? prev.map((s) => (s.id === save.id ? { ...s, isTemplate: next } : s))
-        : prev,
-    );
-    try {
-      await updateSave(save.id, { isTemplate: next });
-    } catch (err) {
-      console.error('updateSave failed', err);
-      void fetchSaves(filter);
+      void fetchSaves();
     }
   }
 
@@ -243,41 +206,6 @@ export function IconsPage() {
               color: 'var(--color-text)',
             }}
           />
-          <div
-            role="radiogroup"
-            aria-label="Save filter"
-            style={{
-              display: 'inline-flex',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
-              padding: 2,
-              background: 'var(--color-surface)',
-            }}
-          >
-            {FILTERS.map((f) => {
-              const active = f.value === filter;
-              return (
-                <button
-                  key={f.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={active}
-                  onClick={() => setFilter(f.value)}
-                  style={{
-                    background: active ? 'var(--color-surface-elev)' : 'transparent',
-                    color: 'var(--color-text)',
-                    border: 'none',
-                    padding: '6px 12px',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    borderRadius: 'var(--radius-sm)',
-                  }}
-                >
-                  {f.label}
-                </button>
-              );
-            })}
-          </div>
         </div>
 
         {userState.status === 'loading' && (
@@ -368,10 +296,8 @@ export function IconsPage() {
                 save={s}
                 onClone={() => void handleClone(s)}
                 onDelete={() => void handleDelete(s)}
-                onToggleTemplate={() => void handleToggleTemplate(s)}
                 onRename={(name) => handleRename(s, name)}
                 onTagsChange={(tags) => handleTagsChange(s, tags)}
-                onUse={() => handleUse(s)}
                 onShare={() => handleShare(s)}
                 onRevokeShare={() => handleRevokeShare(s)}
               />

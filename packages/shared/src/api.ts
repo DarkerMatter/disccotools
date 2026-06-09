@@ -8,12 +8,10 @@ export type Tags = z.infer<typeof TagsSchema>;
 export const SaveSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
-  isTemplate: z.boolean(),
   createdAt: z.number(),
   updatedAt: z.number(),
   recipe: RecipeSchema,
   tags: TagsSchema,
-  parentTemplateId: z.string().nullable(),
   shareToken: z.string().nullable(),
 });
 export type SaveSummary = z.infer<typeof SaveSummarySchema>;
@@ -22,17 +20,15 @@ export const SaveDetailSchema = z.object({
   id: z.string(),
   name: z.string(),
   recipe: RecipeSchema,
-  isTemplate: z.boolean(),
   createdAt: z.number(),
   updatedAt: z.number(),
   tags: TagsSchema,
-  parentTemplateId: z.string().nullable(),
   shareToken: z.string().nullable(),
 });
 export type SaveDetail = z.infer<typeof SaveDetailSchema>;
 
-// Public view of a shared template (no owner identity beyond a display name)
-export const SharedTemplateSchema = z.object({
+// Public view of a shared save (no owner identity beyond a display name)
+export const SharedSaveSchema = z.object({
   id: z.string(),
   name: z.string(),
   recipe: RecipeSchema,
@@ -41,20 +37,17 @@ export const SharedTemplateSchema = z.object({
   createdAt: z.number(),
   shareToken: z.string(),
 });
-export type SharedTemplate = z.infer<typeof SharedTemplateSchema>;
+export type SharedSave = z.infer<typeof SharedSaveSchema>;
 
-export const SharedTemplateResponseSchema = z.object({
-  template: SharedTemplateSchema,
+export const SharedSaveResponseSchema = z.object({
+  save: SharedSaveSchema,
 });
-export type SharedTemplateResponse = z.infer<typeof SharedTemplateResponseSchema>;
+export type SharedSaveResponse = z.infer<typeof SharedSaveResponseSchema>;
 
-export const UseTemplateBodySchema = z.object({
+export const ImportSharedSaveBodySchema = z.object({
   name: z.string().min(1).max(120).optional(),
 });
-export type UseTemplateBody = z.infer<typeof UseTemplateBodySchema>;
-
-export const SaveFilterSchema = z.enum(['all', 'designs', 'templates']);
-export type SaveFilter = z.infer<typeof SaveFilterSchema>;
+export type ImportSharedSaveBody = z.infer<typeof ImportSharedSaveBodySchema>;
 
 export const ListSavesResponseSchema = z.object({
   saves: z.array(SaveSummarySchema),
@@ -69,7 +62,6 @@ export type SaveResponse = z.infer<typeof SaveResponseSchema>;
 export const CreateSaveBodySchema = z.object({
   name: z.string().min(1).max(120),
   recipe: RecipeSchema,
-  isTemplate: z.boolean().optional(),
   tags: TagsSchema.optional(),
 });
 export type CreateSaveBody = z.infer<typeof CreateSaveBodySchema>;
@@ -77,7 +69,6 @@ export type CreateSaveBody = z.infer<typeof CreateSaveBodySchema>;
 export const UpdateSaveBodySchema = z.object({
   name: z.string().min(1).max(120).optional(),
   recipe: RecipeSchema.optional(),
-  isTemplate: z.boolean().optional(),
   tags: TagsSchema.optional(),
 });
 export type UpdateSaveBody = z.infer<typeof UpdateSaveBodySchema>;

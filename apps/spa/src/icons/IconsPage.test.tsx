@@ -11,6 +11,8 @@ vi.mock('../api/saves.js', () => ({
   cloneSave: vi.fn(),
   deleteSave: vi.fn(),
   updateSave: vi.fn(),
+  shareSave: vi.fn(),
+  revokeShare: vi.fn(),
 }));
 
 import { useUser } from '../auth/useUser.js';
@@ -76,7 +78,6 @@ describe('<IconsPage />', () => {
       {
         id: 'sv1',
         name: 'first',
-        isTemplate: false,
         createdAt: 1,
         updatedAt: 1,
         thumbnailUrl: null,
@@ -85,7 +86,7 @@ describe('<IconsPage />', () => {
     ]);
     renderPage();
     await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument());
-    expect(mockedListSaves).toHaveBeenCalledWith('designs');
+    expect(mockedListSaves).toHaveBeenCalled();
   });
 
   it('filters saves by name when the search input is used', async () => {
@@ -94,7 +95,6 @@ describe('<IconsPage />', () => {
       {
         id: 'sv1',
         name: 'apple',
-        isTemplate: false,
         createdAt: 1,
         updatedAt: 1,
         thumbnailUrl: null,
@@ -103,7 +103,6 @@ describe('<IconsPage />', () => {
       {
         id: 'sv2',
         name: 'banana',
-        isTemplate: false,
         createdAt: 1,
         updatedAt: 1,
         thumbnailUrl: null,
@@ -124,7 +123,6 @@ describe('<IconsPage />', () => {
       {
         id: 'sv1',
         name: 'untitled',
-        isTemplate: false,
         createdAt: 1,
         updatedAt: 1,
         thumbnailUrl: null,
@@ -133,7 +131,6 @@ describe('<IconsPage />', () => {
       {
         id: 'sv2',
         name: 'untitled-2',
-        isTemplate: false,
         createdAt: 1,
         updatedAt: 1,
         thumbnailUrl: null,
@@ -147,15 +144,6 @@ describe('<IconsPage />', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: /search saves/i }), 'brand');
     expect(screen.getByText('untitled')).toBeInTheDocument();
     expect(screen.queryByText('untitled-2')).not.toBeInTheDocument();
-  });
-
-  it('refetches when the filter chip changes', async () => {
-    authenticated();
-    mockedListSaves.mockResolvedValue([]);
-    renderPage();
-    await waitFor(() => expect(mockedListSaves).toHaveBeenCalledWith('designs'));
-    await userEvent.click(screen.getByRole('radio', { name: /templates/i }));
-    await waitFor(() => expect(mockedListSaves).toHaveBeenLastCalledWith('templates'));
   });
 
   it('renders the top tab strip', async () => {

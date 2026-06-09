@@ -393,8 +393,8 @@ describe('DELETE /api/assets/:id', () => {
     const now = Date.now();
     await env.DB
       .prepare(
-        `INSERT INTO saves (id, user_id, name, recipe_json, is_template, created_at, updated_at)
-         VALUES (?, ?, ?, ?, 0, ?, ?)`,
+        `INSERT INTO saves (id, user_id, name, recipe_json, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
       .bind('sv_using', USER_ID, 'using asset', JSON.stringify(recipe), now, now)
       .run();

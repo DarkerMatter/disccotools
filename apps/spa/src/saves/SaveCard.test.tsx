@@ -14,11 +14,11 @@ vi.mock('../editor/render.js', () => ({
 const baseSave: SaveSummary = {
   id: 'sv1',
   name: 'My icon',
-  isTemplate: false,
   createdAt: Date.now() - 60000,
   updatedAt: Date.now() - 60000,
   recipe: createEmptyRecipe(),
   tags: [],
+  shareToken: null,
 };
 
 function renderCard(
@@ -26,7 +26,6 @@ function renderCard(
   handlers: Partial<{
     onClone: () => void;
     onDelete: () => void;
-    onToggleTemplate: () => void;
     onRename: (name: string) => Promise<void> | void;
     onTagsChange: (tags: string[]) => Promise<void> | void;
   }> = {},
@@ -37,7 +36,6 @@ function renderCard(
         save={{ ...baseSave, ...over }}
         onClone={handlers.onClone ?? (() => {})}
         onDelete={handlers.onDelete ?? (() => {})}
-        onToggleTemplate={handlers.onToggleTemplate ?? (() => {})}
         onRename={handlers.onRename ?? (() => {})}
         onTagsChange={handlers.onTagsChange ?? (() => {})}
       />
@@ -51,11 +49,6 @@ describe('<SaveCard />', () => {
     expect(screen.getByText('My icon')).toBeInTheDocument();
     const edit = screen.getByRole('link', { name: /^edit$/i });
     expect(edit).toHaveAttribute('href', '/editor/sv1');
-  });
-
-  it('renders a TEMPLATE badge when isTemplate is true', () => {
-    renderCard({ isTemplate: true });
-    expect(screen.getByText('TEMPLATE')).toBeInTheDocument();
   });
 
   it('renders a Canvas preview inside the edit link', () => {
@@ -82,14 +75,11 @@ describe('<SaveCard />', () => {
     expect(onDelete).toHaveBeenCalledTimes(1);
   });
 
-  it('fires onClone and onToggleTemplate', async () => {
+  it('fires onClone', async () => {
     const onClone = vi.fn();
-    const onToggleTemplate = vi.fn();
-    renderCard({}, { onClone, onToggleTemplate });
+    renderCard({}, { onClone });
     await userEvent.click(screen.getByRole('button', { name: /clone/i }));
     expect(onClone).toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: /make template/i }));
-    expect(onToggleTemplate).toHaveBeenCalled();
   });
 
   it('rename flow: click name → input → save calls onRename', async () => {

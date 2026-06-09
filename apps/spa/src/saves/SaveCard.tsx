@@ -14,32 +14,25 @@ function timeAgo(ms: number): string {
 }
 
 function shareUrlFor(token: string): string {
-  if (typeof window === 'undefined') return `/templates/${token}`;
-  return `${window.location.origin}/templates/${token}`;
+  if (typeof window === 'undefined') return `/share/${token}`;
+  return `${window.location.origin}/share/${token}`;
 }
 
 export function SaveCard({
   save,
   onClone,
   onDelete,
-  onToggleTemplate,
   onRename,
   onTagsChange,
-  onUse,
   onShare,
   onRevokeShare,
 }: {
   save: SaveSummary;
   onClone: () => void;
   onDelete: () => void;
-  onToggleTemplate: () => void;
   onRename: (name: string) => Promise<void> | void;
   onTagsChange: (tags: string[]) => Promise<void> | void;
-  /** templates only — clone into a child save under the current user, navigate to it */
-  onUse?: () => Promise<void> | void;
-  /** templates only — generate / refresh a public share token */
   onShare?: () => Promise<void> | void;
-  /** templates only — drop the share token */
   onRevokeShare?: () => Promise<void> | void;
 }) {
   const [confirming, setConfirming] = useState(false);
@@ -205,37 +198,6 @@ export function SaveCard({
               </button>
             </div>
           )}
-          {save.isTemplate && !editingName && (
-            <span
-              style={{
-                background: 'var(--color-accent-bg)',
-                color: 'var(--color-accent)',
-                padding: '2px 6px',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: '0.04em',
-              }}
-            >
-              TEMPLATE
-            </span>
-          )}
-          {!save.isTemplate && save.parentTemplateId && !editingName && (
-            <span
-              title="Made from a template"
-              style={{
-                background: 'rgba(16, 185, 129, 0.12)',
-                color: 'var(--color-success)',
-                padding: '2px 6px',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: '0.04em',
-              }}
-            >
-              FROM TEMPLATE
-            </span>
-          )}
         </div>
         <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: 0 }}>
           Updated {timeAgo(save.updatedAt)}
@@ -243,31 +205,12 @@ export function SaveCard({
 
         <TagChips tags={save.tags ?? []} onChange={onTagsChange} />
 
-        {save.isTemplate && onUse && (
-          <button
-            type="button"
-            onClick={() => void onUse()}
-            style={{
-              background: 'var(--color-accent)',
-              color: 'white',
-              border: 'none',
-              borderRadius: 'var(--radius-sm)',
-              padding: '8px 12px',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            ✨ Use template
-          </button>
-        )}
-
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           <Link
             to={`/editor/${save.id}`}
             style={ghostBtnStyle}
           >
-            {save.isTemplate ? 'Edit template' : 'Edit'}
+            Edit
           </Link>
           {onShare && (
             <button
@@ -289,14 +232,6 @@ export function SaveCard({
           </button>
           <button type="button" onClick={onClone} style={ghostBtnStyle}>
             Clone
-          </button>
-          <button
-            type="button"
-            onClick={onToggleTemplate}
-            style={ghostBtnStyle}
-            aria-pressed={save.isTemplate}
-          >
-            {save.isTemplate ? 'Unmark template' : 'Make template'}
           </button>
           {!confirming && (
             <button

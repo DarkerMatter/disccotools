@@ -111,23 +111,6 @@ describe('GET /api/saves', () => {
     expect(body.saves[0]!.name).toBe('mine');
   });
 
-  it('filters templates only', async () => {
-    const app = makeApp();
-    await authedFetch(app, 'http://t/api/saves', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'plain', recipe: createEmptyRecipe() }),
-    });
-    await authedFetch(app, 'http://t/api/saves', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'tpl', recipe: createEmptyRecipe(), isTemplate: true }),
-    });
-    const res = await authedFetch(app, 'http://t/api/saves?filter=templates');
-    const body = (await res.json()) as { saves: { name: string }[] };
-    expect(body.saves).toHaveLength(1);
-    expect(body.saves[0]!.name).toBe('tpl');
-  });
 });
 
 describe('POST /api/saves', () => {
@@ -139,9 +122,8 @@ describe('POST /api/saves', () => {
       body: JSON.stringify({ name: 'first', recipe: createEmptyRecipe() }),
     });
     expect(res.status).toBe(201);
-    const body = (await res.json()) as { save: { name: string; isTemplate: boolean } };
+    const body = (await res.json()) as { save: { name: string } };
     expect(body.save.name).toBe('first');
-    expect(body.save.isTemplate).toBe(false);
   });
 
   it('400s on invalid body', async () => {
@@ -192,7 +174,7 @@ describe('GET /api/saves/:id', () => {
 });
 
 describe('PATCH /api/saves/:id', () => {
-  it('updates name and isTemplate', async () => {
+  it('updates name', async () => {
     const app = makeApp();
     const created = await (await authedFetch(app, 'http://t/api/saves', {
       method: 'POST',
@@ -203,12 +185,11 @@ describe('PATCH /api/saves/:id', () => {
     const res = await authedFetch(app, `http://t/api/saves/${created.save.id}`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'new', isTemplate: true }),
+      body: JSON.stringify({ name: 'new' }),
     });
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { save: { name: string; isTemplate: boolean } };
+    const body = (await res.json()) as { save: { name: string } };
     expect(body.save.name).toBe('new');
-    expect(body.save.isTemplate).toBe(true);
   });
 
   it('updates tags and normalizes (lowercase + dedupe)', async () => {
@@ -268,12 +249,12 @@ describe('DELETE /api/saves/:id', () => {
 });
 
 describe('POST /api/saves/:id/clone', () => {
-  it('creates a new row with `(copy)` suffix and isTemplate=false', async () => {
+  it('creates a new row with `(copy)` suffix', async () => {
     const app = makeApp();
     const created = await (await authedFetch(app, 'http://t/api/saves', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'tpl', recipe: createEmptyRecipe(), isTemplate: true }),
+      body: JSON.stringify({ name: 'tpl', recipe: createEmptyRecipe() }),
     })).json() as { save: { id: string } };
 
     const res = await authedFetch(app, `http://t/api/saves/${created.save.id}/clone`, {
@@ -282,10 +263,9 @@ describe('POST /api/saves/:id/clone', () => {
       body: JSON.stringify({}),
     });
     expect(res.status).toBe(201);
-    const body = (await res.json()) as { save: { id: string; name: string; isTemplate: boolean } };
+    const body = (await res.json()) as { save: { id: string; name: string } };
     expect(body.save.id).not.toBe(created.save.id);
     expect(body.save.name).toBe('tpl (copy)');
-    expect(body.save.isTemplate).toBe(false);
   });
 
   it('honors a custom name', async () => {

@@ -10,11 +10,9 @@ type SaveRow = {
   thumb_key: string | null;
   rendered_format: string | null;
   rendered_at: number | null;
-  is_template: number;
   created_at: number;
   updated_at: number;
   tags: string | null;
-  parent_template_id: string | null;
   share_token: string | null;
 };
 
@@ -29,15 +27,11 @@ export type Save = {
   thumbKey: string | null;
   renderedFormat: RenderedFormat | null;
   renderedAt: number | null;
-  isTemplate: boolean;
   createdAt: number;
   updatedAt: number;
   tags: string[];
-  parentTemplateId: string | null;
   shareToken: string | null;
 };
-
-export type SaveFilter = 'all' | 'designs' | 'templates';
 
 function parseTagsColumn(raw: string | null | undefined): string[] {
   if (raw === null || raw === undefined) return [];
@@ -73,11 +67,9 @@ function rowToSave(row: SaveRow): Save {
       ? row.rendered_format
       : null,
     renderedAt: row.rendered_at,
-    isTemplate: row.is_template === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     tags: parseTagsColumn(row.tags),
-    parentTemplateId: row.parent_template_id,
     shareToken: row.share_token,
   };
 }
@@ -95,9 +87,7 @@ export async function createSave(
     userId: string;
     name: string;
     recipe: Recipe;
-    isTemplate?: boolean;
     tags?: string[];
-    parentTemplateId?: string | null;
   },
 ): Promise<Save> {
   const now = Date.now();
@@ -105,19 +95,17 @@ export async function createSave(
   const tags = normalizeTags(input.tags);
   await db
     .prepare(
-      `INSERT INTO saves (id, user_id, name, recipe_json, is_template, created_at, updated_at, tags, parent_template_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO saves (id, user_id, name, recipe_json, created_at, updated_at, tags)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       id,
       input.userId,
       input.name,
       JSON.stringify(input.recipe),
-      input.isTemplate ? 1 : 0,
       now,
       now,
       JSON.stringify(tags),
-      input.parentTemplateId ?? null,
     )
     .run();
   const row = await db
@@ -142,14 +130,11 @@ export async function getSave(
 export async function listSavesByUser(
   db: D1Database,
   userId: string,
-  opts: { filter?: SaveFilter; limit?: number; after?: string } = {},
+  opts: { limit?: number; after?: string } = {},
 ): Promise<Save[]> {
   const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
-  const filter = opts.filter ?? 'all';
   const clauses: string[] = ['user_id = ?'];
   const args: unknown[] = [userId];
-  if (filter === 'designs') clauses.push('is_template = 0');
-  else if (filter === 'templates') clauses.push('is_template = 1');
   if (opts.after) {
     clauses.push('id < ?');
     args.push(opts.after);
@@ -166,7 +151,6 @@ export async function updateSave(
   patch: {
     name?: string;
     recipe?: Recipe;
-    isTemplate?: boolean;
     tags?: string[];
   },
 ): Promise<Save | null> {
@@ -179,10 +163,6 @@ export async function updateSave(
   if (patch.recipe !== undefined) {
     sets.push('recipe_json = ?');
     args.push(JSON.stringify(patch.recipe));
-  }
-  if (patch.isTemplate !== undefined) {
-    sets.push('is_template = ?');
-    args.push(patch.isTemplate ? 1 : 0);
   }
   if (patch.tags !== undefined) {
     sets.push('tags = ?');
@@ -234,7 +214,6 @@ export async function cloneSave(
     userId: source.userId,
     name: opts.newName ?? `${source.name} (copy)`,
     recipe: source.recipe,
-    isTemplate: false,
     tags: source.tags,
   });
 }
@@ -243,34 +222,23 @@ export async function deleteSave(
   db: D1Database,
   id: string,
 ): Promise<void> {
-  // children remember their lineage via parent_template_id; null it before drop so
-  // they don't break referential integrity when the parent template goes away
-  await db
-    .prepare(`UPDATE saves SET parent_template_id = NULL WHERE parent_template_id = ?`)
-    .bind(id)
-    .run();
   await db.prepare(`DELETE FROM saves WHERE id = ?`).bind(id).run();
 }
 
-// "Use" a save under the current user. If the source is a real template, the
-// child remembers it via parent_template_id so the lineage badge can show up;
-// for plain shared designs we just produce an orphan copy. Chains of templates
-// aren't supported — the child is never itself a template.
-export async function useTemplate(
+// Copy someone else's shared save into the current user's collection.
+// The child is always a plain design with no lineage tracking.
+export async function importSharedSave(
   db: D1Database,
   sourceId: string,
-  opts: { userId: string; newName?: string } = { userId: '' },
+  opts: { userId: string; newName?: string },
 ): Promise<Save | null> {
   const source = await getSave(db, sourceId);
   if (!source) return null;
-  const fallbackSuffix = source.isTemplate ? '(from template)' : '(shared copy)';
   return createSave(db, {
     userId: opts.userId,
-    name: opts.newName ?? `${source.name} ${fallbackSuffix}`,
+    name: opts.newName ?? `${source.name} (shared copy)`,
     recipe: source.recipe,
-    isTemplate: false,
     tags: source.tags,
-    parentTemplateId: source.isTemplate ? source.id : null,
   });
 }
 

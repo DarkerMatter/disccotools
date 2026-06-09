@@ -236,24 +236,24 @@ describe('findSavesReferencingAsset', () => {
     const now = Date.now();
     await env.DB
       .prepare(
-        `INSERT INTO saves (id, user_id, name, recipe_json, is_template, created_at, updated_at)
-         VALUES (?, ?, ?, ?, 0, ?, ?)`,
+        `INSERT INTO saves (id, user_id, name, recipe_json, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
       .bind('sv_user_one', USER_ID, 'using asset', JSON.stringify(recipe), now, now)
       .run();
     // An unrelated save without the asset id.
     await env.DB
       .prepare(
-        `INSERT INTO saves (id, user_id, name, recipe_json, is_template, created_at, updated_at)
-         VALUES (?, ?, ?, ?, 0, ?, ?)`,
+        `INSERT INTO saves (id, user_id, name, recipe_json, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
       .bind('sv_user_two', USER_ID, 'unrelated', JSON.stringify(createEmptyRecipe()), now, now)
       .run();
     // Another user's save that references the same id — should not be returned.
     await env.DB
       .prepare(
-        `INSERT INTO saves (id, user_id, name, recipe_json, is_template, created_at, updated_at)
-         VALUES (?, ?, ?, ?, 0, ?, ?)`,
+        `INSERT INTO saves (id, user_id, name, recipe_json, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
       .bind('sv_other', OTHER_USER_ID, 'other', JSON.stringify(recipe), now, now)
       .run();
@@ -275,8 +275,8 @@ describe('findSavesReferencingAsset', () => {
     const now = Date.now();
     await env.DB
       .prepare(
-        `INSERT INTO saves (id, user_id, name, recipe_json, is_template, created_at, updated_at)
-         VALUES (?, ?, ?, ?, 0, ?, ?)`,
+        `INSERT INTO saves (id, user_id, name, recipe_json, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
       .bind('sv1', USER_ID, 'empty', JSON.stringify(createEmptyRecipe()), now, now)
       .run();

@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getSharedTemplate } from '../api/saves.js';
+import { getSharedSave } from '../api/saves.js';
 import { Editor } from '../editor/Editor.js';
 import { useRecipeStore } from '../editor/useRecipeStore.js';
 
-// Opening /templates/:token loads the shared design straight into the editor.
+// Opening /share/:token loads the shared design straight into the editor.
 // Saving from there creates a fresh save under the current user — the original
 // stays with its creator.
-export function SharedTemplatePage() {
+export function SharedSavePage() {
   const { token } = useParams<{ token: string }>();
   const resetTo = useRecipeStore((s) => s.resetTo);
   const setCurrentSave = useRecipeStore((s) => s.setCurrentSave);
@@ -19,13 +19,13 @@ export function SharedTemplatePage() {
     if (!token) return;
     let cancelled = false;
     setStatus('loading');
-    getSharedTemplate(token)
-      .then((template) => {
+    getSharedSave(token)
+      .then((shared) => {
         if (cancelled) return;
-        resetTo(template.recipe);
+        resetTo(shared.recipe);
         // null currentSave so the SaveButton creates a fresh row in this user's account
         setCurrentSave(null);
-        setOwnerName(template.ownerName);
+        setOwnerName(shared.ownerName);
         setStatus('ready');
       })
       .catch(() => {

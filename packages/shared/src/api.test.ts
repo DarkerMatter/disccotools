@@ -9,7 +9,6 @@ import {
   ListSavesResponseSchema,
   RenameAssetBodySchema,
   SaveDetailSchema,
-  SaveFilterSchema,
   SaveSummarySchema,
   TagsSchema,
   UpdateAssetBodySchema,
@@ -21,12 +20,10 @@ describe('SaveSummarySchema', () => {
     const ok = {
       id: 'sv_1',
       name: 'design',
-      isTemplate: false,
       createdAt: 1,
       updatedAt: 1,
       recipe: createEmptyRecipe(),
       tags: [],
-      parentTemplateId: null,
       shareToken: null,
     };
     expect(SaveSummarySchema.parse(ok)).toEqual(ok);
@@ -36,12 +33,10 @@ describe('SaveSummarySchema', () => {
     const ok = {
       id: 'sv_1',
       name: 'design',
-      isTemplate: false,
       createdAt: 1,
       updatedAt: 1,
       recipe: createEmptyRecipe(),
       tags: ['icon', 'brand'],
-      parentTemplateId: null,
       shareToken: null,
     };
     expect(SaveSummarySchema.parse(ok).tags).toEqual(['icon', 'brand']);
@@ -54,24 +49,12 @@ describe('SaveDetailSchema', () => {
       id: 'sv_1',
       name: 'design',
       recipe: createEmptyRecipe(),
-      isTemplate: false,
       createdAt: 1,
       updatedAt: 1,
       tags: [],
-      parentTemplateId: null,
       shareToken: null,
     };
     expect(SaveDetailSchema.parse(ok)).toEqual(ok);
-  });
-});
-
-describe('SaveFilterSchema', () => {
-  it.each(['all', 'designs', 'templates'] as const)('accepts %s', (f) => {
-    expect(SaveFilterSchema.parse(f)).toBe(f);
-  });
-
-  it('rejects others', () => {
-    expect(() => SaveFilterSchema.parse('archived')).toThrow();
   });
 });
 

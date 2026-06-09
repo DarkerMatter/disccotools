@@ -3,23 +3,15 @@ import type { TextLayer as TextLayerType } from '@disccotools/shared';
 export function TextLayer({
   layer,
   canvasSize,
-  selected,
   onClick,
 }: {
   layer: TextLayerType;
   canvasSize: number;
-  selected: boolean;
   onClick?: () => void;
 }) {
   const fontSize = layer.size * canvasSize * layer.scale;
   const cx = layer.x * canvasSize;
   const cy = layer.y * canvasSize;
-
-  // not measuring live, just guessing a bbox for the highlight rect
-  const approxWidth = Math.max(fontSize * 0.6 * layer.text.length, fontSize * 0.6);
-  const approxHeight = fontSize * 1.2;
-  const boxX = cx - approxWidth / 2;
-  const boxY = cy - approxHeight / 2;
 
   return (
     <g
@@ -41,19 +33,6 @@ export function TextLayer({
       >
         {layer.text}
       </text>
-      {selected && (
-        <rect
-          x={boxX}
-          y={boxY}
-          width={approxWidth}
-          height={approxHeight}
-          fill="none"
-          stroke="#5865F2"
-          strokeWidth={2}
-          strokeDasharray="4 3"
-          pointerEvents="none"
-        />
-      )}
     </g>
   );
 }

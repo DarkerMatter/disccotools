@@ -2,7 +2,6 @@ import type { Context } from 'hono';
 import {
   CloneSaveBodySchema,
   CreateSaveBodySchema,
-  SaveFilterSchema,
   UpdateSaveBodySchema,
   type SaveDetail,
   type SaveSummary,
@@ -22,12 +21,10 @@ function toSummary(save: Save): SaveSummary {
   return {
     id: save.id,
     name: save.name,
-    isTemplate: save.isTemplate,
     createdAt: save.createdAt,
     updatedAt: save.updatedAt,
     recipe: save.recipe,
     tags: save.tags,
-    parentTemplateId: save.parentTemplateId,
     shareToken: save.shareToken,
   };
 }
@@ -37,11 +34,9 @@ function toDetail(save: Save): SaveDetail {
     id: save.id,
     name: save.name,
     recipe: save.recipe,
-    isTemplate: save.isTemplate,
     createdAt: save.createdAt,
     updatedAt: save.updatedAt,
     tags: save.tags,
-    parentTemplateId: save.parentTemplateId,
     shareToken: save.shareToken,
   };
 }
@@ -68,15 +63,9 @@ async function loadOwnedSave(c: Context<AppEnv>, id: string) {
 
 export async function listSavesHandler(c: Context<AppEnv>): Promise<Response> {
   const user = c.var.user!;
-  const filterRaw = c.req.query('filter') ?? 'all';
-  const parsedFilter = SaveFilterSchema.safeParse(filterRaw);
-  if (!parsedFilter.success) return validation(c, 'invalid filter');
   const limit = clampInt(c.req.query('limit'), 1, 200, 50);
   const after = c.req.query('after');
-  const opts: Parameters<typeof listSavesByUser>[2] = {
-    filter: parsedFilter.data,
-    limit,
-  };
+  const opts: Parameters<typeof listSavesByUser>[2] = { limit };
   if (after) opts.after = after;
   const saves = await listSavesByUser(c.env.DB, user.id, opts);
   return c.json({ saves: saves.map(toSummary) }, 200);
@@ -92,7 +81,6 @@ export async function createSaveHandler(c: Context<AppEnv>): Promise<Response> {
     userId: user.id,
     name: parsed.data.name,
     recipe: parsed.data.recipe,
-    isTemplate: parsed.data.isTemplate ?? false,
   };
   if (parsed.data.tags !== undefined) createInput.tags = parsed.data.tags;
   const created = await createSave(c.env.DB, createInput);
@@ -119,7 +107,6 @@ export async function updateSaveHandler(c: Context<AppEnv>): Promise<Response> {
   const patch: Parameters<typeof updateSave>[2] = {};
   if (parsed.data.name !== undefined) patch.name = parsed.data.name;
   if (parsed.data.recipe !== undefined) patch.recipe = parsed.data.recipe;
-  if (parsed.data.isTemplate !== undefined) patch.isTemplate = parsed.data.isTemplate;
   if (parsed.data.tags !== undefined) patch.tags = parsed.data.tags;
   const updated = await updateSave(c.env.DB, id, patch);
   if (!updated) return notFound(c);
