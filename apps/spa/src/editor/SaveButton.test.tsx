@@ -26,7 +26,6 @@ function detail(over: Partial<{ id: string; name: string }> = {}) {
     id: 'sv1',
     name: 'a',
     recipe: createEmptyRecipe(),
-    isTemplate: false,
     createdAt: 1,
     updatedAt: 1,
     tags: [],
