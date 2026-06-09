@@ -53,7 +53,7 @@ export function PreviewChip() {
               overflow: 'hidden',
             }}
           >
-            <Canvas recipe={recipe} displaySize={TILE_SIZE - 12} />
+            <Canvas recipe={recipe} displaySize={TILE_SIZE - 12} interactive={false} />
           </div>
           <p style={tileLabelStyle}>Light</p>
         </div>
@@ -74,7 +74,7 @@ export function PreviewChip() {
               overflow: 'hidden',
             }}
           >
-            <Canvas recipe={recipe} displaySize={TILE_SIZE - 12} />
+            <Canvas recipe={recipe} displaySize={TILE_SIZE - 12} interactive={false} />
           </div>
           <p style={tileLabelStyle}>Dark</p>
         </div>
