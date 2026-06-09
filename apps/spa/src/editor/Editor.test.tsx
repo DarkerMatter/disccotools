@@ -100,7 +100,6 @@ describe('<Editor />', () => {
       id: 'sv1',
       name: 'a',
       recipe,
-      isTemplate: false,
       renderedAt: null,
       createdAt: 0,
       updatedAt: 0,
