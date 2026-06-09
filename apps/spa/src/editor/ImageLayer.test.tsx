@@ -21,27 +21,11 @@ function renderInSvg(node: React.ReactNode) {
 describe('<ImageLayer />', () => {
   it('renders an <image> with the asset URL', () => {
     const { container } = renderInSvg(
-      <ImageLayer layer={baseLayer} canvasSize={480} selected={false} />,
+      <ImageLayer layer={baseLayer} canvasSize={480} />,
     );
     const img = container.querySelector('image');
     expect(img).not.toBeNull();
     const href = img!.getAttribute('href')!;
     expect(href).toBe('/api/assets/asset_abc/file');
-  });
-
-  it('renders a static dashed selection rect when selected', () => {
-    const { container } = renderInSvg(
-      <ImageLayer layer={baseLayer} canvasSize={480} selected={true} />,
-    );
-    const rect = container.querySelector('rect[stroke-dasharray]');
-    expect(rect).not.toBeNull();
-    expect(rect!.getAttribute('class')).toBeNull();
-  });
-
-  it('does not render selection rect when not selected', () => {
-    const { container } = renderInSvg(
-      <ImageLayer layer={baseLayer} canvasSize={480} selected={false} />,
-    );
-    expect(container.querySelector('rect[stroke-dasharray]')).toBeNull();
   });
 });
