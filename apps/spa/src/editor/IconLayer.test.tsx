@@ -23,30 +23,13 @@ function renderInSvg(node: React.ReactNode) {
 describe('<IconLayer />', () => {
   it('renders an <image> with the Iconify URL containing color', () => {
     const { container } = renderInSvg(
-      <IconLayer layer={baseLayer} canvasSize={480} selected={false} />,
+      <IconLayer layer={baseLayer} canvasSize={480} />,
     );
     const img = container.querySelector('image');
     expect(img).not.toBeNull();
     const href = img!.getAttribute('href')!;
     expect(href).toContain('lucide/rocket.svg');
     expect(href).toContain('color=%23fff');
-  });
-
-  it('renders a static dashed selection rect when selected', () => {
-    const { container } = renderInSvg(
-      <IconLayer layer={baseLayer} canvasSize={480} selected={true} />,
-    );
-    const rect = container.querySelector('rect[stroke-dasharray]');
-    expect(rect).not.toBeNull();
-    // no marching animation class — just a stationary highlight
-    expect(rect!.getAttribute('class')).toBeNull();
-  });
-
-  it('does not render selection rect when not selected', () => {
-    const { container } = renderInSvg(
-      <IconLayer layer={baseLayer} canvasSize={480} selected={false} />,
-    );
-    expect(container.querySelector('rect[stroke-dasharray]')).toBeNull();
   });
 
   it('renders a mask + linearGradient when the color is a gradient', () => {
@@ -57,7 +40,6 @@ describe('<IconLayer />', () => {
           color: { kind: 'gradient', from: '#fff', to: '#000', angle: 45 },
         }}
         canvasSize={480}
-        selected={false}
       />,
     );
     expect(container.querySelector('mask')).not.toBeNull();
