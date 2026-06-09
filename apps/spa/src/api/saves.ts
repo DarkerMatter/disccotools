@@ -1,21 +1,19 @@
 import type {
   CloneSaveBody,
   CreateSaveBody,
+  ImportSharedSaveBody,
   ListSavesResponse,
   SaveDetail,
-  SaveFilter,
   SaveResponse,
   SaveSummary,
-  SharedTemplate,
-  SharedTemplateResponse,
+  SharedSave,
+  SharedSaveResponse,
   UpdateSaveBody,
-  UseTemplateBody,
 } from '@disccotools/shared';
 import { apiFetch } from './client.js';
 
-export async function listSaves(filter?: SaveFilter): Promise<SaveSummary[]> {
-  const url = filter && filter !== 'all' ? `/api/saves?filter=${filter}` : '/api/saves';
-  const res = await apiFetch(url);
+export async function listSaves(): Promise<SaveSummary[]> {
+  const res = await apiFetch('/api/saves');
   const body = (await res.json()) as ListSavesResponse;
   return body.saves;
 }
@@ -60,47 +58,33 @@ export async function cloneSave(id: string, opts: CloneSaveBody = {}): Promise<S
   return body.save;
 }
 
-// "Use" a template the current user owns: makes a child save bound to the template
-export async function useTemplate(
-  id: string,
-  opts: UseTemplateBody = {},
-): Promise<SaveDetail> {
-  const res = await apiFetch(`/api/saves/${id}/use`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(opts),
-  });
-  const body = (await res.json()) as SaveResponse;
-  return body.save;
-}
-
-// Generate (or fetch the existing) share token for a template I own.
-export async function shareTemplate(id: string): Promise<SaveDetail> {
+// Generate (or fetch the existing) share token for a save I own.
+export async function shareSave(id: string): Promise<SaveDetail> {
   const res = await apiFetch(`/api/saves/${id}/share`, { method: 'POST' });
   const body = (await res.json()) as SaveResponse;
   return body.save;
 }
 
-// Stop sharing a template — kills any URL pointing at it.
+// Stop sharing a save — kills any URL pointing at it.
 export async function revokeShare(id: string): Promise<SaveDetail> {
   const res = await apiFetch(`/api/saves/${id}/share`, { method: 'DELETE' });
   const body = (await res.json()) as SaveResponse;
   return body.save;
 }
 
-// Public: fetch a shared template by token. No auth required.
-export async function getSharedTemplate(token: string): Promise<SharedTemplate> {
-  const res = await apiFetch(`/api/templates/share/${token}`);
-  const body = (await res.json()) as SharedTemplateResponse;
-  return body.template;
+// Public: fetch a shared save by token. No auth required.
+export async function getSharedSave(token: string): Promise<SharedSave> {
+  const res = await apiFetch(`/api/share/${token}`);
+  const body = (await res.json()) as SharedSaveResponse;
+  return body.save;
 }
 
-// Auth: import a shared template into my account.
-export async function importSharedTemplate(
+// Auth: import a shared save into my account.
+export async function importSharedSave(
   token: string,
-  opts: UseTemplateBody = {},
+  opts: ImportSharedSaveBody = {},
 ): Promise<SaveDetail> {
-  const res = await apiFetch(`/api/templates/share/${token}/import`, {
+  const res = await apiFetch(`/api/share/${token}/import`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(opts),
