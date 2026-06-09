@@ -90,7 +90,6 @@ export function Canvas({
 }: { recipe?: Recipe; displaySize?: number; interactive?: boolean } = {}) {
   const fromStore = useRecipeStore((s) => s.recipe);
   const recipe = recipeProp ?? fromStore;
-  const selectedId = useRecipeStore((s) => s.selectedId);
   const setSelection = useRecipeStore((s) => s.setSelection);
 
   const uid = useId();
@@ -145,9 +144,8 @@ export function Canvas({
           size={size}
         />
         {recipe.layers.map((layer) => {
-          const isSelected = interactive && selectedId === layer.id;
           const click = interactive ? () => setSelection(layer.id) : undefined;
-          const common = { canvasSize: size, selected: isSelected };
+          const common = { canvasSize: size };
           if (layer.kind === 'icon') {
             return click === undefined ? (
               <IconLayer key={layer.id} layer={layer} {...common} />
