@@ -110,8 +110,6 @@ export function Canvas({
       preserveAspectRatio="xMidYMid meet"
       style={{
         display: 'block',
-        borderRadius: 'var(--radius-md)',
-        boxShadow: 'var(--shadow-card)',
         background: 'transparent',
         // never overflow whatever wraps us. browsers preserve the viewBox
         // aspect when one dimension is constrained and the other is auto.
