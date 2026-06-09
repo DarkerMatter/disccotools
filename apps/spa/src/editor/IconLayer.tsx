@@ -4,12 +4,10 @@ import { iconUrl } from './iconify.js';
 export function IconLayer({
   layer,
   canvasSize,
-  selected,
   onClick,
 }: {
   layer: IconLayerType;
   canvasSize: number;
-  selected: boolean;
   onClick?: () => void;
 }) {
   const naturalSize = canvasSize * 0.4 * layer.scale;
@@ -17,20 +15,6 @@ export function IconLayer({
   const cy = layer.y * canvasSize;
   const tx = cx - naturalSize / 2;
   const ty = cy - naturalSize / 2;
-
-  const selection = selected ? (
-    <rect
-      x={tx}
-      y={ty}
-      width={naturalSize}
-      height={naturalSize}
-      fill="none"
-      stroke="#5865F2"
-      strokeWidth={2}
-      strokeDasharray="4 3"
-      pointerEvents="none"
-    />
-  ) : null;
 
   if (layer.color.kind === 'solid') {
     return (
@@ -49,7 +33,6 @@ export function IconLayer({
           height={naturalSize}
           preserveAspectRatio="xMidYMid meet"
         />
-        {selection}
       </g>
     );
   }
@@ -90,7 +73,6 @@ export function IconLayer({
         fill={`url(#${gradId})`}
         mask={`url(#${maskId})`}
       />
-      {selection}
     </g>
   );
 }
