@@ -80,7 +80,7 @@ function DiscordRow({
             {name}
           </span>
           <span className="discord-row__role-icon" aria-hidden="true">
-            <Canvas recipe={recipe} displaySize={18} />
+            <Canvas recipe={recipe} displaySize={18} interactive={false} />
           </span>
           <span className="discord-row__time">Today at {NOW}</span>
         </div>
