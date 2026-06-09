@@ -32,26 +32,14 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 describe('listSaves', () => {
-  it('GETs /api/saves without filter when none / all', async () => {
+  it('GETs /api/saves', async () => {
     const calls: string[] = [];
     mockFetch(async (url) => {
       calls.push(String(url));
       return jsonResponse(200, { saves: [] });
     });
     await listSaves();
-    await listSaves('all');
-    expect(calls).toEqual(['/api/saves', '/api/saves']);
-  });
-
-  it('GETs with filter query when designs / templates', async () => {
-    const calls: string[] = [];
-    mockFetch(async (url) => {
-      calls.push(String(url));
-      return jsonResponse(200, { saves: [] });
-    });
-    await listSaves('designs');
-    await listSaves('templates');
-    expect(calls).toEqual(['/api/saves?filter=designs', '/api/saves?filter=templates']);
+    expect(calls).toEqual(['/api/saves']);
   });
 });
 
@@ -64,7 +52,6 @@ describe('createSave / updateSave / getSave / deleteSave / cloneSave', () => {
           id: 'sv1',
           name: 'a',
           recipe,
-          isTemplate: false,
           createdAt: 1,
           updatedAt: 1,
         },
@@ -79,7 +66,7 @@ describe('createSave / updateSave / getSave / deleteSave / cloneSave', () => {
       jsonResponse(200, {
         save: {
           id: 'sv1', name: 'b', recipe: createEmptyRecipe(),
-          isTemplate: false, createdAt: 1, updatedAt: 2,
+          createdAt: 1, updatedAt: 2,
         },
       }),
     );
@@ -98,7 +85,7 @@ describe('createSave / updateSave / getSave / deleteSave / cloneSave', () => {
       jsonResponse(201, {
         save: {
           id: 'sv2', name: 'a (copy)', recipe: createEmptyRecipe(),
-          isTemplate: false, createdAt: 1, updatedAt: 1,
+          createdAt: 1, updatedAt: 1,
         },
       }),
     );
@@ -113,7 +100,7 @@ describe('createSave / updateSave / getSave / deleteSave / cloneSave', () => {
       jsonResponse(200, {
         save: {
           id: 'sv1', name: 'a', recipe: createEmptyRecipe(),
-          isTemplate: false, createdAt: 1, updatedAt: 1,
+          createdAt: 1, updatedAt: 1,
         },
       }),
     );
