@@ -3,12 +3,10 @@ import type { ImageLayer as ImageLayerType } from '@disccotools/shared';
 export function ImageLayer({
   layer,
   canvasSize,
-  selected,
   onClick,
 }: {
   layer: ImageLayerType;
   canvasSize: number;
-  selected: boolean;
   onClick?: () => void;
 }) {
   const naturalSize = canvasSize * 0.4 * layer.scale;
@@ -34,19 +32,6 @@ export function ImageLayer({
         height={naturalSize}
         preserveAspectRatio="xMidYMid meet"
       />
-      {selected && (
-        <rect
-          x={tx}
-          y={ty}
-          width={naturalSize}
-          height={naturalSize}
-          fill="none"
-          stroke="#5865F2"
-          strokeWidth={2}
-          strokeDasharray="4 3"
-          pointerEvents="none"
-        />
-      )}
     </g>
   );
 }
