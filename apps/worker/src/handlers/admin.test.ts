@@ -347,6 +347,30 @@ describe('cascade delete user', () => {
     expect(auditRow?.reason).toBe('banned, content wiped');
   });
 
+  it('kills the JWT of a hard-deleted user so they cannot keep posting', async () => {
+    const app = makeApp();
+    // user has a fresh valid cookie cached client-side
+    const stillWarm = await fetchAs(app, 'http://t/api/auth/me', { userId: USER_ID });
+    expect(stillWarm.status).toBe(200);
+
+    // admin nukes the account
+    const del = await fetchAs(app, `http://t/api/admin/users/${USER_ID}`, {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ reason: 'tos' }),
+      userId: ADMIN_ID,
+    });
+    expect(del.status).toBe(204);
+
+    // the same cookie now bounces with 401 (user vanished)
+    const ghost = await uploadOne(app, USER_ID, 'sneaky.png');
+    expect(ghost.status).toBe(401);
+
+    // /me also tells them they're not signed in (no banned response — they're just gone)
+    const me = await fetchAs(app, 'http://t/api/auth/me', { userId: USER_ID });
+    expect(me.status).toBe(401);
+  });
+
   it('refuses to let an admin delete themselves', async () => {
     const app = makeApp();
     const res = await fetchAs(app, `http://t/api/admin/users/${ADMIN_ID}`, {

@@ -45,6 +45,12 @@ describe('requireAuth', () => {
 
   it('passes through when user is present', async () => {
     const app = makeApp();
+    // session mw now refuses to populate c.var.user for vanished users
+    await env.DB.prepare(
+      'INSERT OR IGNORE INTO users (id, username, created_at, updated_at) VALUES (?, ?, ?, ?)',
+    )
+      .bind('1', 'x', Date.now(), Date.now())
+      .run();
     const token = await signClaims();
     const res = await app.fetch(
       new Request('http://t/private/data', {

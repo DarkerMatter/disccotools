@@ -77,6 +77,20 @@ export const sessionMiddleware = createMiddleware<AppEnv>(async (c, next) => {
 
     const permLevel = await getUserPermLevel(c.env.DB, claims.sub);
 
+    // user row vanished (hard-deleted by an admin). same treatment as ban:
+    // kill the cookie + revoke the jti so the stale JWT can't be replayed
+    // for the rest of its 7-day life.
+    if (permLevel === null) {
+      clearSessionCookie(c);
+      try {
+        await revokeSession(c.env.DB, claims.jti, claims.exp);
+      } catch {
+        // already revoked is fine
+      }
+      await next();
+      return;
+    }
+
     // banned: nuke the cookie, revoke the jti so even a stolen cookie is dead,
     // surface the reason so /api/auth/me can tell the SPA why.
     if (permLevel === PERM_LEVEL.BANNED) {

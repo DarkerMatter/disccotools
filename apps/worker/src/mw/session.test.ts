@@ -26,7 +26,16 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await env.DB.prepare('DELETE FROM revoked_sessions').run();
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM revoked_sessions'),
+    env.DB.prepare('DELETE FROM users'),
+    // the JWT-holds-a-user the middleware will look up perm_level for. without
+    // this row the middleware would treat the session as a hard-deleted ghost
+    // and refuse to populate c.var.user.
+    env.DB.prepare(
+      'INSERT INTO users (id, username, created_at, updated_at) VALUES (?, ?, ?, ?)',
+    ).bind(baseClaims.sub, baseClaims.username, Date.now(), Date.now()),
+  ]);
 });
 
 describe('sessionMiddleware', () => {
