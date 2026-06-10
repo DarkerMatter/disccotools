@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage.js';
+import { UserProvider } from './auth/useUser.js';
 import { Editor } from './editor/Editor.js';
 import { IconsPage } from './icons/IconsPage.js';
 import { ImagesPage } from './images/ImagesPage.js';
@@ -19,6 +20,7 @@ createRoot(rootEl).render(
   <StrictMode>
     <ThemeProvider>
       <BrowserRouter>
+        <UserProvider>
         <Routes>
           <Route path="/" element={<Editor />} />
           <Route path="/editor" element={<Editor />} />
@@ -33,6 +35,7 @@ createRoot(rootEl).render(
           <Route path="/saves" element={<Navigate to="/icons" replace />} />
           <Route path="/assets" element={<Navigate to="/icons" replace />} />
         </Routes>
+        </UserProvider>
       </BrowserRouter>
     </ThemeProvider>
   </StrictMode>,
