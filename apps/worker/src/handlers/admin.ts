@@ -133,7 +133,7 @@ export async function getAdminUserHandler(
       sizeBytes: a.sizeBytes,
       createdAt: a.createdAt,
       updatedAt: a.updatedAt,
-      url: `/api/assets/${a.id}/file`,
+      url: `/api/admin/assets/${a.id}/file`,
       tags: a.tags,
     })),
     saves: saves.map(saveToRow),
@@ -353,6 +353,26 @@ export async function deleteAdminCustomIconHandler(
   }
   await c.env.R2.delete(raw).catch(() => undefined);
   return c.body(null, 204);
+}
+
+export async function getAdminAssetFileHandler(
+  c: Context<AppEnv>,
+): Promise<Response> {
+  const id = c.req.param('id');
+  if (!id) return validation(c, 'missing id');
+  const asset = await getAsset(c.env.DB, id);
+  if (!asset) return notFound(c, 'asset not found');
+  const object = await c.env.R2.get(asset.r2Key);
+  if (!object) return notFound(c, 'file not found');
+  const buf = await object.arrayBuffer();
+  return new Response(buf, {
+    status: 200,
+    headers: {
+      'Content-Type': asset.mimeType,
+      'Content-Length': String(buf.byteLength),
+      'Cache-Control': 'private, no-store',
+    },
+  });
 }
 
 export async function ackNoticeHandler(c: Context<AppEnv>): Promise<Response> {

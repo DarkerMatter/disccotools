@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import type { SaveSummary } from '@disccotools/shared';
+import { Link, Navigate } from 'react-router-dom';
+import { PERM_LEVEL, type SaveSummary } from '@disccotools/shared';
 import { logout } from '../api/client.js';
 import {
   cloneSave,
@@ -11,6 +11,7 @@ import {
   updateSave,
 } from '../api/saves.js';
 import { LoginButton } from '../auth/LoginButton.js';
+import { NoticesBanner } from '../auth/NoticesBanner.js';
 import { UserPill } from '../auth/UserPill.js';
 import { useUser } from '../auth/useUser.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
@@ -159,6 +160,10 @@ export function IconsPage() {
     window.location.reload();
   }
 
+  if (userState.status === 'banned') {
+    return <Navigate to="/banned" replace />;
+  }
+
   return (
     <main className="app-shell" style={{ minHeight: '100vh' }}>
       <header className="app-header">
@@ -168,6 +173,12 @@ export function IconsPage() {
         </Link>
         <TopTabs />
         <nav className="app-header__actions">
+          {userState.status === 'authenticated' &&
+            userState.permLevel >= PERM_LEVEL.ADMIN && (
+              <Link to="/admin" className="admin-nav-link">
+                Admin
+              </Link>
+            )}
           <ThemeToggle />
           <div className="auth-slot">
             {userState.status === 'anonymous' && <LoginButton />}
@@ -177,6 +188,10 @@ export function IconsPage() {
           </div>
         </nav>
       </header>
+      {userState.status === 'authenticated' &&
+        userState.pendingNotices.length > 0 && (
+          <NoticesBanner notices={userState.pendingNotices} />
+        )}
 
       <section className="page-content">
         <div

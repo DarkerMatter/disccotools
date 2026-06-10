@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import type { Asset } from '@disccotools/shared';
+import { Link, Navigate } from 'react-router-dom';
+import { PERM_LEVEL, uploadCapForLevel, type Asset } from '@disccotools/shared';
 import { ApiError, logout } from '../api/client.js';
 import {
   AssetInUseError,
@@ -12,6 +12,7 @@ import {
   validateAssetFile,
 } from '../api/assets.js';
 import { LoginButton } from '../auth/LoginButton.js';
+import { NoticesBanner } from '../auth/NoticesBanner.js';
 import { UserPill } from '../auth/UserPill.js';
 import { useUser } from '../auth/useUser.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
@@ -214,6 +215,10 @@ export function ImagesPage() {
     window.location.reload();
   }
 
+  if (userState.status === 'banned') {
+    return <Navigate to="/banned" replace />;
+  }
+
   return (
     <main className="app-shell" style={{ minHeight: '100vh' }}>
       <header className="app-header">
@@ -223,6 +228,12 @@ export function ImagesPage() {
         </Link>
         <TopTabs />
         <nav className="app-header__actions">
+          {userState.status === 'authenticated' &&
+            userState.permLevel >= PERM_LEVEL.ADMIN && (
+              <Link to="/admin" className="admin-nav-link">
+                Admin
+              </Link>
+            )}
           <ThemeToggle />
           <div className="auth-slot">
             {userState.status === 'anonymous' && <LoginButton />}
@@ -232,6 +243,10 @@ export function ImagesPage() {
           </div>
         </nav>
       </header>
+      {userState.status === 'authenticated' &&
+        userState.pendingNotices.length > 0 && (
+          <NoticesBanner notices={userState.pendingNotices} />
+        )}
 
       <section className="page-content">
         {userState.status === 'loading' && (
@@ -251,6 +266,29 @@ export function ImagesPage() {
             Sign in to upload and reuse your own images.
           </div>
         )}
+
+        {authenticated && (() => {
+          const cap =
+            userState.status === 'authenticated'
+              ? uploadCapForLevel(userState.permLevel)
+              : null;
+          const used = assets?.length ?? 0;
+          const atCap = cap !== null && used >= cap;
+          return (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                marginBottom: 12,
+              }}
+            >
+              <span className={`upload-quota${atCap ? ' upload-quota--full' : ''}`}>
+                <span className="upload-quota__count">{used}</span>
+                {cap !== null ? <> / {cap} images</> : <> images (unlimited)</>}
+              </span>
+            </div>
+          );
+        })()}
 
         {authenticated && (
           <>

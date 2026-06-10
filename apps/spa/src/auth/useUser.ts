@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
-import type { User } from '@disccotools/shared';
+import type { PendingNotice, User } from '@disccotools/shared';
 import { fetchMe } from '../api/client.js';
 
 export type UserState =
   | { status: 'loading' }
   | { status: 'anonymous' }
-  | { status: 'authenticated'; user: User };
+  | { status: 'banned'; reason: string }
+  | {
+      status: 'authenticated';
+      user: User;
+      permLevel: number;
+      pendingNotices: PendingNotice[];
+    };
 
 export function useUser(): UserState {
   const [state, setState] = useState<UserState>({ status: 'loading' });
@@ -15,8 +21,20 @@ export function useUser(): UserState {
     fetchMe()
       .then((res) => {
         if (cancelled) return;
-        if (res) setState({ status: 'authenticated', user: res.user });
-        else setState({ status: 'anonymous' });
+        if (res.kind === 'anonymous') {
+          setState({ status: 'anonymous' });
+          return;
+        }
+        if (res.kind === 'banned') {
+          setState({ status: 'banned', reason: res.reason });
+          return;
+        }
+        setState({
+          status: 'authenticated',
+          user: res.data.user,
+          permLevel: res.data.permLevel,
+          pendingNotices: res.data.pendingNotices,
+        });
       })
       .catch(() => {
         if (!cancelled) setState({ status: 'anonymous' });

@@ -1,4 +1,9 @@
-import { AuthMeResponseSchema, type AuthMeResponse } from '@disccotools/shared';
+import {
+  AuthBannedResponseSchema,
+  AuthMeResponseSchema,
+  type AuthBannedResponse,
+  type AuthMeResponse,
+} from '@disccotools/shared';
 
 export class ApiError extends Error {
   constructor(
@@ -39,12 +44,31 @@ async function readError(res: Response): Promise<ApiError> {
   return new ApiError(code, res.status, message);
 }
 
-export async function fetchMe(): Promise<AuthMeResponse | null> {
+export type MeResult =
+  | { kind: 'anonymous' }
+  | { kind: 'banned'; reason: string }
+  | { kind: 'authenticated'; data: AuthMeResponse };
+
+export async function fetchMe(): Promise<MeResult> {
   const res = await fetch('/api/auth/me');
-  if (res.status === 401) return null;
+  if (res.status === 401) return { kind: 'anonymous' };
+  if (res.status === 403) {
+    try {
+      const json = await res.json();
+      const banned: AuthBannedResponse = AuthBannedResponseSchema.parse(json);
+      return { kind: 'banned', reason: banned.reason };
+    } catch {
+      return { kind: 'anonymous' };
+    }
+  }
   if (!res.ok) throw await readError(res);
   const json = await res.json();
-  return AuthMeResponseSchema.parse(json);
+  return { kind: 'authenticated', data: AuthMeResponseSchema.parse(json) };
+}
+
+export async function ackNotice(id: string): Promise<void> {
+  const res = await fetch(`/api/notices/${id}/ack`, { method: 'POST' });
+  if (!res.ok && res.status !== 404) throw await readError(res);
 }
 
 export async function logout(): Promise<void> {

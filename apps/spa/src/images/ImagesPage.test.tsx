@@ -43,6 +43,8 @@ function authenticated() {
     user: {
       id: '1', username: 'mitri', globalName: null, avatarHash: null,
     },
+    permLevel: 1,
+    pendingNotices: [],
   });
 }
 

@@ -24,25 +24,43 @@ describe('useUser', () => {
     expect(result.current.status).toBe('loading');
   });
 
-  it('transitions to anonymous when fetchMe returns null', async () => {
-    mockedFetchMe.mockResolvedValue(null);
+  it('transitions to anonymous when fetchMe returns anonymous', async () => {
+    mockedFetchMe.mockResolvedValue({ kind: 'anonymous' });
     const { result } = renderHook(() => useUser());
     await waitFor(() => expect(result.current.status).toBe('anonymous'));
   });
 
   it('transitions to authenticated when fetchMe returns a user', async () => {
     mockedFetchMe.mockResolvedValue({
-      user: {
-        id: '1',
-        username: 'mitri',
-        globalName: 'Dimitri',
-        avatarHash: null,
+      kind: 'authenticated',
+      data: {
+        user: {
+          id: '1',
+          username: 'mitri',
+          globalName: 'Dimitri',
+          avatarHash: null,
+        },
+        permLevel: 1,
+        pendingNotices: [],
       },
     });
     const { result } = renderHook(() => useUser());
     await waitFor(() => expect(result.current.status).toBe('authenticated'));
     if (result.current.status === 'authenticated') {
       expect(result.current.user.username).toBe('mitri');
+      expect(result.current.permLevel).toBe(1);
+    }
+  });
+
+  it('transitions to banned when fetchMe returns banned', async () => {
+    mockedFetchMe.mockResolvedValue({
+      kind: 'banned',
+      reason: 'TOS violation',
+    });
+    const { result } = renderHook(() => useUser());
+    await waitFor(() => expect(result.current.status).toBe('banned'));
+    if (result.current.status === 'banned') {
+      expect(result.current.reason).toBe('TOS violation');
     }
   });
 

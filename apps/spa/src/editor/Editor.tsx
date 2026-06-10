@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { createEmptyRecipe } from '@disccotools/shared';
+import { Link, Navigate, useParams } from 'react-router-dom';
+import { createEmptyRecipe, PERM_LEVEL } from '@disccotools/shared';
 import { useUser } from '../auth/useUser.js';
 import { LoginButton } from '../auth/LoginButton.js';
+import { NoticesBanner } from '../auth/NoticesBanner.js';
 import { UserPill } from '../auth/UserPill.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
 import { logout } from '../api/client.js';
@@ -114,6 +115,10 @@ export function Editor() {
     window.location.reload();
   }
 
+  if (userState.status === 'banned') {
+    return <Navigate to="/banned" replace />;
+  }
+
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -123,6 +128,12 @@ export function Editor() {
         </Link>
         <TopTabs />
         <nav className="app-header__actions">
+          {userState.status === 'authenticated' &&
+            userState.permLevel >= PERM_LEVEL.ADMIN && (
+              <Link to="/admin" className="admin-nav-link">
+                Admin
+              </Link>
+            )}
           <ThemeToggle />
           <div className="auth-slot">
             {userState.status === 'anonymous' && <LoginButton />}
@@ -132,6 +143,10 @@ export function Editor() {
           </div>
         </nav>
       </header>
+      {userState.status === 'authenticated' &&
+        userState.pendingNotices.length > 0 && (
+          <NoticesBanner notices={userState.pendingNotices} />
+        )}
 
       <div className="editor-grid">
         <div className="editor-card">

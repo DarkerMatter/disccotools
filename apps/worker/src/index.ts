@@ -38,6 +38,7 @@ import {
   deleteAdminCustomIconHandler,
   deleteAdminSaveHandler,
   deleteAdminUserHandler,
+  getAdminAssetFileHandler,
   getAdminUserHandler,
   listAdminAssetsHandler,
   listAdminCustomIconsHandler,
@@ -91,6 +92,7 @@ app.get('/api/admin/users/:id', getAdminUserHandler);
 app.patch('/api/admin/users/:id/perm', setAdminUserPermHandler);
 app.delete('/api/admin/users/:id', deleteAdminUserHandler);
 app.get('/api/admin/assets', listAdminAssetsHandler);
+app.get('/api/admin/assets/:id/file', getAdminAssetFileHandler);
 app.delete('/api/admin/assets/:id', deleteAdminAssetHandler);
 app.get('/api/admin/saves', listAdminSavesHandler);
 app.delete('/api/admin/saves/:id', deleteAdminSaveHandler);

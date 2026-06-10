@@ -64,10 +64,21 @@ describe('apiFetch', () => {
 });
 
 describe('fetchMe', () => {
-  it('returns null on 401 (no redirect)', async () => {
+  it('returns anonymous on 401 (no redirect)', async () => {
     mockFetch({ status: 401, ok: false, json: async () => ({}) });
     const result = await fetchMe();
-    expect(result).toBeNull();
+    expect(result.kind).toBe('anonymous');
+  });
+
+  it('returns banned on 403 with reason payload', async () => {
+    mockFetch({
+      status: 403,
+      ok: false,
+      json: async () => ({ banned: true, reason: 'CSAM upload' }),
+    });
+    const result = await fetchMe();
+    if (result.kind !== 'banned') throw new Error('expected banned');
+    expect(result.reason).toBe('CSAM upload');
   });
 
   it('returns parsed AuthMeResponse on 200', async () => {
@@ -81,11 +92,14 @@ describe('fetchMe', () => {
           globalName: 'Dimitri',
           avatarHash: 'a_abc123',
         },
+        permLevel: 3,
+        pendingNotices: [],
       }),
     });
     const result = await fetchMe();
-    expect(result?.user.id).toBe('714517219026927767');
-    expect(result?.user.username).toBe('mitri');
+    if (result.kind !== 'authenticated') throw new Error('expected authenticated');
+    expect(result.data.user.id).toBe('714517219026927767');
+    expect(result.data.permLevel).toBe(3);
   });
 });
 

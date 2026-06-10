@@ -72,6 +72,8 @@ describe('<SaveButton />', () => {
       user: {
         id: '1', username: 'mitri', globalName: null, avatarHash: null,
       },
+      permLevel: 1,
+      pendingNotices: [],
     });
     mockedCreate.mockResolvedValue(detail({ name: 'fresh' }));
     renderBtn();
@@ -90,6 +92,8 @@ describe('<SaveButton />', () => {
       user: {
         id: '1', username: 'mitri', globalName: null, avatarHash: null,
       },
+      permLevel: 1,
+      pendingNotices: [],
     });
     useRecipeStore.setState((s) => ({ ...s, currentSave: { id: 'sv1', name: 'a' } }));
     mockedUpdate.mockResolvedValue(detail());
@@ -105,6 +109,8 @@ describe('<SaveButton />', () => {
       user: {
         id: '1', username: 'mitri', globalName: null, avatarHash: null,
       },
+      permLevel: 1,
+      pendingNotices: [],
     });
     useRecipeStore.setState((s) => ({ ...s, currentSave: { id: 'sv1', name: 'a' } }));
     mockedUpdate.mockRejectedValue(new Error('boom'));
