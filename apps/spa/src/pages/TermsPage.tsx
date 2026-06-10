@@ -7,7 +7,7 @@ import { SiteFooter } from '../SiteFooter.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
 import { TopTabs } from '../TopTabs.js';
 
-const UPDATED = 'June 6, 2026';
+const UPDATED = 'June 10, 2026';
 
 export function TermsPage() {
   const userState = useUser();
@@ -66,9 +66,8 @@ export function TermsPage() {
         <h2>4. Discord OAuth</h2>
         <p>
           To save designs or upload images, you need to sign in with Discord. We use the OAuth
-          scopes <code>identify</code> and <code>guilds</code> to confirm your identity and
-          check whether you're a member of the home server. We don't read your messages, voice
-          channels, or DMs. See Discord's privacy policy at{' '}
+          scope <code>identify</code> to confirm your identity. We don't read your messages,
+          voice channels, DMs, or your server list. See Discord's privacy policy at{' '}
           <a href="https://discord.com/privacy" target="_blank" rel="noopener noreferrer">discord.com/privacy</a>{' '}
           for how Discord handles your data.
         </p>

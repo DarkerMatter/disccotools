@@ -112,6 +112,34 @@ export async function getAsset(
   return row ? rowToAsset(row) : null;
 }
 
+export async function countAssetsByUser(
+  db: D1Database,
+  userId: string,
+): Promise<number> {
+  const row = await db
+    .prepare(`SELECT COUNT(*) AS n FROM assets WHERE user_id = ?`)
+    .bind(userId)
+    .first<{ n: number }>();
+  return row?.n ?? 0;
+}
+
+export async function listAllAssets(
+  db: D1Database,
+  opts: { limit?: number; userId?: string } = {},
+): Promise<Asset[]> {
+  const limit = Math.min(Math.max(opts.limit ?? 100, 1), 500);
+  const args: unknown[] = [];
+  let where = '';
+  if (opts.userId) {
+    where = 'WHERE user_id = ?';
+    args.push(opts.userId);
+  }
+  args.push(limit);
+  const sql = `SELECT * FROM assets ${where} ORDER BY created_at DESC LIMIT ?`;
+  const result = await db.prepare(sql).bind(...args).all<AssetRow>();
+  return (result.results ?? []).map(rowToAsset);
+}
+
 export async function listAssetsByUser(
   db: D1Database,
   userId: string,

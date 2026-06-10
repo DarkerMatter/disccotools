@@ -1,7 +1,12 @@
 import type { Context } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { verify } from 'hono/jwt';
-import { SessionClaimsSchema, type AuthMeResponse } from '@disccotools/shared';
+import {
+  PERM_LEVEL,
+  SessionClaimsSchema,
+  type AuthBannedResponse,
+  type AuthMeResponse,
+} from '@disccotools/shared';
 import type { AppEnv } from '../env.js';
 import {
   signSession,
@@ -12,6 +17,10 @@ import {
 import { exchangeCode, fetchMe } from '../discord.js';
 import { upsertUser } from '../db/users.js';
 import { revokeSession } from '../db/revokedSessions.js';
+import {
+  getLatestBanReason,
+  listPendingNoticesForUser,
+} from '../db/adminActions.js';
 
 const OAUTH_STATE_COOKIE = 'oauth_state';
 const OAUTH_STATE_TTL_SECONDS = 600;
@@ -123,6 +132,12 @@ export async function callbackHandler(c: Context<AppEnv>): Promise<Response> {
     avatarHash: me.avatar,
   });
 
+  // banned users never get a cookie back. bounce them to the banned page
+  // so the SPA can show the reason.
+  if (user.permLevel === PERM_LEVEL.BANNED) {
+    return c.redirect('/banned', 302);
+  }
+
   const token = await signSession(c.env.SESSION_SIGNING_SECRET, {
     sub: user.id,
     username: user.username,
@@ -133,7 +148,17 @@ export async function callbackHandler(c: Context<AppEnv>): Promise<Response> {
   return c.redirect('/', 302);
 }
 
-export function meHandler(c: Context<AppEnv>): Response {
+export async function meHandler(c: Context<AppEnv>): Promise<Response> {
+  // banned: middleware already cleared the cookie. tell the SPA so it
+  // routes to /banned with the reason.
+  if (c.var.bannedReason !== null) {
+    const body: AuthBannedResponse = {
+      banned: true,
+      reason: c.var.bannedReason,
+    };
+    return c.json(body, 403);
+  }
+
   const user = c.var.user;
   if (!user) {
     return c.json(
@@ -141,7 +166,12 @@ export function meHandler(c: Context<AppEnv>): Response {
       401,
     );
   }
-  const body: AuthMeResponse = { user };
+  const pendingNotices = await listPendingNoticesForUser(c.env.DB, user.id);
+  const body: AuthMeResponse = {
+    user,
+    permLevel: c.var.permLevel ?? 1,
+    pendingNotices,
+  };
   return c.json(body, 200);
 }
 

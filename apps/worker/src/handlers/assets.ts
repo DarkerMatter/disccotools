@@ -1,10 +1,12 @@
 import type { Context } from 'hono';
 import {
   RenameAssetBodySchema,
+  uploadCapForLevel,
   type Asset as AssetDto,
 } from '@disccotools/shared';
 import type { AppEnv } from '../env.js';
 import {
+  countAssetsByUser,
   createAsset,
   deleteAsset,
   findSavesReferencingAsset,
@@ -106,6 +108,24 @@ function clampInt(raw: string | undefined, min: number, max: number, fallback: n
 
 export async function createAssetHandler(c: Context<AppEnv>): Promise<Response> {
   const user = c.var.user!;
+  const permLevel = c.var.permLevel ?? 1;
+  const cap = uploadCapForLevel(permLevel);
+  if (cap !== null) {
+    const have = await countAssetsByUser(c.env.DB, user.id);
+    if (have >= cap) {
+      return c.json(
+        {
+          error: {
+            code: 'QUOTA',
+            message: `upload limit reached for your tier (${cap} images). delete one to upload another.`,
+            cap,
+            current: have,
+          },
+        },
+        403,
+      );
+    }
+  }
 
   let form: FormData;
   try {

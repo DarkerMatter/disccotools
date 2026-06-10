@@ -14,6 +14,8 @@ export type Bindings = {
 
 export type Variables = {
   user: User | null;
+  permLevel: number | null;
+  bannedReason: string | null;
 };
 
 export type AppEnv = { Bindings: Bindings; Variables: Variables };

@@ -3,6 +3,7 @@ import { createMiddleware } from 'hono/factory';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { sign, verify } from 'hono/jwt';
 import {
+  PERM_LEVEL,
   SessionClaimsSchema,
   userFromClaims,
   type SessionClaims,
@@ -11,7 +12,10 @@ import type { AppEnv } from '../env.js';
 import {
   isSessionRevoked,
   purgeExpiredRevokedSessions,
+  revokeSession,
 } from '../db/revokedSessions.js';
+import { getUserPermLevel } from '../db/users.js';
+import { getLatestBanReason } from '../db/adminActions.js';
 
 export const SESSION_COOKIE = 'sid';
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // a discord week
@@ -48,10 +52,16 @@ export function clearSessionCookie(c: Context<AppEnv>): void {
   deleteCookie(c, SESSION_COOKIE, { path: '/' });
 }
 
+function resetVars(c: Context<AppEnv>): void {
+  c.set('user', null);
+  c.set('permLevel', null);
+  c.set('bannedReason', null);
+}
+
 export const sessionMiddleware = createMiddleware<AppEnv>(async (c, next) => {
+  resetVars(c);
   const token = getCookie(c, SESSION_COOKIE);
   if (!token) {
-    c.set('user', null);
     await next();
     return;
   }
@@ -61,12 +71,29 @@ export const sessionMiddleware = createMiddleware<AppEnv>(async (c, next) => {
 
     const revoked = await isSessionRevoked(c.env.DB, claims.jti);
     if (revoked) {
-      c.set('user', null);
+      await next();
+      return;
+    }
+
+    const permLevel = await getUserPermLevel(c.env.DB, claims.sub);
+
+    // banned: nuke the cookie, revoke the jti so even a stolen cookie is dead,
+    // surface the reason so /api/auth/me can tell the SPA why.
+    if (permLevel === PERM_LEVEL.BANNED) {
+      const reason = await getLatestBanReason(c.env.DB, claims.sub);
+      c.set('bannedReason', reason ?? '');
+      clearSessionCookie(c);
+      try {
+        await revokeSession(c.env.DB, claims.jti, claims.exp);
+      } catch {
+        // already revoked is fine
+      }
       await next();
       return;
     }
 
     c.set('user', userFromClaims(claims));
+    c.set('permLevel', permLevel);
 
     // d100, roll a 1 and we sweep the revoked table
     if (Math.random() < 0.01) {
@@ -77,7 +104,7 @@ export const sessionMiddleware = createMiddleware<AppEnv>(async (c, next) => {
       }
     }
   } catch {
-    c.set('user', null);
+    resetVars(c);
   }
   await next();
 });

@@ -49,14 +49,12 @@ export function PrivacyPage() {
 
         <h2>2. What we collect when you sign in</h2>
         <p>
-          When you sign in with Discord, the OAuth scopes <code>identify</code> and{' '}
-          <code>guilds</code> let us read:
+          When you sign in with Discord, the OAuth scope <code>identify</code> lets us read:
         </p>
         <ul>
           <li>Your Discord user ID (e.g. 519939316898856967)</li>
           <li>Your username and global display name</li>
           <li>Your avatar hash (so we can show your real avatar in the Discord preview)</li>
-          <li>The list of servers you're in, which is used only to check No Text To Speech membership, then discarded</li>
         </ul>
         <p>
           We store the identity fields in our database alongside a session record so we can keep
@@ -81,7 +79,6 @@ export function PrivacyPage() {
         <h2>5. How we use this data</h2>
         <ul>
           <li>To show your designs when you sign in.</li>
-          <li>To confirm you're a member of the No Text To Speech server (a soft gate, currently disabled).</li>
           <li>To rate-limit or revoke sessions if abuse happens.</li>
         </ul>
 
