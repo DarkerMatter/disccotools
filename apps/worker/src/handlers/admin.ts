@@ -169,16 +169,23 @@ export async function setAdminUserPermHandler(
     return c.json({ user: target }, 200);
   }
 
+  const isBan = after === PERM_LEVEL.BANNED;
+  // bans must be justified; plan tier changes are informational
+  if (isBan && (!parsed.data.reason || parsed.data.reason.length === 0)) {
+    return validation(c, 'reason is required when banning');
+  }
+
   const updated = await setUserPermLevel(c.env.DB, id, after);
   if (!updated) return notFound(c, 'user vanished');
 
   await createAdminAction(c.env.DB, {
     adminId: admin.id,
     targetUserId: id,
-    action: after === PERM_LEVEL.BANNED ? 'banned' : 'level_changed',
+    action: isBan ? 'banned' : 'level_changed',
     targetId: null,
-    targetLabel: `${before} → ${after}`,
-    reason: parsed.data.reason,
+    // "before|after" lets the SPA compute upgrade vs downgrade and the new tier
+    targetLabel: `${before}|${after}`,
+    reason: parsed.data.reason ?? '',
   });
 
   return c.json({ user: updated }, 200);
@@ -297,7 +304,7 @@ export async function listAdminAssetsHandler(
     sizeBytes: a.sizeBytes,
     createdAt: a.createdAt,
     updatedAt: a.updatedAt,
-    url: `/api/assets/${a.id}/file`,
+    url: `/api/admin/assets/${a.id}/file`,
     tags: a.tags,
     userId: a.userId,
   }));

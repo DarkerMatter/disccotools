@@ -28,12 +28,14 @@ export async function getAdminUser(id: string): Promise<AdminUserDetailResponse>
 export async function setAdminUserPerm(
   id: string,
   level: number,
-  reason: string,
+  reason?: string,
 ): Promise<void> {
+  const body: { level: number; reason?: string } = { level };
+  if (reason) body.reason = reason;
   await apiFetch(`/api/admin/users/${encodeURIComponent(id)}/perm`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ level, reason }),
+    body: JSON.stringify(body),
   });
 }
 

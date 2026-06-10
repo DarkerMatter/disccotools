@@ -133,9 +133,11 @@ export async function callbackHandler(c: Context<AppEnv>): Promise<Response> {
   });
 
   // banned users never get a cookie back. bounce them to the banned page
-  // so the SPA can show the reason.
+  // with the reason in the query so they see it even without a session.
   if (user.permLevel === PERM_LEVEL.BANNED) {
-    return c.redirect('/banned', 302);
+    const reason = await getLatestBanReason(c.env.DB, user.id);
+    const q = reason ? `?reason=${encodeURIComponent(reason)}` : '';
+    return c.redirect(`/banned${q}`, 302);
   }
 
   const token = await signSession(c.env.SESSION_SIGNING_SECRET, {

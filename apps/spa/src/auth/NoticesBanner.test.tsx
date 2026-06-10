@@ -37,7 +37,6 @@ describe('<NoticesBanner />', () => {
 
   it('shows the reason and target label', () => {
     render(<NoticesBanner notices={[sampleNotice()]} />);
-    expect(screen.getByText(/an image was removed/i)).toBeInTheDocument();
     expect(screen.getByText(/bad\.png/)).toBeInTheDocument();
     expect(screen.getByText(/violates policy/)).toBeInTheDocument();
   });
@@ -48,7 +47,7 @@ describe('<NoticesBanner />', () => {
     await waitFor(() =>
       expect(mockedAck).toHaveBeenCalledWith('aa_1'),
     );
-    expect(screen.queryByText(/an image was removed/i)).toBeNull();
+    expect(screen.queryByText(/bad\.png/)).toBeNull();
   });
 
   it('shows distinct copy per kind', () => {
@@ -61,6 +60,40 @@ describe('<NoticesBanner />', () => {
       />,
     );
     expect(screen.getByText(/your account was banned/i)).toBeInTheDocument();
-    expect(screen.getByText(/a saved design was removed/i)).toBeInTheDocument();
+    expect(screen.getByText(/"mine" was removed/i)).toBeInTheDocument();
+  });
+
+  it('shows friendly tier message for level changes without a reason line', () => {
+    render(
+      <NoticesBanner
+        notices={[
+          sampleNotice({
+            id: 'lvl',
+            kind: 'level_changed',
+            targetLabel: '1|2',
+            reason: '',
+          }),
+        ]}
+      />,
+    );
+    expect(screen.getByText(/upgraded/i)).toBeInTheDocument();
+    expect(screen.getByText(/up to 10 images/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Reason:/i)).toBeNull();
+  });
+
+  it('shows admin access message at level 10', () => {
+    render(
+      <NoticesBanner
+        notices={[
+          sampleNotice({
+            id: 'adm',
+            kind: 'level_changed',
+            targetLabel: '3|10',
+            reason: '',
+          }),
+        ]}
+      />,
+    );
+    expect(screen.getByText(/admin access/i)).toBeInTheDocument();
   });
 });

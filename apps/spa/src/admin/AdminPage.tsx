@@ -42,6 +42,19 @@ function levelLabel(n: number): string {
   return LEVEL_LABELS[n] ?? `Level ${n}`;
 }
 
+function formatActionLabel(action: string, raw: string | null): string | null {
+  if (!raw) return null;
+  if (action === 'level_changed' || action === 'banned') {
+    const [a, b] = raw.split('|');
+    const from = Number(a);
+    const to = Number(b);
+    if (Number.isInteger(from) && Number.isInteger(to)) {
+      return `${levelLabel(from)} → ${levelLabel(to)}`;
+    }
+  }
+  return raw;
+}
+
 export function AdminPage() {
   const userState = useUser();
   const [tab, setTab] = useState<Tab>('users');
@@ -247,12 +260,16 @@ function UserDetail({
             <button
               key={lvl}
               type="button"
-              className={
-                lvl === detail.user.permLevel
-                  ? 'cta-button cta-button--secondary'
-                  : 'cta-button cta-button--secondary'
-              }
-              onClick={() => setPending({ kind: 'level', level: lvl })}
+              className="cta-button cta-button--secondary"
+              onClick={async () => {
+                if (lvl === PERM_LEVEL.BANNED) {
+                  setPending({ kind: 'level', level: lvl });
+                  return;
+                }
+                // plan up/down: no reason, just apply
+                await setAdminUserPerm(detail.user.id, lvl);
+                await refreshDetail();
+              }}
               disabled={lvl === detail.user.permLevel}
             >
               {levelLabel(lvl)}
@@ -327,16 +344,23 @@ function UserDetail({
           <p className="admin-empty">No moderation actions.</p>
         ) : (
           <ul className="admin-history">
-            {detail.actions.map((a) => (
-              <li key={a.id}>
-                <span className="admin-history__when">
-                  {new Date(a.createdAt).toLocaleString()}
-                </span>{' '}
-                <strong>{a.action}</strong>
-                {a.targetLabel ? <> · {a.targetLabel}</> : null} —{' '}
-                <em>{a.reason}</em>
-              </li>
-            ))}
+            {detail.actions.map((a) => {
+              const label = formatActionLabel(a.action, a.targetLabel);
+              return (
+                <li key={a.id}>
+                  <span className="admin-history__when">
+                    {new Date(a.createdAt).toLocaleString()}
+                  </span>{' '}
+                  <strong>{a.action}</strong>
+                  {label ? <> · {label}</> : null}
+                  {a.reason ? (
+                    <>
+                      {' '}— <em>{a.reason}</em>
+                    </>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

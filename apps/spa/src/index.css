@@ -1579,13 +1579,9 @@ button.admin-list__row:hover {
 }
 
 .notices-banner {
-  background: rgba(255, 196, 0, 0.12);
-  border-bottom: 1px solid rgba(255, 196, 0, 0.4);
   color: var(--color-text);
-  padding: 12px 24px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
 .notices-banner__item {
@@ -1593,6 +1589,29 @@ button.admin-list__row:hover {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  padding: 12px 24px;
+  border-bottom: 1px solid transparent;
+}
+
+.notices-banner__item--red {
+  background: rgba(192, 57, 43, 0.12);
+  border-bottom-color: rgba(192, 57, 43, 0.4);
+}
+
+.notices-banner__item--green {
+  background: rgba(46, 160, 67, 0.14);
+  border-bottom-color: rgba(46, 160, 67, 0.4);
+}
+
+.notices-banner__item--yellow {
+  background: rgba(212, 162, 0, 0.16);
+  border-bottom-color: rgba(212, 162, 0, 0.45);
+}
+
+.notices-banner__body {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--color-text);
 }
 
 .notices-banner__reason {

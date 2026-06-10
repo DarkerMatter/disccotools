@@ -1,14 +1,92 @@
 import { useState } from 'react';
-import type { PendingNotice } from '@disccotools/shared';
+import { PERM_LEVEL, type PendingNotice } from '@disccotools/shared';
 import { ackNotice } from '../api/client.js';
 
-const KIND_LABELS: Record<PendingNotice['kind'], string> = {
-  asset_deleted: 'An image was removed from your account',
-  save_deleted: 'A saved design was removed from your account',
-  account_deleted: 'Your account was deleted',
-  banned: 'Your account was banned',
-  level_changed: 'Your account tier was changed',
+type Tone = 'red' | 'green' | 'yellow';
+
+type DisplayNotice = {
+  id: string;
+  tone: Tone;
+  title: string;
+  body: string | null;
+  reason: string | null;
 };
+
+function levelMessage(level: number): string {
+  if (level === PERM_LEVEL.ADMIN) return 'You now have admin access.';
+  if (level >= PERM_LEVEL.UNLIMITED) {
+    return 'You now have unlimited image uploads.';
+  }
+  if (level === PERM_LEVEL.PLUS) {
+    return 'You can now upload up to 10 images.';
+  }
+  if (level === PERM_LEVEL.BASIC) {
+    return 'You can now upload up to 5 images.';
+  }
+  return '';
+}
+
+function parseLevelChange(label: string | null): { from: number; to: number } | null {
+  if (!label) return null;
+  const [a, b] = label.split('|');
+  const from = Number(a);
+  const to = Number(b);
+  if (!Number.isInteger(from) || !Number.isInteger(to)) return null;
+  return { from, to };
+}
+
+function describe(notice: PendingNotice): DisplayNotice {
+  switch (notice.kind) {
+    case 'asset_deleted':
+      return {
+        id: notice.id,
+        tone: 'red',
+        title: notice.targetLabel
+          ? `Image "${notice.targetLabel}" was removed`
+          : 'An image was removed from your account',
+        body: null,
+        reason: notice.reason,
+      };
+    case 'save_deleted':
+      return {
+        id: notice.id,
+        tone: 'red',
+        title: notice.targetLabel
+          ? `Icon "${notice.targetLabel}" was removed`
+          : 'A saved icon was removed from your account',
+        body: null,
+        reason: notice.reason,
+      };
+    case 'account_deleted':
+      return {
+        id: notice.id,
+        tone: 'red',
+        title: 'Your account was deleted',
+        body: null,
+        reason: notice.reason,
+      };
+    case 'banned':
+      return {
+        id: notice.id,
+        tone: 'red',
+        title: 'Your account was banned',
+        body: null,
+        reason: notice.reason,
+      };
+    case 'level_changed': {
+      const change = parseLevelChange(notice.targetLabel);
+      const upgrade = change ? change.to > change.from : true;
+      const newLevel = change?.to ?? PERM_LEVEL.BASIC;
+      return {
+        id: notice.id,
+        tone: upgrade ? 'green' : 'yellow',
+        title: upgrade ? 'Your account was upgraded' : 'Your account plan changed',
+        body: levelMessage(newLevel),
+        reason: null,
+      };
+    }
+  }
+}
 
 export function NoticesBanner({ notices }: { notices: PendingNotice[] }) {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
@@ -30,22 +108,30 @@ export function NoticesBanner({ notices }: { notices: PendingNotice[] }) {
 
   return (
     <div className="notices-banner" role="alert">
-      {visible.map((n) => (
-        <div key={n.id} className="notices-banner__item">
-          <div>
-            <strong>{KIND_LABELS[n.kind]}</strong>
-            {n.targetLabel && <span>: {n.targetLabel}</span>}
-            <p className="notices-banner__reason">Reason: {n.reason}</p>
-          </div>
-          <button
-            type="button"
-            className="cta-button cta-button--secondary notices-banner__ack"
-            onClick={() => handleAck(n.id)}
+      {visible.map((n) => {
+        const d = describe(n);
+        return (
+          <div
+            key={d.id}
+            className={`notices-banner__item notices-banner__item--${d.tone}`}
           >
-            Got it
-          </button>
-        </div>
-      ))}
+            <div>
+              <strong>{d.title}</strong>
+              {d.body && <p className="notices-banner__body">{d.body}</p>}
+              {d.reason && (
+                <p className="notices-banner__reason">Reason: {d.reason}</p>
+              )}
+            </div>
+            <button
+              type="button"
+              className="cta-button cta-button--secondary notices-banner__ack"
+              onClick={() => handleAck(d.id)}
+            >
+              Got it
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -1,20 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { fetchMe } from '../api/client.js';
 import { SiteFooter } from '../SiteFooter.js';
 
 export function BannedPage() {
-  const [reason, setReason] = useState<string | null>(null);
-  const [checked, setChecked] = useState(false);
+  const [params] = useSearchParams();
+  const queryReason = params.get('reason');
+  const [reason, setReason] = useState<string | null>(queryReason);
+  const [checked, setChecked] = useState(queryReason !== null);
 
   useEffect(() => {
+    // query param wins because callback sets it even before any cookie exists
+    if (queryReason) return;
     fetchMe()
       .then((res) => {
         if (res.kind === 'banned') setReason(res.reason);
         setChecked(true);
       })
       .catch(() => setChecked(true));
-  }, []);
+  }, [queryReason]);
 
   return (
     <main className="app-shell" style={{ height: 'auto', overflow: 'visible' }}>

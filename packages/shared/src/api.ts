@@ -161,9 +161,11 @@ export const AdminReasonBodySchema = z.object({
 });
 export type AdminReasonBody = z.infer<typeof AdminReasonBodySchema>;
 
+// reason is required only when banning (level 0). plan up/down doesn't need it.
+// the handler enforces the ban-requires-reason rule.
 export const AdminSetPermBodySchema = z.object({
   level: z.number().int().min(0).max(10),
-  reason: z.string().min(1).max(500),
+  reason: z.string().max(500).optional(),
 });
 export type AdminSetPermBody = z.infer<typeof AdminSetPermBodySchema>;
 
