@@ -246,10 +246,19 @@ h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
 .app-header__brand {
   display: flex;
   align-items: center;
+  gap: 8px;
   font-weight: 700;
   letter-spacing: -0.01em;
   font-size: 18px;
   color: var(--color-text);
+}
+
+.app-header__logo {
+  width: 24px;
+  height: 24px;
+  display: block;
+  border-radius: 4px;
+  object-fit: contain;
 }
 
 .app-header__actions {

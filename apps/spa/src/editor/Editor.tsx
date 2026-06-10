@@ -118,6 +118,7 @@ export function Editor() {
     <main className="app-shell">
       <header className="app-header">
         <Link to="/" className="app-header__brand">
+          <img src="/static/disccotools.png" alt="" className="app-header__logo" />
           disccotools
         </Link>
         <TopTabs />

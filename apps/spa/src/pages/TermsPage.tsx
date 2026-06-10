@@ -21,6 +21,7 @@ export function TermsPage() {
     <main className="app-shell" style={{ height: 'auto', overflow: 'visible' }}>
       <header className="app-header">
         <Link to="/" className="app-header__brand">
+          <img src="/static/disccotools.png" alt="" className="app-header__logo" />
           disccotools
         </Link>
         <TopTabs />

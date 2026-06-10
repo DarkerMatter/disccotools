@@ -7,7 +7,7 @@ import { SiteFooter } from '../SiteFooter.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
 import { TopTabs } from '../TopTabs.js';
 
-const UPDATED = 'June 6, 2026';
+const UPDATED = 'June 10, 2026';
 
 export function PrivacyPage() {
   const userState = useUser();
@@ -21,6 +21,7 @@ export function PrivacyPage() {
     <main className="app-shell" style={{ height: 'auto', overflow: 'visible' }}>
       <header className="app-header">
         <Link to="/" className="app-header__brand">
+          <img src="/static/disccotools.png" alt="" className="app-header__logo" />
           disccotools
         </Link>
         <TopTabs />
