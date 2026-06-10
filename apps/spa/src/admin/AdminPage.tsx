@@ -535,7 +535,7 @@ function SavesTab() {
         Every saved design across the platform, most recently updated first.
       </p>
       {error && <p className="admin-error">{error}</p>}
-      {saves === null && !error && <p>Loading...</p>}
+      {saves === null && !error && <Spinner size={16} label="Loading saves…" />}
       {saves && saves.length === 0 && <p>No saves yet.</p>}
       {saves && (
         <ul className="admin-grid-thumbs">
@@ -606,7 +606,7 @@ function PackTab() {
         are global assets, not user content.
       </p>
       {error && <p className="admin-error">{error}</p>}
-      {icons === null && !error && <p>Loading...</p>}
+      {icons === null && !error && <Spinner size={16} label="Loading pack…" />}
       {icons && icons.length === 0 && <p>No custom icons.</p>}
       {icons && (
         <ul className="admin-list">
