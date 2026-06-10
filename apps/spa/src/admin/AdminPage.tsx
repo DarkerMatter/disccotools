@@ -25,6 +25,7 @@ import { UserPill } from '../auth/UserPill.js';
 import { useUser } from '../auth/useUser.js';
 import { Canvas } from '../editor/Canvas.js';
 import { SiteFooter } from '../SiteFooter.js';
+import { Spinner } from '../Spinner.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
 import { ReasonModal } from './ReasonModal.js';
 
@@ -65,7 +66,11 @@ export function AdminPage() {
   }
 
   if (userState.status === 'loading') {
-    return <div className="admin-page__loading">Loading...</div>;
+    return (
+      <div className="admin-page__loading">
+        <Spinner size={20} label="Loading admin panel…" />
+      </div>
+    );
   }
   if (userState.status === 'anonymous' || userState.status === 'banned') {
     return <Navigate to="/" replace />;
@@ -172,7 +177,7 @@ function UsersTab({ adminId }: { adminId: string }) {
         </form>
 
         {error && <p className="admin-error">{error}</p>}
-        {users === null && !error && <p>Loading...</p>}
+        {users === null && !error && <Spinner size={16} label="Loading users…" />}
         {users && users.length === 0 && <p>No users match.</p>}
         {users && users.length > 0 && (
           <ul className="admin-list">
@@ -468,7 +473,7 @@ function ImagesTab() {
         and remove banned content.
       </p>
       {error && <p className="admin-error">{error}</p>}
-      {assets === null && !error && <p>Loading...</p>}
+      {assets === null && !error && <Spinner size={16} label="Loading images…" />}
       {assets && assets.length === 0 && <p>No uploads yet.</p>}
       {assets && (
         <ul className="admin-grid-thumbs">
