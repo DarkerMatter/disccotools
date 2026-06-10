@@ -4,6 +4,7 @@ import type { AppEnv } from './env.js';
 import { sessionMiddleware } from './mw/session.js';
 import { callbackHandler, loginHandler, meHandler, logoutHandler } from './handlers/auth.js';
 import { requireAuth } from './mw/requireAuth.js';
+import { requireAdmin } from './mw/requireAdmin.js';
 import {
   cloneSaveHandler,
   createSaveHandler,
@@ -31,6 +32,19 @@ import {
   listCustomIconsHandler,
   validateColor,
 } from './handlers/iconPack.js';
+import {
+  ackNoticeHandler,
+  deleteAdminAssetHandler,
+  deleteAdminCustomIconHandler,
+  deleteAdminSaveHandler,
+  deleteAdminUserHandler,
+  getAdminUserHandler,
+  listAdminAssetsHandler,
+  listAdminCustomIconsHandler,
+  listAdminSavesHandler,
+  listAdminUsersHandler,
+  setAdminUserPermHandler,
+} from './handlers/admin.js';
 
 const app = new Hono<AppEnv>();
 
@@ -66,6 +80,22 @@ app.delete('/api/assets/:id', deleteAssetHandler);
 app.get('/api/assets/:id/file', getAssetFileHandler);
 
 app.get('/api/icon-pack/custom', listCustomIconsHandler);
+
+app.use('/api/notices/*', requireAuth);
+app.post('/api/notices/:id/ack', ackNoticeHandler);
+
+app.use('/api/admin/*', requireAuth);
+app.use('/api/admin/*', requireAdmin);
+app.get('/api/admin/users', listAdminUsersHandler);
+app.get('/api/admin/users/:id', getAdminUserHandler);
+app.patch('/api/admin/users/:id/perm', setAdminUserPermHandler);
+app.delete('/api/admin/users/:id', deleteAdminUserHandler);
+app.get('/api/admin/assets', listAdminAssetsHandler);
+app.delete('/api/admin/assets/:id', deleteAdminAssetHandler);
+app.get('/api/admin/saves', listAdminSavesHandler);
+app.delete('/api/admin/saves/:id', deleteAdminSaveHandler);
+app.get('/api/admin/icon-pack/custom', listAdminCustomIconsHandler);
+app.delete('/api/admin/icon-pack/custom', deleteAdminCustomIconHandler);
 
 app.get('/static/*', async (c) => {
   const path = c.req.path.replace(/^\/static\//, '');
