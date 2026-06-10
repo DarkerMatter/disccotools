@@ -127,6 +127,23 @@ export async function getSave(
   return row ? rowToSave(row) : null;
 }
 
+export async function listAllSaves(
+  db: D1Database,
+  opts: { limit?: number; userId?: string } = {},
+): Promise<Save[]> {
+  const limit = Math.min(Math.max(opts.limit ?? 100, 1), 500);
+  const args: unknown[] = [];
+  let where = '';
+  if (opts.userId) {
+    where = 'WHERE user_id = ?';
+    args.push(opts.userId);
+  }
+  args.push(limit);
+  const sql = `SELECT * FROM saves ${where} ORDER BY updated_at DESC LIMIT ?`;
+  const result = await db.prepare(sql).bind(...args).all<SaveRow>();
+  return (result.results ?? []).map(rowToSave);
+}
+
 export async function listSavesByUser(
   db: D1Database,
   userId: string,
