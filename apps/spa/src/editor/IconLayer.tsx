@@ -18,21 +18,23 @@ export function IconLayer({
 
   if (layer.color.kind === 'solid') {
     return (
-      <g
-        data-testid={`icon-layer-${layer.id}`}
-        transform={`rotate(${layer.rotation} ${cx} ${cy})`}
-        opacity={layer.opacity}
-        onMouseDown={onClick}
-        style={{ cursor: onClick ? 'pointer' : 'default' }}
-      >
-        <image
-          href={iconUrl(layer.iconset, layer.name, layer.color.color)}
-          x={tx}
-          y={ty}
-          width={naturalSize}
-          height={naturalSize}
-          preserveAspectRatio="xMidYMid meet"
-        />
+      <g className="layer-mount-in">
+        <g
+          data-testid={`icon-layer-${layer.id}`}
+          transform={`rotate(${layer.rotation} ${cx} ${cy})`}
+          opacity={layer.opacity}
+          onMouseDown={onClick}
+          style={{ cursor: onClick ? 'pointer' : 'default' }}
+        >
+          <image
+            href={iconUrl(layer.iconset, layer.name, layer.color.color)}
+            x={tx}
+            y={ty}
+            width={naturalSize}
+            height={naturalSize}
+            preserveAspectRatio="xMidYMid meet"
+          />
+        </g>
       </g>
     );
   }
@@ -41,38 +43,39 @@ export function IconLayer({
   const gradId = `grad-${layer.id}`;
   const eps = gradientEndpoints(layer.color.angle);
   return (
-    <g
-      data-testid={`icon-layer-${layer.id}`}
-      transform={`rotate(${layer.rotation} ${cx} ${cy})`}
-      opacity={layer.opacity}
-      onMouseDown={onClick}
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
-      className="layer-mount-in"
-    >
-      <defs>
-        <mask id={maskId}>
-          <image
-            href={iconUrl(layer.iconset, layer.name, '#ffffff')}
-            x={tx}
-            y={ty}
-            width={naturalSize}
-            height={naturalSize}
-            preserveAspectRatio="xMidYMid meet"
-          />
-        </mask>
-        <linearGradient id={gradId} x1={eps.x1} y1={eps.y1} x2={eps.x2} y2={eps.y2}>
-          <stop offset="0%" stopColor={layer.color.from} />
-          <stop offset="100%" stopColor={layer.color.to} />
-        </linearGradient>
-      </defs>
-      <rect
-        x={tx}
-        y={ty}
-        width={naturalSize}
-        height={naturalSize}
-        fill={`url(#${gradId})`}
-        mask={`url(#${maskId})`}
-      />
+    <g className="layer-mount-in">
+      <g
+        data-testid={`icon-layer-${layer.id}`}
+        transform={`rotate(${layer.rotation} ${cx} ${cy})`}
+        opacity={layer.opacity}
+        onMouseDown={onClick}
+        style={{ cursor: onClick ? 'pointer' : 'default' }}
+      >
+        <defs>
+          <mask id={maskId}>
+            <image
+              href={iconUrl(layer.iconset, layer.name, '#ffffff')}
+              x={tx}
+              y={ty}
+              width={naturalSize}
+              height={naturalSize}
+              preserveAspectRatio="xMidYMid meet"
+            />
+          </mask>
+          <linearGradient id={gradId} x1={eps.x1} y1={eps.y1} x2={eps.x2} y2={eps.y2}>
+            <stop offset="0%" stopColor={layer.color.from} />
+            <stop offset="100%" stopColor={layer.color.to} />
+          </linearGradient>
+        </defs>
+        <rect
+          x={tx}
+          y={ty}
+          width={naturalSize}
+          height={naturalSize}
+          fill={`url(#${gradId})`}
+          mask={`url(#${maskId})`}
+        />
+      </g>
     </g>
   );
 }

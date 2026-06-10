@@ -16,22 +16,23 @@ export function ImageLayer({
   const ty = cy - naturalSize / 2;
 
   return (
-    <g
-      data-testid={`image-layer-${layer.id}`}
-      transform={`rotate(${layer.rotation} ${cx} ${cy})`}
-      opacity={layer.opacity}
-      onMouseDown={onClick}
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
-      className="layer-mount-in"
-    >
-      <image
-        href={`/api/assets/${layer.assetId}/file`}
-        x={tx}
-        y={ty}
-        width={naturalSize}
-        height={naturalSize}
-        preserveAspectRatio="xMidYMid meet"
-      />
+    <g className="layer-mount-in">
+      <g
+        data-testid={`image-layer-${layer.id}`}
+        transform={`rotate(${layer.rotation} ${cx} ${cy})`}
+        opacity={layer.opacity}
+        onMouseDown={onClick}
+        style={{ cursor: onClick ? 'pointer' : 'default' }}
+      >
+        <image
+          href={`/api/assets/${layer.assetId}/file`}
+          x={tx}
+          y={ty}
+          width={naturalSize}
+          height={naturalSize}
+          preserveAspectRatio="xMidYMid meet"
+        />
+      </g>
     </g>
   );
 }

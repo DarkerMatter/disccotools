@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Spinner } from '../Spinner.js';
 import { useTheme } from '../theme/ThemeContext.js';
 import {
   DEFAULT_PREFIXES,
@@ -216,7 +217,9 @@ export function IconGrid({
       </div>
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
         {loading && (
-          <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Searching…</p>
+          <div style={{ padding: '8px 0' }}>
+            <Spinner size={16} label="Searching…" />
+          </div>
         )}
         {!loading && hits.length === 0 && (
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>

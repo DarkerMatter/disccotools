@@ -5,6 +5,7 @@ import { useUser } from '../auth/useUser.js';
 import { LoginButton } from '../auth/LoginButton.js';
 import { NoticesBanner } from '../auth/NoticesBanner.js';
 import { UserPill } from '../auth/UserPill.js';
+import { Spinner } from '../Spinner.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
 import { logout } from '../api/client.js';
 import { getSave } from '../api/saves.js';
@@ -180,17 +181,15 @@ export function Editor() {
         <div className="editor-canvas-column">
           <div className="editor-canvas-frame">
             {loading && (
-              <p
+              <div
                 style={{
                   position: 'absolute',
                   top: 12,
                   left: 12,
-                  color: 'var(--color-text-muted)',
-                  fontSize: 12,
                 }}
               >
-                Loading save…
-              </p>
+                <Spinner size={16} label="Loading save…" />
+              </div>
             )}
             {loadError && (
               <p

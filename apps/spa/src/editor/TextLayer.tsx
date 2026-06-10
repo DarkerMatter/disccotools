@@ -14,25 +14,26 @@ export function TextLayer({
   const cy = layer.y * canvasSize;
 
   return (
-    <g
-      data-testid={`text-layer-${layer.id}`}
-      transform={`rotate(${layer.rotation} ${cx} ${cy})`}
-      opacity={layer.opacity}
-      onMouseDown={onClick}
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
-      className="layer-mount-in"
-    >
-      <text
-        x={cx}
-        y={cy}
-        fontFamily={layer.font}
-        fontSize={fontSize}
-        fill={layer.color}
-        textAnchor="middle"
-        dominantBaseline="central"
+    <g className="layer-mount-in">
+      <g
+        data-testid={`text-layer-${layer.id}`}
+        transform={`rotate(${layer.rotation} ${cx} ${cy})`}
+        opacity={layer.opacity}
+        onMouseDown={onClick}
+        style={{ cursor: onClick ? 'pointer' : 'default' }}
       >
-        {layer.text}
-      </text>
+        <text
+          x={cx}
+          y={cy}
+          fontFamily={layer.font}
+          fontSize={fontSize}
+          fill={layer.color}
+          textAnchor="middle"
+          dominantBaseline="central"
+        >
+          {layer.text}
+        </text>
+      </g>
     </g>
   );
 }
