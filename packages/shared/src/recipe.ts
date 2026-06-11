@@ -32,6 +32,7 @@ export const BackgroundSchema = z.discriminatedUnion('kind', [
 export type Background = z.infer<typeof BackgroundSchema>;
 
 export const ShapeSchema = z.enum([
+  'none',
   'circle',
   'square',
   'rounded-square',

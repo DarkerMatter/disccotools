@@ -1,6 +1,7 @@
 import type { Shape } from './recipe.js';
 
 export const SHAPES_FOR_UI: readonly Shape[] = [
+  'none',
   'circle',
   'rounded-square',
   'scalloped',
@@ -18,6 +19,7 @@ export const SHAPES_FOR_UI: readonly Shape[] = [
 ];
 
 export const SHAPE_LABELS: Record<Shape, string> = {
+  'none': 'No background (icons only)',
   'circle': 'Circle',
   'square': 'Square',
   'rounded-square': 'Rounded square',
@@ -241,6 +243,9 @@ function trianglePathD(size: number): string {
 
 export function shapePathD(shape: Shape, size: number): string {
   switch (shape) {
+    // "no shape" still needs a clip-path geometry, just a full-bleed square so
+    // nothing gets clipped. the background is suppressed elsewhere.
+    case 'none': return squarePathD(size);
     case 'circle': return circlePathD(size);
     case 'square': return squarePathD(size);
     case 'rounded-square': return roundedSquarePathD(size);

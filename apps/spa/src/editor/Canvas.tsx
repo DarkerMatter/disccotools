@@ -136,11 +136,13 @@ export function Canvas({
         )}
       </defs>
       <g clipPath={`url(#${clipId})`}>
-        <BackgroundFill
-          background={recipe.background}
-          gradientId={gradientId}
-          size={size}
-        />
+        {recipe.shape !== 'none' && (
+          <BackgroundFill
+            background={recipe.background}
+            gradientId={gradientId}
+            size={size}
+          />
+        )}
         {recipe.layers.map((layer) => {
           const click = interactive ? () => setSelection(layer.id) : undefined;
           const common = { canvasSize: size };

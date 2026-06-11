@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { SHAPES_FOR_UI, SHAPE_LABELS, shapePathD } from './shapes.js';
 
 describe('SHAPES_FOR_UI', () => {
-  it('has 14 entries (drops plain square)', () => {
-    expect(SHAPES_FOR_UI).toHaveLength(14);
+  it('has 15 entries (drops plain square, includes none)', () => {
+    expect(SHAPES_FOR_UI).toHaveLength(15);
     expect(SHAPES_FOR_UI).not.toContain('square');
+    expect(SHAPES_FOR_UI).toContain('none');
   });
 });
 

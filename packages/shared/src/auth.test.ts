@@ -90,11 +90,13 @@ describe('userFromClaims', () => {
 });
 
 describe('AuthMeResponseSchema', () => {
-  it('wraps a user', () => {
+  it('wraps a user with perm level and pending notices', () => {
     const body = {
       user: {
         id: '1', username: 'a', globalName: null, avatarHash: null,
       },
+      permLevel: 1,
+      pendingNotices: [],
     };
     expect(AuthMeResponseSchema.parse(body)).toEqual(body);
   });

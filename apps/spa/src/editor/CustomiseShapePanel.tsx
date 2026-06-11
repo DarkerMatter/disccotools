@@ -9,6 +9,27 @@ import { useRecipeStore } from './useRecipeStore.js';
 import { SliderWithInput } from './controls/SliderWithInput.js';
 import { Toggle } from './controls/Toggle.js';
 
+// Autobahn "Ende aller Streckenverbote" sign: 4 parallel diagonal lines through
+// a circle. Stands in for "no background, just icons" in the shape picker.
+function NoShapeChip() {
+  return (
+    <svg
+      width="26"
+      height="26"
+      viewBox="0 0 26 26"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <circle cx="13" cy="13" r="10.5" strokeWidth="1.6" />
+      <line x1="6" y1="20" x2="20" y2="6" strokeWidth="1.4" />
+      <line x1="4.5" y1="17" x2="17" y2="4.5" strokeWidth="1.4" />
+      <line x1="9" y1="21.5" x2="21.5" y2="9" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
 function ensureSolid(bg: Background): Extract<Background, { kind: 'solid' }> {
   if (bg.kind === 'solid') return bg;
   if (bg.kind === 'gradient') return { kind: 'solid', color: bg.from, opacity: bg.opacity };
@@ -73,9 +94,13 @@ export function CustomiseShapePanel() {
               onClick={() => updateRecipe((r) => ({ ...r, shape: s }))}
               className={`shape-tile ${active ? 'shape-tile--active' : ''}`}
             >
-              <svg width="26" height="26" viewBox="0 0 26 26" fill="currentColor" aria-hidden="true">
-                <path d={shapePathD(s, 26)} />
-              </svg>
+              {s === 'none' ? (
+                <NoShapeChip />
+              ) : (
+                <svg width="26" height="26" viewBox="0 0 26 26" fill="currentColor" aria-hidden="true">
+                  <path d={shapePathD(s, 26)} />
+                </svg>
+              )}
             </button>
           );
         })}
