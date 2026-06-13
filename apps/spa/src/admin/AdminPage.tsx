@@ -297,7 +297,7 @@ function UserDetail({
             {detail.assets.map((a) => (
               <li key={a.id} className="admin-grid-thumbs__item">
                 <img src={a.url} alt={a.name} />
-                <span>{a.name}</span>
+                <span className="admin-grid-thumbs__name" title={a.name}>{a.name}</span>
                 <button
                   type="button"
                   className="cta-button cta-button--danger"
@@ -328,7 +328,7 @@ function UserDetail({
                 <div className="admin-grid-thumbs__canvas">
                   <Canvas recipe={s.recipe} interactive={false} displaySize={120} />
                 </div>
-                <span className="admin-grid-thumbs__name">{s.name}</span>
+                <span className="admin-grid-thumbs__name" title={s.name}>{s.name}</span>
                 <button
                   type="button"
                   className="cta-button cta-button--danger"
@@ -575,8 +575,8 @@ function ImagesTab() {
                   />
                 </label>
                 <img src={a.url} alt={a.name} />
-                <span className="admin-grid-thumbs__name">{a.name}</span>
-                <span className="admin-grid-thumbs__owner">user: {a.userId}</span>
+                <span className="admin-grid-thumbs__name" title={a.name}>{a.name}</span>
+                <span className="admin-grid-thumbs__owner" title={a.userId}>user: {a.userId}</span>
                 <button
                   type="button"
                   className="cta-button cta-button--danger"
@@ -667,8 +667,8 @@ function SavesTab() {
               <div className="admin-grid-thumbs__canvas">
                 <Canvas recipe={s.recipe} interactive={false} displaySize={120} />
               </div>
-              <span className="admin-grid-thumbs__name">{s.name}</span>
-              <span className="admin-grid-thumbs__owner">user: {s.userId}</span>
+              <span className="admin-grid-thumbs__name" title={s.name}>{s.name}</span>
+              <span className="admin-grid-thumbs__owner" title={s.userId}>user: {s.userId}</span>
               <button
                 type="button"
                 className="cta-button cta-button--danger"

@@ -7,10 +7,12 @@ import {
 
 const HISTORY_LIMIT = 50;
 
+type CurrentSave = { id: string; name: string; shareToken: string | null };
+
 type EditorState = {
   recipe: Recipe;
   selectedId: string | null;
-  currentSave: { id: string; name: string } | null;
+  currentSave: CurrentSave | null;
   history: Recipe[];
   future: Recipe[];
 
@@ -18,8 +20,15 @@ type EditorState = {
   resetTo: (r: Recipe) => void;
   updateRecipe: (mutator: (current: Recipe) => Recipe) => void;
   setSelection: (id: string | null) => void;
-  setCurrentSave: (value: { id: string; name: string } | null) => void;
-  loadFromSave: (save: { id: string; name: string; recipe: Recipe }) => void;
+  setCurrentSave: (
+    value: { id: string; name: string; shareToken?: string | null } | null,
+  ) => void;
+  loadFromSave: (save: {
+    id: string;
+    name: string;
+    recipe: Recipe;
+    shareToken?: string | null;
+  }) => void;
   addIconLayer: (args: { iconset: string; name: string; color?: string }) => void;
   addTextLayer: (args?: { text?: string }) => void;
   addImageLayer: (args: { assetId: string }) => void;
@@ -63,12 +72,22 @@ export const useRecipeStore = create<EditorState>((set, get) => ({
 
   setSelection: (id) => set(() => ({ selectedId: id })),
 
-  setCurrentSave: (value) => set(() => ({ currentSave: value })),
+  setCurrentSave: (value) =>
+    set(() => ({
+      currentSave:
+        value === null
+          ? null
+          : { id: value.id, name: value.name, shareToken: value.shareToken ?? null },
+    })),
 
   loadFromSave: (save) =>
     set(() => ({
       recipe: save.recipe,
-      currentSave: { id: save.id, name: save.name },
+      currentSave: {
+        id: save.id,
+        name: save.name,
+        shareToken: save.shareToken ?? null,
+      },
       history: [],
       future: [],
       selectedId: null,

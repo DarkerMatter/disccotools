@@ -151,8 +151,8 @@ describe('useRecipeStore', () => {
   });
 
   it('setCurrentSave updates without touching history', () => {
-    useRecipeStore.getState().setCurrentSave({ id: 'sv1', name: 'a' });
-    expect(useRecipeStore.getState().currentSave).toEqual({ id: 'sv1', name: 'a' });
+    useRecipeStore.getState().setCurrentSave({ id: 'sv1', name: 'a', shareToken: null });
+    expect(useRecipeStore.getState().currentSave).toEqual({ id: 'sv1', name: 'a', shareToken: null });
     expect(useRecipeStore.getState().history).toEqual([]);
   });
 
@@ -166,7 +166,7 @@ describe('useRecipeStore', () => {
     });
     const s = useRecipeStore.getState();
     expect(s.recipe.shape).toBe('rounded-square');
-    expect(s.currentSave).toEqual({ id: 'sv1', name: 'a' });
+    expect(s.currentSave).toEqual({ id: 'sv1', name: 'a', shareToken: null });
     expect(s.history).toEqual([]);
     expect(s.selectedId).toBeNull();
   });

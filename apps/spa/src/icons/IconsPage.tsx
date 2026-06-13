@@ -6,8 +6,6 @@ import {
   cloneSave,
   deleteSave,
   listSaves,
-  revokeShare,
-  shareSave,
   updateSave,
 } from '../api/saves.js';
 import { LoginButton } from '../auth/LoginButton.js';
@@ -80,30 +78,12 @@ export function IconsPage() {
     setSaves((prev) => (prev ? [detailToSummary(cloned), ...prev] : prev));
   }
 
-  async function handleShare(save: SaveSummary) {
-    try {
-      const updated = await shareSave(save.id);
-      setSaves((prev) =>
-        prev
-          ? prev.map((s) => (s.id === save.id ? { ...s, shareToken: updated.shareToken } : s))
-          : prev,
-      );
-    } catch (err) {
-      console.error('shareSave failed', err);
-    }
-  }
-
-  async function handleRevokeShare(save: SaveSummary) {
-    try {
-      const updated = await revokeShare(save.id);
-      setSaves((prev) =>
-        prev
-          ? prev.map((s) => (s.id === save.id ? { ...s, shareToken: updated.shareToken } : s))
-          : prev,
-      );
-    } catch (err) {
-      console.error('revokeShare failed', err);
-    }
+  function handleShareTokenChange(saveId: string, token: string | null) {
+    setSaves((prev) =>
+      prev
+        ? prev.map((s) => (s.id === saveId ? { ...s, shareToken: token } : s))
+        : prev,
+    );
   }
 
   async function handleDelete(save: SaveSummary) {
@@ -314,8 +294,7 @@ export function IconsPage() {
                 onDelete={() => void handleDelete(s)}
                 onRename={(name) => handleRename(s, name)}
                 onTagsChange={(tags) => handleTagsChange(s, tags)}
-                onShare={() => handleShare(s)}
-                onRevokeShare={() => handleRevokeShare(s)}
+                onShareTokenChange={(token) => handleShareTokenChange(s.id, token)}
               />
             ))}
           </div>

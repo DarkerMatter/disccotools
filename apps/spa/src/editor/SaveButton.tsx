@@ -29,7 +29,11 @@ export function SaveButton() {
         : await createSave({ name, recipe });
       // v2: we only store the recipe and reconstruct the PNG on demand,
       // so no R2 render upload step anymore
-      setCurrentSave({ id: save.id, name: save.name });
+      setCurrentSave({
+        id: save.id,
+        name: save.name,
+        shareToken: save.shareToken,
+      });
       if (!existingId) navigate(`/editor/${save.id}`);
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : 'Save failed. Try again.';

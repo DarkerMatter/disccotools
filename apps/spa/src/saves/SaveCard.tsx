@@ -4,6 +4,7 @@ import type { SaveSummary } from '@disccotools/shared';
 import { TagChips } from '../tags/TagChips.js';
 import { Canvas } from '../editor/Canvas.js';
 import { downloadBlob, renderToPng } from '../editor/render.js';
+import { ShareMenu } from './ShareMenu.js';
 
 function timeAgo(ms: number): string {
   const seconds = Math.max(0, Math.floor((Date.now() - ms) / 1000));
@@ -13,34 +14,26 @@ function timeAgo(ms: number): string {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-function shareUrlFor(token: string): string {
-  if (typeof window === 'undefined') return `/share/${token}`;
-  return `${window.location.origin}/share/${token}`;
-}
-
 export function SaveCard({
   save,
   onClone,
   onDelete,
   onRename,
   onTagsChange,
-  onShare,
-  onRevokeShare,
+  onShareTokenChange,
 }: {
   save: SaveSummary;
   onClone: () => void;
   onDelete: () => void;
   onRename: (name: string) => Promise<void> | void;
   onTagsChange: (tags: string[]) => Promise<void> | void;
-  onShare?: () => Promise<void> | void;
-  onRevokeShare?: () => Promise<void> | void;
+  /** Called with the new shareToken (or null on revoke) so the parent can update its list */
+  onShareTokenChange?: (token: string | null) => void;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState(save.name);
   const [downloading, setDownloading] = useState(false);
-  const [sharing, setSharing] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   async function handleSaveName() {
     const next = draftName.trim();
@@ -67,26 +60,6 @@ export function SaveCard({
     }
   }
 
-  async function handleShareToggle() {
-    if (save.shareToken) {
-      setSharing(true);
-    } else if (onShare) {
-      await onShare();
-      setSharing(true);
-    }
-  }
-
-  async function handleCopyShare() {
-    if (!save.shareToken) return;
-    const url = shareUrlFor(save.shareToken);
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      // clipboard might be blocked; fallback to selecting input
-    }
-  }
 
   return (
     <article
@@ -212,15 +185,13 @@ export function SaveCard({
           >
             Edit
           </Link>
-          {onShare && (
-            <button
-              type="button"
-              onClick={() => void handleShareToggle()}
-              style={ghostBtnStyle}
-              aria-expanded={sharing}
-            >
-              {save.shareToken ? 'Share link' : 'Share'}
-            </button>
+          {onShareTokenChange && (
+            <ShareMenu
+              saveId={save.id}
+              initialToken={save.shareToken}
+              onChange={onShareTokenChange}
+              triggerStyle={ghostBtnStyle}
+            />
           )}
           <button
             type="button"
@@ -261,57 +232,6 @@ export function SaveCard({
           )}
         </div>
 
-        {sharing && save.shareToken && (
-          <div
-            style={{
-              marginTop: 4,
-              padding: 8,
-              border: '1px dashed var(--color-border)',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--color-bg)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 6,
-            }}
-          >
-            <div style={{ display: 'flex', gap: 4 }}>
-              <input
-                type="text"
-                readOnly
-                value={shareUrlFor(save.shareToken)}
-                aria-label="Share URL"
-                onFocus={(e) => e.currentTarget.select()}
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  padding: '4px 6px',
-                  fontSize: 11,
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'var(--color-surface)',
-                  color: 'var(--color-text)',
-                }}
-              />
-              <button type="button" onClick={() => void handleCopyShare()} style={ghostBtnStyle}>
-                {copied ? '✓ Copied' : 'Copy'}
-              </button>
-            </div>
-            <div style={{ display: 'flex', gap: 4 }}>
-              {onRevokeShare && (
-                <button
-                  type="button"
-                  onClick={() => void onRevokeShare()}
-                  style={{ ...ghostBtnStyle, color: '#ef4444' }}
-                >
-                  Stop sharing
-                </button>
-              )}
-              <button type="button" onClick={() => setSharing(false)} style={ghostBtnStyle}>
-                Close
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </article>
   );

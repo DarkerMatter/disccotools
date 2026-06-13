@@ -11,6 +11,7 @@ import { ApiError, logout } from '../api/client.js';
 import { uploadAssetWithProgress, validateAssetFile } from '../api/assets.js';
 import { getSave } from '../api/saves.js';
 import { TopTabs } from '../TopTabs.js';
+import { ShareMenu } from '../saves/ShareMenu.js';
 import { Canvas } from './Canvas.js';
 import { CustomiseIconsPanel } from './CustomiseIconsPanel.js';
 import { CustomiseShapePanel } from './CustomiseShapePanel.js';
@@ -197,7 +198,12 @@ export function Editor() {
     setLoadError(null);
     getSave(id)
       .then((save) => {
-        loadFromSave({ id: save.id, name: save.name, recipe: save.recipe });
+        loadFromSave({
+          id: save.id,
+          name: save.name,
+          recipe: save.recipe,
+          shareToken: save.shareToken,
+        });
       })
       .catch(() => setLoadError('Could not load that save.'))
       .finally(() => setLoading(false));
@@ -372,6 +378,20 @@ export function Editor() {
                 <DownloadButton />
               </div>
               <SaveButton />
+              {currentSave && (
+                <ShareMenu
+                  saveId={currentSave.id}
+                  initialToken={currentSave.shareToken}
+                  onChange={(token) =>
+                    setCurrentSave({
+                      id: currentSave.id,
+                      name: currentSave.name,
+                      shareToken: token,
+                    })
+                  }
+                  triggerClassName="cta-button cta-button--secondary"
+                />
+              )}
             </div>
             {!confirmingClear && (
               <button
