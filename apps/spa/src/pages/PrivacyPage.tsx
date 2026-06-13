@@ -7,7 +7,7 @@ import { SiteFooter } from '../SiteFooter.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
 import { TopTabs } from '../TopTabs.js';
 
-const UPDATED = 'June 10, 2026';
+const UPDATED = 'June 13, 2026';
 
 export function PrivacyPage() {
   const userState = useUser();
@@ -64,38 +64,50 @@ export function PrivacyPage() {
         <h2>3. What we collect when you use the editor</h2>
         <ul>
           <li>Designs you save: stored as recipe JSON in Cloudflare D1, scoped to your user ID. As of v2.0.0 we no longer store the rendered PNG; we reconstruct it on the fly from the recipe.</li>
-          <li>Custom images you upload: stored in Cloudflare R2, scoped to your user ID. We check the magic bytes to confirm they're real images before accepting them.</li>
+          <li>Custom images you upload: stored in Cloudflare R2, scoped to your user ID. We check the magic bytes to confirm they're real images before accepting them, and they are scanned against the NCMEC CSAM hash list (see section 4).</li>
           <li>Tags you attach to saves or images.</li>
         </ul>
         <p>That's it. We don't log IP addresses, browser fingerprints, or anything for analytics.</p>
 
-        <h2>4. What we don't collect</h2>
+        <h2>4. Image scanning</h2>
+        <p>
+          Every uploaded image is automatically scanned with Cloudflare's CSAM Scanning Tool
+          against the hash list maintained by the National Center for Missing &amp; Exploited
+          Children (NCMEC). Confirmed matches are reported to NCMEC's CyberTipline, which
+          forwards reports to U.S. federal law enforcement as required by 18 U.S.C. § 2258A.
+          Upload data and the associated account record may be preserved and disclosed to law
+          enforcement to support such investigations. The matching account will be permanently
+          banned. See the{' '}
+          <Link to="/terms">Terms of Service</Link> for the full disclosure.
+        </p>
+
+        <h2>5. What we don't collect</h2>
         <ul>
           <li>No third-party analytics (no Google Analytics, no Plausible, nothing).</li>
           <li>No advertising trackers or cookies.</li>
           <li>We don't read your Discord messages, voice channels, or DMs.</li>
         </ul>
 
-        <h2>5. How we use this data</h2>
+        <h2>6. How we use this data</h2>
         <ul>
           <li>To show your designs when you sign in.</li>
           <li>To rate-limit or revoke sessions if abuse happens.</li>
         </ul>
 
-        <h2>6. Where data lives</h2>
+        <h2>7. Where data lives</h2>
         <ul>
           <li><strong>Cloudflare D1</strong> (SQLite at the edge) — user records, save metadata, asset metadata, session records.</li>
           <li><strong>Cloudflare R2</strong> — uploaded image files and the curated custom icon set.</li>
           <li><strong>Cloudflare Workers</strong> handles every request; nothing leaves Cloudflare's network from us.</li>
         </ul>
 
-        <h2>7. Cookies</h2>
+        <h2>8. Cookies</h2>
         <p>
           We set one cookie called <code>disccotools_session</code> that stores your signed JWT.
           It's HttpOnly, SameSite=Lax, and Secure in production. We don't use any other cookies.
         </p>
 
-        <h2>8. Data retention and deletion</h2>
+        <h2>9. Data retention and deletion</h2>
         <ul>
           <li>Saves and assets: you can delete them anytime from the Icons or Images tabs.</li>
           <li>Account / all data: email{' '}
@@ -104,19 +116,19 @@ export function PrivacyPage() {
           </li>
         </ul>
 
-        <h2>9. Children</h2>
+        <h2>10. Children</h2>
         <p>
           This service isn't directed at children under 13. Don't use it if you're under the age
           permitted by Discord's own Terms of Service in your country.
         </p>
 
-        <h2>10. Changes</h2>
+        <h2>11. Changes</h2>
         <p>
           If this policy changes, the "Last updated" date above changes too. Significant changes
           will be mentioned in the No Text To Speech server.
         </p>
 
-        <h2>11. Contact</h2>
+        <h2>12. Contact</h2>
         <p>
           For privacy questions or data deletion requests, email{' '}
           <a href="mailto:fwd@dimitri.one">fwd@dimitri.one</a>.

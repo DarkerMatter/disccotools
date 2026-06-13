@@ -7,7 +7,7 @@ import { SiteFooter } from '../SiteFooter.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
 import { TopTabs } from '../TopTabs.js';
 
-const UPDATED = 'June 10, 2026';
+const UPDATED = 'June 13, 2026';
 
 export function TermsPage() {
   const userState = useUser();
@@ -63,7 +63,44 @@ export function TermsPage() {
           <li>You can delete any save or asset at any time from the Icons or Images tabs.</li>
         </ul>
 
-        <h2>4. Discord OAuth</h2>
+        <h2>4. Image scanning and mandatory reporting</h2>
+        <p>
+          Every image uploaded to disccotools is automatically scanned with{' '}
+          <a
+            href="https://developers.cloudflare.com/cache/reference/csam-scanning/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Cloudflare's CSAM Scanning Tool
+          </a>{' '}
+          against the hash list maintained by the National Center for Missing &amp; Exploited
+          Children (NCMEC) and partner organisations. We have no way to turn this off for
+          individual users.
+        </p>
+        <ul>
+          <li>
+            If an upload matches a known CSAM hash, Cloudflare blocks the request and notifies
+            the maintainer.
+          </li>
+          <li>
+            A CyberTipline report is filed with NCMEC, which forwards reports to U.S. federal
+            law enforcement, as required by U.S. law (18 U.S.C. § 2258A).
+          </li>
+          <li>
+            The offending upload, your account record, and any associated metadata (Discord
+            user ID, upload timestamps, request data) are preserved and disclosed to law
+            enforcement to the extent required to support the investigation.
+          </li>
+          <li>
+            The associated account will be banned immediately and permanently.
+          </li>
+        </ul>
+        <p>
+          Uploading or attempting to upload child sexual abuse material is illegal. Do not use
+          this service to do it.
+        </p>
+
+        <h2>5. Discord OAuth</h2>
         <p>
           To save designs or upload images, you need to sign in with Discord. We use the OAuth
           scope <code>identify</code> to confirm your identity. We don't read your messages,
@@ -72,14 +109,14 @@ export function TermsPage() {
           for how Discord handles your data.
         </p>
 
-        <h2>5. No warranty</h2>
+        <h2>6. No warranty</h2>
         <p>
           This service is provided "as is" without any warranty of any kind, express or implied.
           The maintainer is not liable for any data loss, downtime, or other damages arising
           from your use of the service. Save your important designs locally too.
         </p>
 
-        <h2>6. Open source</h2>
+        <h2>7. Open source</h2>
         <p>
           The source code lives at{' '}
           <a href="https://github.com/DarkerMatter/disccotools" target="_blank" rel="noopener noreferrer">
@@ -88,13 +125,13 @@ export function TermsPage() {
           . You're welcome to read it, fork it, or open a pull request.
         </p>
 
-        <h2>7. Changes</h2>
+        <h2>8. Changes</h2>
         <p>
           If these terms change, the "Last updated" date above changes too. Continued use after a
           change means you accept the new terms.
         </p>
 
-        <h2>8. Contact</h2>
+        <h2>9. Contact</h2>
         <p>
           Reach the maintainer at{' '}
           <a href="mailto:fwd@dimitri.one">fwd@dimitri.one</a>.
