@@ -5,7 +5,7 @@ import { Editor } from '../editor/Editor.js';
 import { useRecipeStore } from '../editor/useRecipeStore.js';
 
 // Opening /share/:token loads the shared design straight into the editor.
-// Saving from there creates a fresh save under the current user — the original
+// Saving from there creates a fresh save under the current user - the original
 // stays with its creator.
 export function SharedSavePage() {
   const { token } = useParams<{ token: string }>();

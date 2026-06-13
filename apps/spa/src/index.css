@@ -495,6 +495,105 @@ h1, h2, h3 { line-height: 1.15; letter-spacing: -0.01em; }
   height: auto;
 }
 
+.editor-canvas-frame--dragging {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-bg) inset;
+}
+
+.canvas-drop-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent-bg);
+  border-radius: var(--radius-md);
+  pointer-events: none;
+  z-index: 3;
+}
+.canvas-drop-overlay > span {
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow-card);
+}
+
+.canvas-drop-status {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  z-index: 3;
+}
+
+.canvas-drop-error {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 12px;
+  z-index: 3;
+}
+.canvas-drop-error > button {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.canvas-history-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 4px;
+  z-index: 2;
+}
+.canvas-history-controls > button {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.canvas-history-controls > button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+.canvas-history-controls > button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .editor-action-row {
   display: flex;
   gap: 8px;
@@ -1416,6 +1515,26 @@ button.admin-list__row:hover {
   gap: 8px;
 }
 
+.admin-tier-select {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.admin-tier-select select {
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  max-width: 260px;
+}
+.admin-tier-select__hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
 .admin-grid-thumbs {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -1426,6 +1545,7 @@ button.admin-list__row:hover {
 }
 
 .admin-grid-thumbs__item {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1433,6 +1553,47 @@ button.admin-list__row:hover {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-bg);
+}
+
+.admin-grid-thumbs__item--checked {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent) inset;
+}
+
+.admin-grid-thumbs__select {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: var(--color-surface);
+  border-radius: 4px;
+  padding: 2px;
+  border: 1px solid var(--color-border);
+  display: flex;
+  z-index: 2;
+}
+.admin-grid-thumbs__select input { margin: 0; }
+
+.admin-bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  margin: 8px 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.admin-bulk-bar__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+.admin-bulk-bar__actions {
+  display: flex;
+  gap: 8px;
 }
 
 .admin-grid-thumbs__item img {

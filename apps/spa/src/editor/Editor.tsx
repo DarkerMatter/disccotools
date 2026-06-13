@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { createEmptyRecipe, PERM_LEVEL } from '@disccotools/shared';
 import { useUser } from '../auth/useUser.js';
@@ -7,7 +7,8 @@ import { NoticesBanner } from '../auth/NoticesBanner.js';
 import { UserPill } from '../auth/UserPill.js';
 import { Spinner } from '../Spinner.js';
 import { ThemeToggle } from '../theme/ThemeToggle.js';
-import { logout } from '../api/client.js';
+import { ApiError, logout } from '../api/client.js';
+import { uploadAssetWithProgress, validateAssetFile } from '../api/assets.js';
 import { getSave } from '../api/saves.js';
 import { TopTabs } from '../TopTabs.js';
 import { Canvas } from './Canvas.js';
@@ -78,13 +79,21 @@ export function Editor() {
   const resetTo = useRecipeStore((s) => s.resetTo);
   const setCurrentSave = useRecipeStore((s) => s.setCurrentSave);
   const addIconLayer = useRecipeStore((s) => s.addIconLayer);
+  const addImageLayer = useRecipeStore((s) => s.addImageLayer);
   const setSelection = useRecipeStore((s) => s.setSelection);
+  const undo = useRecipeStore((s) => s.undo);
+  const redo = useRecipeStore((s) => s.redo);
+  const canUndo = useRecipeStore((s) => s.history.length > 0);
+  const canRedo = useRecipeStore((s) => s.future.length > 0);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [confirmingClear, setConfirmingClear] = useState(false);
   const [activeTab, setActiveTab] = useState<EditorTabKey>('icons');
+  const [dragOverCanvas, setDragOverCanvas] = useState(false);
+  const [dropUploading, setDropUploading] = useState<string | null>(null);
+  const [dropError, setDropError] = useState<string | null>(null);
 
   function handleClear() {
     resetTo(createEmptyRecipe());
@@ -97,6 +106,89 @@ export function Editor() {
     // hop into Customise Icons so the user sees their new layer card expand
     setActiveTab('icons');
   }
+
+  const handleCanvasDrop = useCallback(
+    async (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setDragOverCanvas(false);
+      if (userState.status !== 'authenticated') {
+        setDropError('Sign in to drop images onto the canvas.');
+        return;
+      }
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      const guard = validateAssetFile(file);
+      if (guard) {
+        setDropError(guard);
+        return;
+      }
+      setDropError(null);
+      setDropUploading(file.name);
+      try {
+        const niceName = file.name.replace(/\.[^.]+$/, '') || file.name;
+        const asset = await uploadAssetWithProgress(file, niceName, () => {});
+        addImageLayer({ assetId: asset.id });
+        setActiveTab('icons');
+      } catch (err) {
+        setDropError(err instanceof ApiError ? err.message : 'Upload failed.');
+      } finally {
+        setDropUploading(null);
+      }
+    },
+    [userState.status, addImageLayer],
+  );
+
+  // global editor shortcuts: undo/redo, arrow-nudge selected layer, delete
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        const editable =
+          tag === 'INPUT' ||
+          tag === 'TEXTAREA' ||
+          tag === 'SELECT' ||
+          target.isContentEditable;
+        if (editable) return;
+      }
+      const meta = e.metaKey || e.ctrlKey;
+      if (meta && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if (meta && (e.key === 'y' || e.key === 'Y')) {
+        e.preventDefault();
+        redo();
+        return;
+      }
+      const state = useRecipeStore.getState();
+      const id = state.selectedId;
+      if (!id) return;
+      const layer = state.recipe.layers.find((l) => l.id === id);
+      if (!layer) return;
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        e.preventDefault();
+        state.removeLayer(id);
+        return;
+      }
+      const step = e.shiftKey ? 0.05 : 0.005;
+      let dx = 0;
+      let dy = 0;
+      if (e.key === 'ArrowLeft') dx = -step;
+      else if (e.key === 'ArrowRight') dx = step;
+      else if (e.key === 'ArrowUp') dy = -step;
+      else if (e.key === 'ArrowDown') dy = step;
+      else return;
+      e.preventDefault();
+      const nextX = Math.max(0, Math.min(1, layer.x + dx));
+      const nextY = Math.max(0, Math.min(1, layer.y + dy));
+      state.updateLayer(id, { x: nextX, y: nextY });
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [undo, redo]);
 
   useEffect(() => {
     if (!id) return;
@@ -179,7 +271,22 @@ export function Editor() {
         </div>
 
         <div className="editor-canvas-column">
-          <div className="editor-canvas-frame">
+          <div
+            className={`editor-canvas-frame${dragOverCanvas ? ' editor-canvas-frame--dragging' : ''}`}
+            onDragOver={(e) => {
+              if (userState.status !== 'authenticated') return;
+              if (dropUploading) return;
+              if (!Array.from(e.dataTransfer.types).includes('Files')) return;
+              e.preventDefault();
+              setDragOverCanvas(true);
+            }}
+            onDragLeave={(e) => {
+              // ignore dragLeave when the pointer just moved over a child
+              if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+              setDragOverCanvas(false);
+            }}
+            onDrop={handleCanvasDrop}
+          >
             {loading && (
               <div
                 style={{
@@ -205,7 +312,54 @@ export function Editor() {
                 {loadError}
               </p>
             )}
+            <div className="canvas-history-controls" aria-label="History">
+              <button
+                type="button"
+                onClick={() => undo()}
+                disabled={!canUndo}
+                aria-label="Undo"
+                title="Undo (⌘Z)"
+              >
+                ↶
+              </button>
+              <button
+                type="button"
+                onClick={() => redo()}
+                disabled={!canRedo}
+                aria-label="Redo"
+                title="Redo (⌘⇧Z)"
+              >
+                ↷
+              </button>
+            </div>
             <Canvas />
+            {dragOverCanvas && (
+              <div className="canvas-drop-overlay" aria-hidden="true">
+                <span>Drop image to add as a layer</span>
+              </div>
+            )}
+            {dropUploading && (
+              <div
+                className="canvas-drop-status"
+                role="status"
+                aria-live="polite"
+              >
+                <Spinner size={14} />
+                <span>Uploading {dropUploading}…</span>
+              </div>
+            )}
+            {dropError && (
+              <div className="canvas-drop-error" role="alert">
+                <span>{dropError}</span>
+                <button
+                  type="button"
+                  onClick={() => setDropError(null)}
+                  aria-label="Dismiss"
+                >
+                  ×
+                </button>
+              </div>
+            )}
           </div>
 
           <DiscordPreview />

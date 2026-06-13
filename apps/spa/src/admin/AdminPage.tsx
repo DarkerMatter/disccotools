@@ -260,26 +260,31 @@ function UserDetail({
 
       <section className="admin-detail__section">
         <h3>Change tier</h3>
-        <div className="admin-level-buttons">
-          {[0, 1, 2, 3, 10].map((lvl) => (
-            <button
-              key={lvl}
-              type="button"
-              className="cta-button cta-button--secondary"
-              onClick={async () => {
-                if (lvl === PERM_LEVEL.BANNED) {
-                  setPending({ kind: 'level', level: lvl });
-                  return;
-                }
-                // plan up/down: no reason, just apply
-                await setAdminUserPerm(detail.user.id, lvl);
-                await refreshDetail();
-              }}
-              disabled={lvl === detail.user.permLevel}
-            >
-              {levelLabel(lvl)}
-            </button>
-          ))}
+        <div className="admin-tier-select">
+          <select
+            aria-label="Permission tier"
+            value={detail.user.permLevel}
+            onChange={async (e) => {
+              const next = Number(e.target.value);
+              if (!Number.isFinite(next) || next === detail.user.permLevel) return;
+              if (next === PERM_LEVEL.BANNED) {
+                // bans need a reason; everything else is silent
+                setPending({ kind: 'level', level: next });
+                return;
+              }
+              await setAdminUserPerm(detail.user.id, next);
+              await refreshDetail();
+            }}
+          >
+            {[0, 1, 2, 3, 10].map((lvl) => (
+              <option key={lvl} value={lvl}>
+                {levelLabel(lvl)}
+              </option>
+            ))}
+          </select>
+          <p className="admin-tier-select__hint">
+            Banning prompts for a reason. Everything else applies immediately.
+          </p>
         </div>
       </section>
 
@@ -450,13 +455,26 @@ function UserDetail({
 function ImagesTab() {
   const [assets, setAssets] = useState<AdminAssetRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState<{ id: string; name: string } | null>(null);
+  const [pending, setPending] = useState<
+    | { kind: 'single'; id: string; name: string }
+    | { kind: 'bulk'; ids: string[] }
+    | null
+  >(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
 
   async function refresh() {
     setError(null);
     try {
       const res = await listAdminAssets();
       setAssets(res.assets);
+      // drop any selections that no longer exist after a refresh
+      setSelected((prev) => {
+        const ids = new Set(res.assets.map((a) => a.id));
+        const next = new Set<string>();
+        for (const id of prev) if (ids.has(id)) next.add(id);
+        return next;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'failed');
     }
@@ -465,6 +483,26 @@ function ImagesTab() {
   useEffect(() => {
     refresh();
   }, []);
+
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAll() {
+    if (!assets) return;
+    setSelected(new Set(assets.map((a) => a.id)));
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  const allSelected = assets !== null && assets.length > 0 && selected.size === assets.length;
 
   return (
     <div className="admin-panel">
@@ -475,25 +513,85 @@ function ImagesTab() {
       {error && <p className="admin-error">{error}</p>}
       {assets === null && !error && <Spinner size={16} label="Loading images…" />}
       {assets && assets.length === 0 && <p>No uploads yet.</p>}
+      {assets && assets.length > 0 && (
+        <div className="admin-bulk-bar">
+          <label className="admin-bulk-bar__check">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={() => (allSelected ? clearSelection() : selectAll())}
+              aria-label="Select all images"
+            />
+            <span>
+              {selected.size === 0
+                ? `Select all (${assets.length})`
+                : `${selected.size} selected`}
+            </span>
+          </label>
+          <div className="admin-bulk-bar__actions">
+            {selected.size > 0 && (
+              <>
+                <button
+                  type="button"
+                  className="cta-button cta-button--secondary"
+                  onClick={clearSelection}
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  className="cta-button cta-button--danger"
+                  onClick={() =>
+                    setPending({ kind: 'bulk', ids: Array.from(selected) })
+                  }
+                >
+                  Delete selected ({selected.size})
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+      {bulkProgress && (
+        <p className="admin-help" role="status">
+          Deleting {bulkProgress.done} / {bulkProgress.total}…
+        </p>
+      )}
       {assets && (
         <ul className="admin-grid-thumbs">
-          {assets.map((a) => (
-            <li key={a.id} className="admin-grid-thumbs__item">
-              <img src={a.url} alt={a.name} />
-              <span className="admin-grid-thumbs__name">{a.name}</span>
-              <span className="admin-grid-thumbs__owner">user: {a.userId}</span>
-              <button
-                type="button"
-                className="cta-button cta-button--danger"
-                onClick={() => setPending({ id: a.id, name: a.name })}
+          {assets.map((a) => {
+            const isChecked = selected.has(a.id);
+            return (
+              <li
+                key={a.id}
+                className={`admin-grid-thumbs__item${isChecked ? ' admin-grid-thumbs__item--checked' : ''}`}
               >
-                Delete
-              </button>
-            </li>
-          ))}
+                <label className="admin-grid-thumbs__select">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => toggleOne(a.id)}
+                    aria-label={`Select ${a.name}`}
+                  />
+                </label>
+                <img src={a.url} alt={a.name} />
+                <span className="admin-grid-thumbs__name">{a.name}</span>
+                <span className="admin-grid-thumbs__owner">user: {a.userId}</span>
+                <button
+                  type="button"
+                  className="cta-button cta-button--danger"
+                  onClick={() =>
+                    setPending({ kind: 'single', id: a.id, name: a.name })
+                  }
+                >
+                  Delete
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
-      {pending && (
+      {pending?.kind === 'single' && (
         <ReasonModal
           title={`Delete image "${pending.name}"`}
           description="Removes the R2 object and the D1 row. The user sees this reason."
@@ -502,6 +600,31 @@ function ImagesTab() {
           onConfirm={async (reason) => {
             await deleteAdminAsset(pending.id, reason);
             setPending(null);
+            await refresh();
+          }}
+        />
+      )}
+      {pending?.kind === 'bulk' && (
+        <ReasonModal
+          title={`Delete ${pending.ids.length} images`}
+          description="One reason will be recorded against every selected image. Users see this in their notices banner."
+          confirmLabel={`Delete ${pending.ids.length} images`}
+          onCancel={() => setPending(null)}
+          onConfirm={async (reason) => {
+            const ids = pending.ids;
+            setPending(null);
+            setBulkProgress({ done: 0, total: ids.length });
+            for (let i = 0; i < ids.length; i++) {
+              try {
+                await deleteAdminAsset(ids[i]!, reason);
+              } catch {
+                // surface the count, swallow individual errors so one bad row
+                // doesnt block the rest of the batch
+              }
+              setBulkProgress({ done: i + 1, total: ids.length });
+            }
+            setBulkProgress(null);
+            clearSelection();
             await refresh();
           }}
         />

@@ -13,6 +13,8 @@ import {
 const DEBOUNCE_MS = 200;
 const INITIAL_CHUNK = 200;
 const CHUNK_SIZE = 200;
+const RECENTS_KEY = 'disccotools.iconRecents.v1';
+const RECENTS_MAX = 12;
 
 function groupByPrefix(hits: IconHit[]): Map<string, IconHit[]> {
   const map = new Map<string, IconHit[]>();
@@ -22,6 +24,40 @@ function groupByPrefix(hits: IconHit[]): Map<string, IconHit[]> {
     map.set(hit.prefix, arr);
   }
   return map;
+}
+
+function loadRecents(): IconHit[] {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(RECENTS_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const ok: IconHit[] = [];
+    for (const h of parsed) {
+      if (
+        h &&
+        typeof h === 'object' &&
+        typeof (h as IconHit).id === 'string' &&
+        typeof (h as IconHit).prefix === 'string' &&
+        typeof (h as IconHit).name === 'string'
+      ) {
+        ok.push(h as IconHit);
+      }
+    }
+    return ok.slice(0, RECENTS_MAX);
+  } catch {
+    return [];
+  }
+}
+
+function saveRecents(list: IconHit[]) {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(RECENTS_KEY, JSON.stringify(list));
+  } catch {
+    // quota or disabled — fine, recents are a nice-to-have
+  }
 }
 
 export function IconGrid({
@@ -39,7 +75,17 @@ export function IconGrid({
   const [loading, setLoading] = useState(false);
   const [activePrefix, setActivePrefix] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(INITIAL_CHUNK);
+  const [recents, setRecents] = useState<IconHit[]>(() => loadRecents());
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  function handlePick(hit: IconHit) {
+    setRecents((prev) => {
+      const next = [hit, ...prev.filter((p) => p.id !== hit.id)].slice(0, RECENTS_MAX);
+      saveRecents(next);
+      return next;
+    });
+    onSelect(hit);
+  }
 
   useEffect(() => {
     setVisibleCount(INITIAL_CHUNK);
@@ -132,7 +178,7 @@ export function IconGrid({
         key={hit.id}
         type="button"
         aria-label={`Insert ${hit.id}`}
-        onClick={() => onSelect(hit)}
+        onClick={() => handlePick(hit)}
         style={{
           background: 'var(--color-bg)',
           border: '1px solid var(--color-border)',
@@ -216,6 +262,49 @@ export function IconGrid({
         })}
       </div>
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+        {query.trim() === '' && activePrefix === null && recents.length > 0 && (
+          <section style={{ marginBottom: 12 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 6,
+              }}
+            >
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  color: 'var(--color-text-muted)',
+                }}
+              >
+                Recently used
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setRecents([]);
+                  saveRecents([]);
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--color-text-muted)',
+                  fontSize: 11,
+                  cursor: 'pointer',
+                }}
+                aria-label="Clear recently used icons"
+              >
+                Clear
+              </button>
+            </div>
+            <div style={gridStyle}>{recents.map(renderIconButton)}</div>
+          </section>
+        )}
         {loading && (
           <div style={{ padding: '8px 0' }}>
             <Spinner size={16} label="Searching…" />
