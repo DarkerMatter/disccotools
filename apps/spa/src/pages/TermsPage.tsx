@@ -75,7 +75,7 @@ export function TermsPage() {
           </a>{' '}
           against the hash list maintained by the National Center for Missing &amp; Exploited
           Children (NCMEC) and partner organisations. We have no way to turn this off for
-          individual users.
+          individual users nor do we want to.
         </p>
         <ul>
           <li>
